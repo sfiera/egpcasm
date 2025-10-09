@@ -5,6 +5,13 @@
     ret => $08
     rets => $18
 
+    calt {addr: u16} => {
+        assert(addr & 0x0001 == 0)
+        assert(addr >= 0x0080)
+        assert(addr <= 0x00FE)
+        0b10 @ ((addr - 0x0080) >> 1)`6
+    }
+
     jr {addr: u16} => {
         reladdr = addr - $ - 1
         assert(reladdr <= 0x3f)
@@ -66,7 +73,7 @@ ________0018:   #d8 $69, $C1                                    ; MVI     A,C1
 ________001A:   #d8 $4D, $C0                                    ; MOV     PA,A
 ________001C:   #d8 $64, $88, $FE                               ; ANI     PA,FE
 ________001F:   #d8 $64, $98, $01                               ; ORI     PA,01
-________0022:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________0022:   calt $008A                                      ; "Clear A"
 ________0023:   #d8 $4D, $C4                                    ; MOV     MB,A	;Mode B = All outputs
 ________0025:   #d8 $64, $98, $38                               ; ORI     PA,38
 
@@ -84,17 +91,17 @@ ________0042:   #d8 $69, $07                                    ; MVI     A,07
 ________0044:   #d8 $4D, $C9                                    ; MOV     TMM,A	;Timer register = #$7
 ________0046:   #d8 $69, $74                                    ; MVI     A,74
 ________0048:   #d8 $4D, $C6                                    ; MOV     T0,A        ;Timer option reg = #$74
-________004A:   #d8 $87                                         ; CALT    008E	; "Clear Screen RAM"
-________004B:   #d8 $88                                         ; CALT    0090	; "Clear C4B0~C593"
-________004C:   #d8 $89                                         ; CALT    0092	; "Clear C594~C86F?"
+________004A:   calt $008E                                      ; "Clear Screen RAM"
+________004B:   calt $0090                                      ; "Clear C4B0~C593"
+________004C:   calt $0092                                      ; "Clear C594~C86F?"
 ________004D:   #d8 $34, $80, $FF                               ; LXI     H,FF80
 ________0050:   #d8 $6A, $49                                    ; MVI     B,49
-________0052:   #d8 $8A                                         ; CALT    0094	; "Clear RAM (HL+)xB"
-________0053:   #d8 $81                                         ; CALT    0082	; Copy Screen RAM to LCD Driver
+________0052:   calt $0094                                      ; "Clear RAM (HL+)xB"
+________0053:   calt $0082                                      ; Copy Screen RAM to LCD Driver
 ________0054:   #d8 $69, $05                                    ; MVI     A,05
 ________0056:   #d8 $4D, $C3                                    ; MOV     MK,A        ;Mask = IntT,1 ON
 ________0058:   #d8 $48, $20                                    ; EI
-________005A:   #d8 $80                                         ; CALT    0080	; [PC+1] Check Cartridge
+________005A:   calt $0080                                      ; [PC+1] Check Cartridge
 ________005B:   #d8 $C0                                         ; DB $C0 		;Jump to ($4001) in cartridge
 ________005C:   #d8 $54, $7F, $05                               ; JMP     057F        ;Flow continues if no cartridge is present.
 ;------------------------------------------------------------
@@ -107,7 +114,7 @@ ________0062:   ret
 ;?? (Find 1st diff. byte in (HL),(DE)xB)  (Matching byte perhaps?)
 ; I don't know how useful this is, but I guess it's for advancing pointers to
 ; the first difference between 2 buffers, etc.
-CALT_A2_0063:   #d8 $A1                                         ; CALT    00C2	; "(DE+)-(HL+) ==> A"
+CALT_A2_0063:   calt $00C2                                      ; "(DE+)-(HL+) ==> A"
 ________0064:   #d8 $48, $1C                                    ; SKN     Z
 ________0066:   jr $0068
 ________0067:   ret
@@ -122,7 +129,7 @@ ________006C:   ret
 CALT_A3_006D:   #d8 $48, $3E                                    ; PUSH    H
 ________006F:   #d8 $48, $2E                                    ; PUSH    D
 ________0071:   #d8 $48, $1E                                    ; PUSH    B
-________0073:   #d8 $A2                                         ; CALT    00C4	; "?? (Find 1st diff. byte in (HL),(DE)xB)"
+________0073:   calt $00C4                                      ; "?? (Find 1st diff. byte in (HL),(DE)xB)"
 ________0074:   #d8 $48, $1F                                    ; POP     B
 ________0076:   #d8 $48, $2F                                    ; POP     D
 ________0078:   #d8 $48, $3F                                    ; POP     H
@@ -130,7 +137,7 @@ ________007A:   #d8 $48, $1A                                    ; SKN     CY
 ________007C:   jr $007E
 ________007D:   ret
 
-________007E:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________007E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________007F:   ret
 ;------------------------------------------------------------
 ;This is the call table provided by the CALT instruction in the uPD78xx CPU.
@@ -327,7 +334,7 @@ ________01A9:   #d8 $2B                                         ; LDAX    H
 ________01AA:   #d8 $77, $55                                    ; EQI     A,55
 ________01AC:   rets
 
-________01AD:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________01AD:   calt $008A                                      ; "Clear A"
 ________01AE:   #d8 $38, $89                                    ; STAW    89
 ________01B0:   #d8 $2B                                         ; LDAX    H
 ________01B1:   #d8 $77, $55                                    ; EQI     A,55
@@ -358,8 +365,8 @@ ________01CC:   #d8 $73                                         ; JB            
 ;CALT 00A0, CALT 00A4
 ; Copies the 2nd screen to the screen buffer & moves some text around
 ; And updates the LCD...
-CALT_91_01CD:   #d8 $90                                         ; CALT    00A0	; "C258+ ==> C000+"
-________01CE:   #d8 $92                                         ; CALT    00A4	; "?? (Move some RAM around...)"
+CALT_91_01CD:   calt $00A0                                      ; "C258+ ==> C000+"
+________01CE:   calt $00A4                                      ; "?? (Move some RAM around...)"
 ;-----------------------------------------------------------
 ;Copy Screen RAM to LCD Driver
 ; A very important and often-used function.  The LCD won't show anything without it...
@@ -381,7 +388,7 @@ ________01EE:   #d8 $64, $98, $02                               ; ORI     PA,02 
 ________01F1:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
 ________01F4:   #d8 $53                                         ; DCR     C
 ________01F5:   jr $01EB
-________01F6:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________01F6:   calt $0096                                      ; "HL <== HL+DE"
 ________01F7:   #d8 $0A                                         ; MOV     A,B
 ________01F8:   #d8 $26, $40                                    ; ADINC   A,40
 ________01FA:   jr $01FE
@@ -406,14 +413,14 @@ ________0220:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0223:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________0226:   #d8 $53                                         ; DCR     C
 ________0227:   jr $021D
-________0228:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0228:   calt $0096                                      ; "HL <== HL+DE"
 ________0229:   #d8 $0A                                         ; MOV     A,B
 ________022A:   #d8 $26, $40                                    ; ADINC   A,40
 ________022C:   jr $0230
 ________022D:   #d8 $1A                                         ; MOV     B,A
 ________022E:   #d8 $4F, $DC                                    ; JRE     020C
 
-________0230:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________0230:   calt $008A                                      ; "Clear A"
 ________0231:   #d8 $38, $96                                    ; STAW    96
         						;Set up writing for LCD controller #3
 ________0233:   #d8 $64, $88, $EF                               ; ANI     PA,EF	;bit 4 off
@@ -440,9 +447,9 @@ ________025D:   jr $0253
 
 ________025E:   #d8 $48, $2E                                    ; PUSH    D
 ________0260:   #d8 $24, $32, $00                               ; LXI     D,0032
-________0263:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0263:   calt $0096                                      ; "HL <== HL+DE"
 ________0264:   #d8 $48, $2F                                    ; POP     D
-________0266:   #d8 $94                                         ; CALT    00A8	; "XCHG HL,DE"
+________0266:   calt $00A8                                      ; "XCHG HL,DE"
 ________0267:   #d8 $20, $96                                    ; INRW    96          ;Skip if a carry...
 ________0269:   #d8 $55, $96, $01                               ; OFFIW   96,01       ;Do alternating lines
 ________026C:   jr $0251
@@ -523,16 +530,16 @@ ________056F:   #d8 $08, $04, $02, $04, $08, $08, $08, $01, $02,$01, $08, $04, $
 ;-----------------------------------------------------------
 ;from 005C -
 
-________057F:   #d8 $86                                         ; CALT    008C	;Clear Screen 2 RAM
+________057F:   calt $008C                                      ;Clear Screen 2 RAM
 ________0580:   #d8 $38, $D8                                    ; STAW    D8          ;Set mem locations to 0
 ________0582:   #d8 $38, $82                                    ; STAW    82
 ________0584:   #d8 $38, $A5                                    ; STAW    A5
 ________0586:   #d8 $34, $B8, $04                               ; LXI     H,04B8	;Start of scrolltext
 ________0589:   #d8 $70, $3E, $D6, $FF                          ; SHLD    FFD6	;Save pointer
 ________058D:   #d8 $7D, $68                                    ; CALF    0D68        ;Setup RAM vars
-________058F:   #d8 $90                                         ; CALT    00A0	; "C258+ ==> C000+"
-________0590:   #d8 $81                                         ; CALT    0082	;Copy Screen RAM to LCD Driver
-________0591:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________058F:   calt $00A0                                      ; "C258+ ==> C000+"
+________0590:   calt $0082                                      ;Copy Screen RAM to LCD Driver
+________0591:   calt $008A                                      ; "Clear A"
 ________0592:   #d8 $38, $DA                                    ; STAW    DA
 ________0594:   #d8 $38, $D1                                    ; STAW    D1
 ________0596:   #d8 $38, $D2                                    ; STAW    D2
@@ -546,22 +553,22 @@ ________05A5:   #d8 $69, $60                                    ; MVI     A,60  
 ________05A7:   #d8 $38, $8A                                    ; STAW    8A
 
 ;Main Loop starts here!
-________05A9:   #d8 $80                                         ; CALT    0080	;[PC+1] Check Cartridge
+________05A9:   calt $0080                                      ;[PC+1] Check Cartridge
 ________05AA:   #d8 $C1                                         ; DB $C1 		;Jump to ($4003) in cartridge
 
 ________05AB:   #d8 $55, $80, $02                               ; OFFIW   80,02       ;If bit 1 is on, no music
 ________05AE:   jr $05B2
 ________05AF:   #d8 $7E, $64                                    ; CALF    0E64	;Point HL to the music data
-________05B1:   #d8 $83                                         ; CALT    0086	;Setup/Play Music
-________05B2:   #d8 $84                                         ; CALT    0088	;Read Controller FF90-FF95
+________05B1:   calt $0086                                      ;Setup/Play Music
+________05B2:   calt $0088                                      ;Read Controller FF90-FF95
 ________05B3:   #d8 $65, $93, $01                               ; NEIW    93,01       ;If Select is pressed...
 ________05B6:   #d8 $54, $EC, $06                               ; JMP     06EC        ;Setup puzzle
 ________05B9:   #d8 $65, $D2, $0F                               ; NEIW    D2,0F
 ________05BC:   #d8 $4F, $D3                                    ; JRE     0591        ;(go to main loop setup)
 ________05BE:   #d8 $7D, $1F                                    ; CALF    0D1F        ;Draw spiral dot-by-dot
 ________05C0:   #d8 $7D, $1F                                    ; CALF    0D1F	;Draw spiral dot-by-dot
-________05C2:   #d8 $90                                         ; CALT    00A0	; "C258+ ==> C000+"
-________05C3:   #d8 $81                                         ; CALT    0082	;Copy Screen RAM to LCD Driver
+________05C2:   calt $00A0                                      ; "C258+ ==> C000+"
+________05C3:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________05C4:   #d8 $65, $93, $08                               ; NEIW    93,08       ;If Start is pressed...
 ________05C7:   jr $05D1                                        ;Jump to graphic program
 
@@ -572,10 +579,10 @@ ________05CF:   #d8 $4F, $D4                                    ; JRE     05A5  
 ;-----------------------------------------------------------
 ;"Paint" program setup routines
 ________05D1:   #d8 $7E, $4D                                    ; CALF    0E4D        ;Turn timer on
-________05D3:   #d8 $86                                         ; CALT    008C	; "Clear Screen 2 RAM"
-________05D4:   #d8 $88                                         ; CALT    0090	; "Clear C4B0~C593"
+________05D3:   calt $008C                                      ; "Clear Screen 2 RAM"
+________05D4:   calt $0090                                      ; "Clear C4B0~C593"
 ________05D5:   #d8 $34, $41, $05                               ; LXI     H,0541      ;"GRA"
-________05D8:   #d8 $9B                                         ; CALT    00B6	; "[PC+3] Print Text on-Screen"
+________05D8:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
 ________05D9:   #d8 $02, $00, $1C                               ; DB $02,$00,$1C     ;Parameters for the text routine
 ________05DC:   #d8 $69, $05                                    ; MVI     A,05
 ________05DE:   #d8 $34, $B8, $C4                               ; LXI     H,C4B8
@@ -591,7 +598,7 @@ ________05EC:   #d8 $69, $39                                    ; MVI     A,39
 ________05EE:   #d8 $3D                                         ; STAX    H+
 ________05EF:   #d8 $41                                         ; INR     A
 ________05F0:   #d8 $38, $A7                                    ; STAW    A7
-________05F2:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________05F2:   calt $008A                                      ; "Clear A"
 ________05F3:   #d8 $3D                                         ; STAX    H+
 ________05F4:   #d8 $38, $A0                                    ; STAW    A0          ;X,Y position for cursor
 ________05F6:   #d8 $38, $A1                                    ; STAW    A1
@@ -609,13 +616,13 @@ ________0603:   #d8 $7D, $68                                    ; CALF    0D68  
 ________0605:   #d8 $69, $70                                    ; MVI     A,70
 ________0607:   #d8 $38, $8A                                    ; STAW    8A
 ________0609:   #d8 $34, $A0, $FF                               ; LXI     H,FFA0      ;Print the X-, Y- position
-________060C:   #d8 $9A                                         ; CALT    00B4	; "[PC+3] Print Bytes on-Screen"
+________060C:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________060D:   #d8 $26, $00, $19                               ; DB $26,$00,$19     ;Parameters for the print routine
 ________0610:   #d8 $34, $A1, $FF                               ; LXI     H,FFA1
-________0613:   #d8 $9A                                         ; CALT    00B4	; "[PC+3] Print Bytes on-Screen"
+________0613:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________0614:   #d8 $3E, $00, $19                               ; DB $3E,$00,$19     ;Parameters for the print routine
-________0617:   #d8 $91                                         ; CALT    00A2	; "CALT A0, CALT A4"
-________0618:   #d8 $80                                         ; CALT    0080	;[PC+1] Check Cartridge
+________0617:   calt $00A2                                      ; "CALT A0, CALT A4"
+________0618:   calt $0080                                      ;[PC+1] Check Cartridge
 ________0619:   #d8 $C1                                         ; DB $C1		;Jump to ($4003) in cartridge
 
 ________061A:   #d8 $45, $8A, $80                               ; ONIW    8A,80
@@ -624,7 +631,7 @@ ________061E:   #d8 $34, $72, $C5                               ; LXI     H,C572
 ________0621:   #d8 $2B                                         ; LDAX    H
 ________0622:   #d8 $16, $FF                                    ; XRI     A,FF
 ________0624:   #d8 $3B                                         ; STAX    H
-________0625:   #d8 $84                                         ; CALT    0088	;Read Controller FF90-FF95
+________0625:   calt $0088                                      ;Read Controller FF90-FF95
 ________0626:   #d8 $28, $93                                    ; LDAW    93
 ________0628:   #d8 $57, $3F                                    ; OFFI    A,3F        ;Test Buttons 1,2,3,4
 ________062A:   jr $0633
@@ -638,38 +645,38 @@ ________0636:   jr $0647
 ________0637:   #d8 $77, $08                                    ; EQI     A,08        ;Start clears the screen
 ________0639:   jr $063F
 
-________063A:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________063A:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________063B:   #d8 $22, $03                                    ; DB $22,$03
 ________063D:   #d8 $4F, $9D                                    ; JRE     05DC        ;Clear screen
 
 ________063F:   #d8 $77, $01                                    ; EQI     A,01        ;Select goes to the Puzzle
 ________0641:   jr $0647
 
-________0642:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0642:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0643:   #d8 $23, $03                                    ; DB $23,$03
 ________0645:   #d8 $4E, $A7                                    ; JRE     06EE        ;To Puzzle Setup
 
 ________0647:   #d8 $77, $02                                    ; EQI     A,02        ;Button 1
 ________0649:   jr $064E
-________064A:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________064A:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________064B:   #d8 $19, $03                                    ; DB $19,$03
 ________064D:   jr $0664                                        ;Clear a dot
 
 ________064E:   #d8 $77, $10                                    ; EQI     A,10        ;Button 2
 ________0650:   jr $0655
-________0651:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0651:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0652:   #d8 $1B, $03                                    ; DB $1B,$03
 ________0654:   jr $0664                                        ;Clear a dot
 
 ________0655:   #d8 $77, $04                                    ; EQI     A,04        ;Button 3
 ________0657:   jr $065C
-________0658:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0658:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0659:   #d8 $1D, $03                                    ; DB $1D,$03
 ________065B:   jr $066C                                        ;Set a dot
 
 ________065C:   #d8 $77, $20                                    ; EQI     A,20        ;Button 4
 ________065E:   #d8 $4E, $20                                    ; JRE     0680
-________0660:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0660:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0661:   #d8 $1E, $03                                    ; DB $1E,$03
 ________0663:   jr $066C                                        ;Set a dot
 
@@ -677,14 +684,14 @@ ________0664:   #d8 $28, $A6                                    ; LDAW    A6
 ________0666:   #d8 $1A                                         ; MOV     B,A
 ________0667:   #d8 $28, $A7                                    ; LDAW    A7
 ________0669:   #d8 $1B                                         ; MOV     C,A
-________066A:   #d8 $AD                                         ; CALT    00DA	; "Clear Dot; B,C = X-,Y-position"
+________066A:   calt $00DA                                      ; "Clear Dot; B,C = X-,Y-position"
 ________066B:   jr $0673
 
 ________066C:   #d8 $28, $A6                                    ; LDAW    A6
 ________066E:   #d8 $1A                                         ; MOV     B,A
 ________066F:   #d8 $28, $A7                                    ; LDAW    A7
 ________0671:   #d8 $1B                                         ; MOV     C,A
-________0672:   #d8 $98                                         ; CALT    00B0	; "Set Dot; B,C = X-,Y-position"
+________0672:   calt $00B0                                      ; "Set Dot; B,C = X-,Y-position"
 
 ________0673:   #d8 $28, $92                                    ; LDAW    92
 ________0675:   #d8 $67, $0F                                    ; NEI     A,0F        ;Check if U,D,L,R pressed at once??
@@ -704,7 +711,7 @@ ________0689:   #d8 $28, $A1                                    ; LDAW    A1
 ________068B:   #d8 $46, $01                                    ; ADI     A,01
 ________068D:   #d8 $61                                         ; DAA
 ________068E:   #d8 $38, $A1                                    ; STAW    A1
-________0690:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0690:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0691:   #d8 $12, $03                                    ; DB $12,$03
 ________0693:   jr $06AE
 
@@ -723,7 +730,7 @@ ________06A4:   #d8 $28, $A1                                    ; LDAW    A1
 ________06A6:   #d8 $46, $99                                    ; ADI     A,99
 ________06A8:   #d8 $61                                         ; DAA     
 ________06A9:   #d8 $38, $A1                                    ; STAW    A1
-________06AB:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________06AB:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06AC:   #d8 $14, $03                                    ; DB $14,$03
 
 ________06AE:   #d8 $28, $92                                    ; LDAW    92
@@ -742,7 +749,7 @@ ________06C0:   #d8 $28, $A0                                    ; LDAW    A0
 ________06C2:   #d8 $46, $01                                    ; ADI     A,01
 ________06C4:   #d8 $61                                         ; DAA
 ________06C5:   #d8 $38, $A0                                    ; STAW    A0
-________06C7:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________06C7:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06C8:   #d8 $17, $03                                    ; DB $17,$03
 ________06CA:   #d8 $4F, $39                                    ; JRE     0605
 
@@ -760,11 +767,11 @@ ________06DD:   #d8 $28, $A0                                    ; LDAW    A0
 ________06DF:   #d8 $46, $99                                    ; ADI     A,99
 ________06E1:   #d8 $61                                         ; DAA     
 ________06E2:   #d8 $38, $A0                                    ; STAW    A0
-________06E4:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________06E4:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06E5:   #d8 $16, $03                                    ; DB $16,$03
 ________06E7:   jr $06CA
 ;------------------------------------------------------------
-________06E8:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________06E8:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06E9:   #d8 $01, $03                                    ; DB $01,$03
 ________06EB:   jr $06E7
 ;------------------------------------------------------------
@@ -782,25 +789,25 @@ ________06F9:   #d8 $3D                                         ; STAX    H+
 ________06FA:   #d8 $7E, $67                                    ; CALF    0E67
 ________06FC:   #d8 $6A, $0B                                    ; MVI     B,0B
 ________06FE:   #d8 $24, $5E, $C7                               ; LXI     D,C75E
-________0701:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0701:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0702:   #d8 $6A, $0B                                    ; MVI     B,0B
 ________0704:   #d8 $34, $5E, $C7                               ; LXI     H,C75E
 ________0707:   #d8 $24, $52, $C7                               ; LXI     D,C752
-________070A:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
-________070B:   #d8 $86                                         ; CALT    008C	; "Clear Screen 2 RAM"
+________070A:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________070B:   calt $008C                                      ; "Clear Screen 2 RAM"
 ________070C:   #d8 $7D, $68                                    ; CALF    0D68        ;Draw Border
 ________070E:   #d8 $7D, $92                                    ; CALF    0D92	;Draw the grid
 ________0710:   #d8 $7C, $7B                                    ; CALF    0C7B	;Write "PUZZLE"
 ________0712:   #d8 $05, $89, $00                               ; ANIW    89,00
 ________0715:   #d8 $69, $60                                    ; MVI     A,60
 ________0717:   #d8 $38, $8A                                    ; STAW    8A
-________0719:   #d8 $80                                         ; CALT    0080	;[PC+1] Check Cartridge
+________0719:   calt $0080                                      ;[PC+1] Check Cartridge
 ________071A:   #d8 $C1                                         ; DB $C1		;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
 ________071B:   #d8 $6A, $0B                                    ; MVI     B,0B
 ________071D:   #d8 $34, $52, $C7                               ; LXI     H,C752
 ________0720:   #d8 $24, $F2, $C7                               ; LXI     D,C7F2
-________0723:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0723:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0724:   #d8 $6A, $11                                    ; MVI     B,11
 ________0726:   #d8 $34, $5D, $05                               ; LXI     H,055D      ;Point to "grid" data
 ________0729:   #d8 $2D                                         ; LDAX    H+
@@ -815,18 +822,18 @@ ________0736:   jr $0729
 ________0737:   #d8 $6A, $0B                                    ; MVI     B,0B        
 ________0739:   #d8 $7E, $67                                    ; CALF    0E67        ;LXI H,$C7F2
 ________073B:   #d8 $24, $52, $C7                               ; LXI     D,C752
-________073E:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
-________073F:   #d8 $84                                         ; CALT    0088	;Read Controller FF90-FF95
+________073E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________073F:   calt $0088                                      ;Read Controller FF90-FF95
 ________0740:   #d8 $65, $93, $01                               ; NEIW    93,01       ;Select
 ________0743:   #d8 $45, $95, $01                               ; ONIW    95,01	;Select trigger
 ________0746:   jr $074D
-________0747:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0747:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0748:   #d8 $14, $03                                    ; DB $14,$03
 ________074A:   #d8 $54, $D1, $05                               ; JMP     05D1	;Go to Paint Program
 ________074D:   #d8 $65, $93, $08                               ; NEIW    93,08	;Start
 ________0750:   #d8 $45, $95, $08                               ; ONIW    95,08
 ________0753:   jr $0758
-________0754:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________0754:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0755:   #d8 $16, $03                                    ; DB $16,$03
 ________0757:   jr $0765
 ;------------------------------------------------------------
@@ -836,13 +843,13 @@ ________075D:   #d8 $75, $89, $3C                               ; EQIW    89,3C
 ________0760:   #d8 $4F, $B3                                    ; JRE     0715	;Reset timer?
 ________0762:   #d8 $54, $7F, $05                               ; JMP     057F        ;Go back to startup screen(?)
 ;------------------------------------------------------------
-________0765:   #d8 $86                                         ; CALT    008C	; "Clear Screen 2 RAM"
+________0765:   calt $008C                                      ; "Clear Screen 2 RAM"
 ________0766:   #d8 $34, $53, $05                               ; LXI     H,0553      ;"TIME"
-________0769:   #d8 $9B                                         ; CALT    00B6	; "[PC+3] Print Text on-Screen"
+________0769:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
 ________076A:   #d8 $0E, $00, $1A                               ; DB $0E,$00,$1A
 ________076D:   #d8 $34, $86, $FF                               ; LXI     H,FF86
 ________0770:   #d8 $6A, $02                                    ; MVI     B,02
-________0772:   #d8 $8A                                         ; CALT    0094	; "Clear RAM (HL+)xB"
+________0772:   calt $0094                                      ; "Clear RAM (HL+)xB"
 ________0773:   #d8 $28, $8C                                    ; LDAW    8C
 ________0775:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0777:   #d8 $1A                                         ; MOV     B,A
@@ -861,18 +868,18 @@ ________078B:   #d8 $7D, $92                                    ; CALF    0D92  
 ________078D:   #d8 $7C, $82                                    ; CALF    0C82	;Scroll text? Write time in decimal?
 ________078F:   #d8 $69, $60                                    ; MVI     A,60
 ________0791:   #d8 $38, $8A                                    ; STAW    8A
-________0793:   #d8 $80                                         ; CALT    0080	;[PC+1] Check Cartridge
+________0793:   calt $0080                                      ;[PC+1] Check Cartridge
 ________0794:   #d8 $C1                                         ; DB $C1		;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
 ________0795:   #d8 $34, $86, $FF                               ; LXI     H,FF86
-________0798:   #d8 $9A                                         ; CALT    00B4	; "[PC+3] Print Bytes on-Screen"
+________0798:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________0799:   #d8 $2C, $00, $12                               ; DB $2C,$00,$12
 ________079C:   #d8 $34, $88, $FF                               ; LXI     H,FF88
-________079F:   #d8 $9A                                         ; CALT    00B4	; "[PC+3] Print Bytes on-Screen"
+________079F:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________07A0:   #d8 $44, $00, $08                               ; DB $44,$00,$08
-________07A3:   #d8 $90                                         ; CALT    00A0	; "C258+ ==> C000+"
-________07A4:   #d8 $81                                         ; CALT    0082	;Copy Screen RAM to LCD Driver
-________07A5:   #d8 $84                                         ; CALT    0088	;Read Controller FF90-FF95
+________07A3:   calt $00A0                                      ; "C258+ ==> C000+"
+________07A4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
+________07A5:   calt $0088                                      ;Read Controller FF90-FF95
 ________07A6:   #d8 $65, $93, $01                               ; NEIW    93,01       ;Select
 ________07A9:   #d8 $4F, $9C                                    ; JRE     0747	;To Paint Program
 ________07AB:   #d8 $65, $93, $08                               ; NEIW    93,08	;Start
@@ -888,7 +895,7 @@ ________07BD:   #d8 $4F, $D0                                    ; JRE     078F  
 ________07BF:   #d8 $7D, $D3                                    ; CALF    0DD3        ;Draw Tiles
 ________07C1:   jr $07C6
 ;------------------------------------------------------------
-________07C2:   #d8 $82                                         ; CALT    0084	;[PC+2] Setup/Play Sound
+________07C2:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________07C3:   #d8 $01, $03                                    ; DB $01,$03
 ________07C5:   jr $07BD
 ;------------------------------------------------------------
@@ -911,35 +918,35 @@ ________07DF:   #d8 $75, $A2, $00                               ; EQIW    A2,00
 ________07E2:   #d8 $4E, $3F                                    ; JRE     0823
 ________07E4:   #d8 $7C, $BF                                    ; CALF    0CBF        ;Write Text(?)
 ________07E6:   #d8 $32                                         ; INX     H
-________07E7:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________07E7:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07E8:   #d8 $00, $8E                                    ; DB $00,$8E
 ________07EA:   #d8 $7C, $77                                    ; CALF    0C77        ;HL + $3C
 ________07EC:   #d8 $48, $3E                                    ; PUSH    H
-________07EE:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________07EE:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07EF:   #d8 $F0, $0E                                    ; DB $F0,$0E
 ________07F1:   #d8 $48, $3F                                    ; POP     H
-________07F3:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________07F3:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07F4:   #d8 $F0, $8E                                    ; DB $F0,$8E
 ________07F6:   #d8 $7C, $77                                    ; CALF    0C77        ;HL + $3C
-________07F8:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________07F8:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07F9:   #d8 $1F, $0F                                    ; DB $1F,$0F
 ________07FB:   #d8 $48, $1F                                    ; POP     B
 ________07FD:   #d8 $0A                                         ; MOV     A,B
 ________07FE:   #d8 $7C, $BF                                    ; CALF    0CBF        ;Write Text(?)
-________0800:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0800:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0801:   #d8 $F0, $0F                                    ; DB $F0,$0F
 ________0803:   #d8 $7C, $77                                    ; CALF    0C77        ;HL + $3C
 ________0805:   #d8 $48, $3E                                    ; PUSH    H
-________0807:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0807:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0808:   #d8 $0F, $0E                                    ; DB $0F,$0E
 ________080A:   #d8 $48, $3F                                    ; POP     H
-________080C:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________080C:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________080D:   #d8 $0F, $8E                                    ; DB $0F,$0E
 ________080F:   #d8 $6D, $41                                    ; MVI     E,41
-________0811:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0811:   calt $009A                                      ; "HL <== HL+E"
 ________0812:   #d8 $48, $0F                                    ; POP     V
 ________0814:   #d8 $48, $3E                                    ; PUSH    H
-________0816:   #d8 $9C                                         ; CALT    00B8	;Byte -> Point to Font Graphic
+________0816:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0817:   #d8 $48, $2F                                    ; POP     D
 ________0819:   #d8 $6A, $04                                    ; MVI     B,04
 ________081B:   #d8 $2D                                         ; LDAX    H+
@@ -956,15 +963,15 @@ ________0828:   #d8 $52                                         ; DCR     B
 ________0829:   jr $0827
 ________082A:   #d8 $69, $01                                    ; MVI     A,01
 ________082C:   #d8 $38, $A5                                    ; STAW    A5
-________082E:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________082E:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________082F:   #d8 $E0, $08                                    ; DB $E0,$08
 ________0831:   #d8 $6D, $42                                    ; MVI     E,42
-________0833:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________0834:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0833:   calt $009A                                      ; "HL <== HL+E"
+________0834:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0835:   #d8 $FF, $08                                    ; DB $FF,$08
 ________0837:   #d8 $6D, $42                                    ; MVI     E,42
-________0839:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________083A:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0839:   calt $009A                                      ; "HL <== HL+E"
+________083A:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________083B:   #d8 $1F, $08                                    ; DB $1F,$08
 ________083D:   #d8 $28, $A5                                    ; LDAW    A5
 ________083F:   #d8 $51                                         ; DCR     A
@@ -981,23 +988,23 @@ ________084B:   jr $082E
 ________084C:   #d8 $28, $A2                                    ; LDAW    A2
 ________084E:   #d8 $7C, $BF                                    ; CALF    0CBF        ;Write Text(?)
 ________0850:   #d8 $6D, $09                                    ; MVI     E,09
-________0852:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________0853:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0852:   calt $009A                                      ; "HL <== HL+E"
+________0853:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0854:   #d8 $1F, $8E                                    ; DB $1F,$8E
 ________0856:   #d8 $7C, $77                                    ; CALF    0C77        ;HL + $3C
-________0858:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0858:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0859:   #d8 $00, $8E                                    ; DB $00,$8E
 ________085B:   #d8 $7C, $77                                    ; CALF    0C77        ;HL + $3C
-________085D:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________085D:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________085E:   #d8 $F0, $8E                                    ; DB $F0,$8E
 ________0860:   #d8 $6A, $54                                    ; MVI     B,54        ;Decrement HL 55 times!
 ________0862:   #d8 $33                                         ; DCX     H		;Is this a delay or something?
 ________0863:   #d8 $52                                         ; DCR     B		;There's already a CALT that subs HL...
 ________0864:   jr $0862
-________0865:   #d8 $94                                         ; CALT    00A8	; "XCHG HL,DE"
+________0865:   calt $00A8                                      ; "XCHG HL,DE"
 ________0866:   #d8 $48, $0F                                    ; POP     V
 ________0868:   #d8 $48, $2E                                    ; PUSH    D
-________086A:   #d8 $9C                                         ; CALT    00B8	;Byte -> Point to Font Graphic
+________086A:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________086B:   #d8 $48, $2F                                    ; POP     D
 ________086D:   #d8 $6A, $04                                    ; MVI     B,04
 ________086F:   #d8 $2D                                         ; LDAX    H+
@@ -1006,10 +1013,10 @@ ________0872:   #d8 $3C                                         ; STAX    D+
 ________0873:   #d8 $52                                         ; DCR     B
 ________0874:   jr $086F
 ________0875:   #d8 $34, $88, $FF                               ; LXI     H,FF88
-________0878:   #d8 $9A                                         ; CALT    00B4	; "[PC+3] Print Bytes on-Screen"
+________0878:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________0879:   #d8 $44, $00, $08                               ; DB $44,$00,$08
-________087C:   #d8 $90                                         ; CALT    00A0	; "C258+ ==> C000+"
-________087D:   #d8 $81                                         ; CALT    0082	;Copy Screen RAM to LCD Driver
+________087C:   calt $00A0                                      ; "C258+ ==> C000+"
+________087D:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________087E:   #d8 $7D, $68                                    ; CALF    0D68        ;Draw Border
 ________0880:   #d8 $7D, $92                                    ; CALF    0D92	;Draw Puzzle Grid
 ________0882:   #d8 $7C, $82                                    ; CALF    0C82        ;Scroll text? Write time in decimal?
@@ -1022,7 +1029,7 @@ ________088F:   #d8 $4F, $34                                    ; JRE     07C5
 ________0891:   #d8 $52                                         ; DCR     B
 ________0892:   jr $088C
 ________0893:   #d8 $7E, $64                                    ; CALF    0E64	;Point HL to music data
-________0895:   #d8 $83                                         ; CALT    0086	;Setup/Play Music
+________0895:   calt $0086                                      ;Setup/Play Music
 ________0896:   #d8 $45, $80, $03                               ; ONIW    80,03
 ________0899:   #d8 $54, $12, $07                               ; JMP     0712        ;Continue puzzle
 ________089C:   jr $0896
@@ -1086,7 +1093,7 @@ ________08DF:   #d8 $48, $2A                                    ; CLC
 ________08E1:   #d8 $48, $31                                    ; RLR
 ________08E3:   #d8 $48, $0E                                    ; PUSH    V
 ________08E5:   #d8 $48, $1A                                    ; SKN     CY
-________08E7:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________08E7:   calt $0096                                      ; "HL <== HL+DE"
 ________08E8:   #d8 $0D                                         ; MOV     A,E
 ________08E9:   #d8 $60, $C1                                    ; ADD     A,A
 ________08EB:   #d8 $1D                                         ; MOV     E,A
@@ -1118,7 +1125,7 @@ CALT_86_08FF:   #d8 $34, $58, $C2                               ; LXI     H,C258
 CALT_87_0902:   #d8 $34, $00, $C0                               ; LXI     H,C000	;RAM for screen 1
 ________0905:   #d8 $6B, $02                                    ; MVI     C,02
 ________0907:   #d8 $6A, $C7                                    ; MVI     B,C7        ;$C8 bytes * 3 loops
-________0909:   #d8 $8A                                         ; CALT    0094	; "Clear RAM (HL+)xB"
+________0909:   calt $0094                                      ; "Clear RAM (HL+)xB"
 ________090A:   #d8 $53                                         ; DCR     C
 ________090B:   jr $0907
 ________090C:   ret
@@ -1134,7 +1141,7 @@ CALT_88_0915:   #d8 $34, $B0, $C4                               ; LXI     H,C4B0
 ________0918:   #d8 $6A, $E3                                    ; MVI     B,E3	;and just drop into the func.
 
 ;Clear RAM (HL+)xB
-CALT_8A_091A:   #d8 $85                                         ; CALT    008A	; "Clear A"
+CALT_8A_091A:   calt $008A                                      ; "Clear A"
 ;A ==> (HL+)xB
 CALT_9F_091B:   #d8 $3D                                         ; STAX    H+
 ________091C:   #d8 $52                                         ; DCR     B
@@ -1145,7 +1152,7 @@ ________091E:   ret
 CALT_84_091F:   #d8 $34, $92, $FF                               ; LXI     H,FF92      ;Current joy storage
 ________0922:   #d8 $24, $90, $FF                               ; LXI     D,FF90      ;Old joy storage
 ________0925:   #d8 $6A, $01                                    ; MVI     B,01        ;Copy 2 bytes from curr->old
-________0927:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0927:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0928:   #d8 $64, $88, $BF                               ; ANI     PA,BF       ;PA Bit 6 off
 ________092B:   #d8 $4C, $C2                                    ; MOV     A,PC	;Get port C
 ________092D:   #d8 $16, $FF                                    ; XRI     A,FF
@@ -1202,10 +1209,10 @@ CALT_90_097E:   #d8 $7E, $5E                                    ; CALF    0E5E
 ________0980:   jr $0984
 ;C000+ ==> C258+
 CALT_8F_0981:   #d8 $7E, $5E                                    ; CALF    0E5E
-________0983:   #d8 $94                                         ; CALT    00A8	; "XCHG HL,DE"
+________0983:   calt $00A8                                      ; "XCHG HL,DE"
 ________0984:   #d8 $6B, $02                                    ; MVI     C,02
 ________0986:   #d8 $6A, $C7                                    ; MVI     B,C7
-________0988:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0988:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0989:   #d8 $53                                         ; DCR     C
 ________098A:   jr $0986
 ________098B:   ret
@@ -1214,7 +1221,7 @@ ________098B:   ret
 CALT_8E_098C:   #d8 $7E, $5E                                    ; CALF    0E5E
 ________098E:   #d8 $14, $02, $C7                               ; LXI     B,C702
 ________0991:   #d8 $48, $1E                                    ; PUSH    B
-________0993:   #d8 $97                                         ; CALT    00AE	; "((HL+) <==> (DE+))xB"
+________0993:   calt $00AE                                      ; "((HL+) <==> (DE+))xB"
 ________0994:   #d8 $48, $1F                                    ; POP     B
 ________0996:   #d8 $53                                         ; DCR     C
 ________0997:   jr $0991
@@ -1228,7 +1235,7 @@ ________099D:   #d8 $48, $1F                                    ; POP     B
 ________099F:   #d8 $0B                                         ; MOV     A,C
 ________09A0:   #d8 $07, $07                                    ; ANI     A,07
 ________09A2:   #d8 $1B                                         ; MOV     C,A
-________09A3:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________09A3:   calt $008A                                      ; "Clear A"
 ________09A4:   #d8 $48, $2B                                    ; STC
 ________09A6:   #d8 $48, $30                                    ; RAL
 ________09A8:   #d8 $53                                         ; DCR     C
@@ -1323,7 +1330,7 @@ ________0A10:   jr $0A12
 ________0A11:   jr $0A23
 
 ________0A12:   #d8 $2B                                         ; LDAX    H
-________0A13:   #d8 $A0                                         ; CALT    00C0	; "(RLR A)x4"
+________0A13:   calt $00C0                                      ; "(RLR A)x4"
 ________0A14:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0A16:   #d8 $60, $9B                                    ; ORA     A,C
 ________0A18:   #d8 $3C                                         ; STAX    D+
@@ -1366,17 +1373,17 @@ ________0A40:   #d8 $38, $98                                    ; STAW    98  	;
 ________0A42:   #d8 $28, $9D                                    ; LDAW    9D
 ________0A44:   #d8 $47, $80                                    ; ONI     A,80	;Check if 0 (2nd screen) or 1 (1st screen)
 ________0A46:   jr $0A49
-________0A47:   #d8 $9D                                         ; CALT    00BA	; "Set HL to screen (B,C)"
+________0A47:   calt $00BA                                      ; "Set HL to screen (B,C)"
 ________0A48:   jr $0A4B
 
 ________0A49:   #d8 $7B, $F4                                    ; CALF    0BF4        ;This points to Sc 1
 ________0A4B:   #d8 $70, $7B, $C6, $FF                          ; MOV     FFC6,C
 ________0A4F:   #d8 $70, $3E, $C2, $FF                          ; SHLD    FFC2
 ________0A53:   #d8 $24, $4B, $00                               ; LXI     D,004B
-________0A56:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0A56:   calt $0096                                      ; "HL <== HL+DE"
 ________0A57:   #d8 $70, $3E, $C4, $FF                          ; SHLD    FFC4
 ________0A5B:   #d8 $28, $9D                                    ; LDAW    9D
-________0A5D:   #d8 $A0                                         ; CALT    00C0	; "(RLR A)x4"
+________0A5D:   calt $00C0                                      ; "(RLR A)x4"
 ________0A5E:   #d8 $07, $07                                    ; ANI     A,07	;Get text spacing (0-7)
 ________0A60:   #d8 $38, $9D                                    ; STAW    9D		;Save in 9D
 ;--
@@ -1394,7 +1401,7 @@ ________0A77:   #d8 $7B, $D3                                    ; CALF    0BD3
 ________0A79:   #d8 $57, $80                                    ; OFFI    A,80
 ________0A7B:   jr $0A85
 ________0A7C:   #d8 $70, $2F, $9D, $FF                          ; LDED    FF9D
-________0A80:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0A80:   calt $009A                                      ; "HL <== HL+E"
 ________0A81:   #d8 $70, $3E, $C2, $FF                          ; SHLD    FFC2
 ________0A85:   #d8 $70, $3F, $C4, $FF                          ; LHLD    FFC4
 ________0A89:   #d8 $70, $3E, $C9, $FF                          ; SHLD    FFC9
@@ -1404,10 +1411,10 @@ ________0A92:   #d8 $7B, $D3                                    ; CALF    0BD3	;
 ________0A94:   #d8 $57, $80                                    ; OFFI    A,80
 ________0A96:   jr $0AA0
 ________0A97:   #d8 $70, $2F, $9D, $FF                          ; LDED    FF9D
-________0A9B:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0A9B:   calt $009A                                      ; "HL <== HL+E"
 ________0A9C:   #d8 $70, $3E, $C4, $FF                          ; SHLD    FFC4
 ________0AA0:   #d8 $70, $6A, $9C, $FF                          ; MOV     B,FF9C
-________0AA4:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________0AA4:   calt $008A                                      ; "Clear A"
 ________0AA5:   #d8 $52                                         ; DCR     B
 ________0AA6:   jr $0AA8
 ________0AA7:   jr $0AAD
@@ -1437,7 +1444,7 @@ ________0AC6:   jr $0AC1
 ________0AC7:   #d8 $70, $3F, $C0, $FF                          ; LHLD    FFC0
 ________0ACB:   #d8 $2D                                         ; LDAX    H+
 ________0ACC:   #d8 $70, $3E, $C0, $FF                          ; SHLD    FFC0
-________0AD0:   #d8 $9C                                         ; CALT    00B8	;Byte -> Point to Font Graphic
+________0AD0:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0AD1:   #d8 $24, $B0, $FF                               ; LXI     D,FFB0
 ________0AD4:   #d8 $14, $B5, $FF                               ; LXI     B,FFB5
 ________0AD7:   #d8 $69, $04                                    ; MVI     A,04
@@ -1477,17 +1484,17 @@ ________0B1B:   #d8 $70, $2E, $96, $FF                          ; SDED    FF96
 ________0B1F:   #d8 $1B                                         ; MOV     C,A
 ________0B20:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0B22:   #d8 $6D, $05                                    ; MVI     E,05
-________0B24:   #d8 $93                                         ; CALT    00A6	; "Add A to "Pointer""
+________0B24:   calt $00A6                                      ; "Add A to "Pointer""
 ________0B25:   #d8 $48, $3E                                    ; PUSH    H
 ________0B27:   #d8 $0B                                         ; MOV     A,C
-________0B28:   #d8 $A0                                         ; CALT    00C0	; "(RLR A)x4"
+________0B28:   calt $00C0                                      ; "(RLR A)x4"
 ________0B29:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0B2B:   #d8 $6D, $50                                    ; MVI     E,50
-________0B2D:   #d8 $93                                         ; CALT    00A6	; "Add A to "Pointer""
+________0B2D:   calt $00A6                                      ; "Add A to "Pointer""
 ________0B2E:   #d8 $48, $2F                                    ; POP     D
-________0B30:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0B30:   calt $0096                                      ; "HL <== HL+DE"
 ________0B31:   #d8 $70, $2F, $96, $FF                          ; LDED    FF96
-________0B35:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0B35:   calt $0096                                      ; "HL <== HL+DE"
 ________0B36:   ret
 ;------------------------------------------------------------
 ;?? (Move some RAM around...)
@@ -1524,7 +1531,7 @@ ________0B61:   #d8 $2B                                         ; LDAX    H
 ________0B62:   #d8 $38, $9D                                    ; STAW    9D
 ________0B64:   #d8 $37, $0C                                    ; LTI     A,0C
 ________0B66:   ret
-________0B67:   #d8 $9D                                         ; CALT    00BA	; "Set HL to screen (B,C)"
+________0B67:   calt $00BA                                      ; "Set HL to screen (B,C)"
 ________0B68:   #d8 $70, $3E, $9E, $FF                          ; SHLD    FF9E
 ________0B6C:   #d8 $0E                                         ; MOV     A,H
 ________0B6D:   #d8 $47, $40                                    ; ONI     A,40
@@ -1533,16 +1540,16 @@ ________0B70:   #d8 $24, $B0, $FF                               ; LXI     D,FFB0
 ________0B73:   #d8 $7B, $D1                                    ; CALF    0BD1
 ________0B75:   #d8 $70, $3F, $9E, $FF                          ; LHLD    FF9E
 ________0B79:   #d8 $24, $4B, $00                               ; LXI     D,004B
-________0B7C:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0B7C:   calt $0096                                      ; "HL <== HL+DE"
 ________0B7D:   #d8 $48, $3E                                    ; PUSH    H
 ________0B7F:   #d8 $24, $B8, $FF                               ; LXI     D,FFB8
 ________0B82:   #d8 $7B, $D1                                    ; CALF    0BD1
 ________0B84:   #d8 $7E, $6A                                    ; CALF    0E6A
 ________0B86:   #d8 $24, $C0, $FF                               ; LXI     D,FFC0
 ________0B89:   #d8 $6A, $0F                                    ; MVI     B,0F
-________0B8B:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0B8B:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0B8C:   #d8 $28, $9D                                    ; LDAW    9D
-________0B8E:   #d8 $9E                                         ; CALT    00BC	; "HL=C4B0+(A*$10)"
+________0B8E:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0B8F:   #d8 $24, $B0, $FF                               ; LXI     D,FFB0
 ________0B92:   #d8 $14, $B8, $FF                               ; LXI     B,FFB8
 ________0B95:   #d8 $7C, $2F                                    ; CALF    0C2F
@@ -1569,7 +1576,7 @@ ________0BBD:   #d8 $15, $80, $10                               ; ORIW    80,10
 ________0BC0:   #d8 $7B, $D1                                    ; CALF    0BD1
 ________0BC2:   #d8 $48, $2F                                    ; POP     D
 ________0BC4:   #d8 $34, $A8, $3D                               ; LXI     H,3DA8
-________0BC7:   #d8 $8B                                         ; CALT    0096	; "HL <== HL+DE"
+________0BC7:   calt $0096                                      ; "HL <== HL+DE"
 ________0BC8:   #d8 $48, $1A                                    ; SKN     CY
 ________0BCA:   ret
 ________0BCB:   #d8 $34, $B8, $FF                               ; LXI     H,FFB8
@@ -1609,7 +1616,7 @@ ________0BFC:   #d8 $46, $08                                    ; ADI     A,08
 ________0BFE:   #d8 $36, $08                                    ; SUINB   A,08
 ________0C00:   jr $0C08
 ________0C01:   #d8 $48, $0E                                    ; PUSH    V
-________0C03:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0C03:   calt $009A                                      ; "HL <== HL+E"
 ________0C04:   #d8 $48, $0F                                    ; POP     V
 ________0C06:   #d8 $43                                         ; INR     C
 ________0C07:   jr $0BFE
@@ -1646,7 +1653,7 @@ ________0C2A:   #d8 $52                                         ; DCR     B
 ________0C2B:   jr $0C2D
 ________0C2C:   ret
 
-________0C2D:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0C2D:   calt $009A                                      ; "HL <== HL+E"
 ________0C2E:   jr $0C2A
 ;------------------------------------------------------------
 CALF____0C2F:   #d8 $69, $07                                    ; MVI     A,07
@@ -1701,11 +1708,11 @@ ________0C74:   #d8 $48, $31                                    ; RLR
 ________0C76:   ret
 ;------------------------------------------------------------
 CALF____0C77:   #d8 $6D, $3C                                    ; MVI     E,3C	; 60 decimal...
-________0C79:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0C79:   calt $009A                                      ; "HL <== HL+E"
 ________0C7A:   ret
 ;------------------------------------------------------------
 CALF____0C7B:   #d8 $34, $4D, $05                               ; LXI     H,054D      ;"PUZZLE"
-________0C7E:   #d8 $9B                                         ; CALT    00B6	; "[PC+3] Print Text on-Screen"
+________0C7E:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
 ________0C7F:   #d8 $03, $00, $16                               ; DB $03,$00,$16
 ________0C82:   #d8 $7E, $67                                    ; CALF    0E67	;(C7F2 -> HL)
 ________0C84:   #d8 $69, $01                                    ; MVI     A,01
@@ -1714,13 +1721,13 @@ ________0C88:   #d8 $2D                                         ; LDAX    H+
 ________0C89:   #d8 $48, $3E                                    ; PUSH    H
 ________0C8B:   #d8 $67, $FF                                    ; NEI     A,FF	;If it's a terminator, loop
 ________0C8D:   #d8 $4E, $27                                    ; JRE     0CB6
-________0C8F:   #d8 $9C                                         ; CALT    00B8	;Byte -> Point to Font Graphic
-________0C90:   #d8 $94                                         ; CALT    00A8	; "XCHG HL,DE"
+________0C8F:   calt $00B8                                      ;Byte -> Point to Font Graphic
+________0C90:   calt $00A8                                      ; "XCHG HL,DE"
 ________0C91:   #d8 $28, $83                                    ; LDAW    83
 ________0C93:   #d8 $7C, $BF                                    ; CALF    0CBF        ;(Scroll text)
 ________0C95:   #d8 $48, $2E                                    ; PUSH    D
 ________0C97:   #d8 $6D, $51                                    ; MVI     E,51
-________0C99:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0C99:   calt $009A                                      ; "HL <== HL+E"
 ________0C9A:   #d8 $48, $2F                                    ; POP     D
 ________0C9C:   #d8 $6A, $04                                    ; MVI     B,04
 ________0C9E:   #d8 $2C                                         ; LDAX    D+
@@ -1735,8 +1742,8 @@ ________0CAB:   #d8 $4F, $DB                                    ; JRE     0C88
 ________0CAD:   #d8 $34, $FF, $C7                               ; LXI     H,C7FF
 ________0CB0:   #d8 $2B                                         ; LDAX    H
 ________0CB1:   #d8 $7E, $3B                                    ; CALF    0E3B	;Scroll text; XOR RAM
-________0CB3:   #d8 $90                                         ; CALT    00A0	; "C258+ ==> C000+"
-________0CB4:   #d8 $81                                         ; CALT    0082	;Copy Screen RAM to LCD Driver
+________0CB3:   calt $00A0                                      ; "C258+ ==> C000+"
+________0CB4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________0CB5:   ret
 ;------------------------------------------------------------
 ________0CB6:   #d8 $70, $69, $83, $FF                          ; MOV     A,FF83	;A "LDAW 83" would've been faster here...
@@ -1773,7 +1780,7 @@ ________0CE4:   nop
 ________0CE5:   #d8 $34, $5B, $C2                               ; LXI     H,C25B
 ________0CE8:   #d8 $24, $58, $C2                               ; LXI     D,C258
 ________0CEB:   #d8 $6A, $47                                    ; MVI     B,47
-________0CED:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0CED:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0CEE:   #d8 $55, $82, $01                               ; OFFIW   82,01
 ________0CF1:   jr $0CF6
 ________0CF2:   #d8 $34, $A3, $FF                               ; LXI     H,FFA3
@@ -1784,10 +1791,10 @@ ________0CFA:   #d8 $2D                                         ; LDAX    H+
 ________0CFB:   #d8 $67, $FF                                    ; NEI     A,FF	;If terminator...
 ________0CFD:   jr $0CDE                                        ;...reset scroll
 ________0CFE:   #d8 $70, $3E, $D6, $FF                          ; SHLD    FFD6
-________0D02:   #d8 $9C                                         ; CALT    00B8	;Byte -> Point to Font Graphic
+________0D02:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0D03:   #d8 $6A, $04                                    ; MVI     B,04	;(5 pixels wide)
 ________0D05:   #d8 $24, $A0, $FF                               ; LXI     D,FFA0
-________0D08:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0D08:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0D09:   #d8 $34, $A0, $FF                               ; LXI     H,FFA0      ;First copy it to RAM...
 
 ________0D0C:   #d8 $24, $A0, $C2                               ; LXI     D,C2A0	;Then put it on screen, 3 pixels at a time.
@@ -1859,28 +1866,28 @@ ________0D67:   ret
 CALF____0D68:   #d8 $34, $A3, $C2                               ; LXI     H,C2A3      ;Point to 2nd screen
 ________0D6B:   #d8 $69, $FF                                    ; MVI     A,FF	;Black character
 ________0D6D:   #d8 $6A, $05                                    ; MVI     B,05	;Write 6 characters
-________0D6F:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
+________0D6F:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D70:   #d8 $69, $1F                                    ; MVI     A,1F	;Then a char with 5 upper dots filled
 ________0D72:   #d8 $6A, $3E                                    ; MVI     B,3E	;Times 63
-________0D74:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
+________0D74:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D75:   #d8 $6B, $04                                    ; MVI     C,04
 ________0D77:   #d8 $6A, $0B                                    ; MVI     B,0B
 ________0D79:   #d8 $69, $FF                                    ; MVI     A,FF
-________0D7B:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
-________0D7C:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________0D7B:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D7C:   calt $008A                                      ; "Clear A"
 ________0D7D:   #d8 $6A, $3E                                    ; MVI     B,3E
-________0D7F:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
+________0D7F:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D80:   #d8 $53                                         ; DCR     C
 ________0D81:   jr $0D77
 ________0D82:   #d8 $69, $FF                                    ; MVI     A,FF
 ________0D84:   #d8 $6A, $0B                                    ; MVI     B,0B
-________0D86:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
+________0D86:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D87:   #d8 $69, $F0                                    ; MVI     A,F0
 ________0D89:   #d8 $6A, $3E                                    ; MVI     B,3E
-________0D8B:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
+________0D8B:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D8C:   #d8 $69, $FF                                    ; MVI     A,FF
 ________0D8E:   #d8 $6A, $05                                    ; MVI     B,05
-________0D90:   #d8 $9F                                         ; CALT    00BE	; "A ==> (HL+)xB"
+________0D90:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D91:   ret
 ;------------------------------------------------------------
 ;This draws the puzzle grid, I think...
@@ -1893,30 +1900,30 @@ ________0D9D:   #d8 $4E, $24                                    ; JRE     0DC3
 ________0D9F:   #d8 $34, $D8, $C2                               ; LXI     H,C2D8
 ________0DA2:   #d8 $34, $B8, $C2                               ; LXI     H,C2B8
 ________0DA5:   #d8 $34, $C8, $C2                               ; LXI     H,C2C8
-________0DA8:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0DA8:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DA9:   #d8 $F0, $00                                    ; DB $F0,$00
 ________0DAB:   #d8 $6A, $04                                    ; MVI     B,04
 ________0DAD:   #d8 $48, $1E                                    ; PUSH    B
 ________0DAF:   #d8 $6D, $4A                                    ; MVI     E,4A
-________0DB1:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________0DB2:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0DB1:   calt $009A                                      ; "HL <== HL+E"
+________0DB2:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DB3:   #d8 $FF, $00                                    ; DB $FF,$00
 ________0DB5:   #d8 $48, $1F                                    ; POP     B
 ________0DB7:   #d8 $52                                         ; DCR     B
 ________0DB8:   jr $0DAD
 ________0DB9:   #d8 $6D, $4A                                    ; MVI     E,4A
-________0DBB:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________0DBC:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0DBB:   calt $009A                                      ; "HL <== HL+E"
+________0DBC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DBD:   #d8 $1F, $00                                    ; DB $1F,00
 ________0DBF:   #d8 $20, $D5                                    ; INRW    D5
 ________0DC1:   #d8 $4F, $CF                                    ; JRE     0D92
 ________0DC3:   #d8 $34, $3E, $C3                               ; LXI     H,C33E
-________0DC6:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0DC6:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DC7:   #d8 $10, $40                                    ; DB $10,$40
 ________0DC9:   #d8 $34, $D4, $C3                               ; LXI     H,C3D4
-________0DCC:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0DCC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DCD:   #d8 $10, $40                                    ; DB $10,$40
-________0DCF:   #d8 $85                                         ; CALT    008A	; "Clear A"
+________0DCF:   calt $008A                                      ; "Clear A"
 ________0DD0:   #d8 $38, $D5                                    ; STAW    D5
 ________0DD2:   ret
 ;------------------------------------------------------------
@@ -1982,15 +1989,15 @@ ________0E39:   #d8 $22                                         ; INX     D
 ________0E3A:   jr $0E34
 ;------------------------------------------------------------
 CALF____0E3B:   #d8 $7C, $BF                                    ; CALF    0CBF
-________0E3D:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0E3D:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0E3E:   #d8 $F0, $10                                    ; DB $F0,$10
 ________0E40:   #d8 $6D, $3A                                    ; MVI     E,3A
-________0E42:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________0E43:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0E42:   calt $009A                                      ; "HL <== HL+E"
+________0E43:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0E44:   #d8 $FF, $10                                    ; DB $FF,$10
 ________0E46:   #d8 $6D, $3A                                    ; MVI     E,3A
-________0E48:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
-________0E49:   #d8 $99                                         ; CALT    00B2	; "[PC+2] Draw Horizontal Line"
+________0E48:   calt $009A                                      ; "HL <== HL+E"
+________0E49:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0E4A:   #d8 $1F, $10                                    ; DB $1F,$10
 ________0E4C:   ret
 ;------------------------------------------------------------
@@ -2018,8 +2025,8 @@ ________0E6D:   ret
 CALT_A8_0E6E:   #d8 $48, $3F                                    ; POP     H
 ________0E70:   #d8 $2D                                         ; LDAX    H+
 ________0E71:   #d8 $48, $3E                                    ; PUSH    H
-________0E73:   #d8 $9E                                         ; CALT    00BC	; "HL=C4B0+(A*$10)"
-________0E74:   #d8 $94                                         ; CALT    00A8	; "XCHG HL,DE"
+________0E73:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
+________0E74:   calt $00A8                                      ; "XCHG HL,DE"
 ________0E75:   #d8 $44, $78, $0E                               ; CALL    0E78        ;This call means the next code runs twice
 
 ________0E78:   #d8 $6A, $07                                    ; MVI     B,7
@@ -2042,7 +2049,7 @@ ________0E8E:   #d8 $48, $2E                                    ; PUSH    D
 ________0E90:   #d8 $33                                         ; DCX     H
 ________0E91:   #d8 $23                                         ; DCX     D
 ________0E92:   #d8 $6A, $07                                    ; MVI     B,7
-________0E94:   #d8 $96                                         ; CALT    00AC	; "((HL-) ==> (DE-))xB"
+________0E94:   calt $00AC                                      ; "((HL-) ==> (DE-))xB"
 ________0E95:   #d8 $48, $2F                                    ; POP     D
 ________0E97:   ret
 ;------------------------------------------------------------
@@ -2059,9 +2066,9 @@ ________0EA3:   jr $0EA9
 CALT_AA_0EA4:   #d8 $48, $3F                                    ; POP     H
 ________0EA6:   #d8 $2D                                         ; LDAX    H+
 ________0EA7:   #d8 $48, $3E                                    ; PUSH    H
-________0EA9:   #d8 $9E                                         ; CALT    00BC	; "HL=C4B0+(A*$10)"
+________0EA9:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0EAA:   #d8 $24, $BF, $FF                               ; LXI     D,FFBF
-________0EAD:   #d8 $94                                         ; CALT    00A8	; "XCHG HL,DE"
+________0EAD:   calt $00A8                                      ; "XCHG HL,DE"
 ________0EAE:   #d8 $48, $2E                                    ; PUSH    D
 ________0EB0:   #d8 $6B, $0F                                    ; MVI     C,0F
 ________0EB2:   #d8 $6A, $07                                    ; MVI     B,8-1
@@ -2084,7 +2091,7 @@ ________0ECA:   #d8 $7E, $CE                                    ; CALF    0ECE
 ________0ECC:   #d8 $7E, $6A                                    ; CALF    0E6A
 
 CALF____0ECE:   #d8 $6A, $07                                    ; MVI     B,8-1
-________0ED0:   #d8 $95                                         ; CALT    00AA	; "((HL+) ==> (DE+))xB"
+________0ED0:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0ED1:   ret
 ;------------------------------------------------------------
 ;[PC+x] ?? (Add/Sub multiple bytes)
@@ -2095,14 +2102,14 @@ ________0ED7:   #d8 $1A                                         ; MOV     B,A
 ________0ED8:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0EDA:   #d8 $38, $96                                    ; STAW    96
 ________0EDC:   #d8 $0A                                         ; MOV     A,B
-________0EDD:   #d8 $A0                                         ; CALT    00C0	; "(RLR A)x4"
+________0EDD:   calt $00C0                                      ; "(RLR A)x4"
 ________0EDE:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0EE0:   #d8 $37, $0D                                    ; LTI     A,0D
 ________0EE2:   ret
 ________0EE3:   #d8 $38, $97                                    ; STAW    97
 ________0EE5:   #d8 $30, $97                                    ; DCRW    97
 ________0EE7:   jr $0EF0                                        ;Based on 97, jump to cart (4007)!
-________0EE8:   #d8 $91                                         ; CALT    00A2	; "CALT A0, CALT A4"
+________0EE8:   calt $00A2                                      ; "CALT A0, CALT A4"
 ________0EE9:   #d8 $48, $1F                                    ; POP     B
 ________0EEB:   #d8 $70, $1F, $07, $40                          ; LBCD    4007        ;Read vector from $4007 on cart, however...
 ________0EEF:   #d8 $73                                         ; JB			;...all 5 Pokekon games have "0000" there!
@@ -2175,9 +2182,9 @@ ________0F45:   #d8 $48, $3E                                    ; PUSH    H
 ________0F47:   #d8 $37, $0C                                    ; LTI     A,0C
 ________0F49:   ret
 
-________0F4A:   #d8 $9E                                         ; CALT    00BC	; "HL=C4B0+(A*$10)"
+________0F4A:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0F4B:   #d8 $6D, $08                                    ; MVI     E,08
-________0F4D:   #d8 $8D                                         ; CALT    009A	; "HL <== HL+E"
+________0F4D:   calt $009A                                      ; "HL <== HL+E"
 ________0F4E:   #d8 $6A, $07                                    ; MVI     B,07
 ________0F50:   jr $0F3B
 ;------------------------------------------------------------
