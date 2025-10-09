@@ -82,7 +82,7 @@ cont    0013:   04 00 00                    LXI     SP,0000
         0056:   4D C3                       MOV     MK,A        ;Mask = IntT,1 ON
         0058:   48 20                       EI
         005A:   80                          CALT    0080	; [PC+1] Check Cartridge
-        005B:   C0                          .DB $C0 		;Jump to ($4001) in cartridge
+        005B:   C0                          DB $C0 		;Jump to ($4001) in cartridge
         005C:   54 7F 05                    JMP     057F        ;Flow continues if no cartridge is present.
 ;------------------------------------------------------------
 ;(DE+)-(HL+) ==> A
@@ -131,63 +131,63 @@ CALT A3 006D:   48 3E                       PUSH    H
 ; "[PC+X]" means the subroutine uses the bytes after its call as parameters.
 ; the subroutine then usually advances the return address by X bytes before returning.
 
-(CALT 80) 0080:   A6 01                       01A6	;[PC+1] Check Cartridge
-(CALT 81) 0082:   CF 01                       01CF	;Copy Screen RAM to LCD Driver
-(CALT 82) 0084:   8E 01                       018E	;[PC+2] Setup/Play Sound
-(CALT 83) 0086:   9C 01                       019C	;Setup/Play Music
-(CALT 84) 0088:   1F 09                       091F	;Read Controller FF90-FF95
-(CALT 85) 008A:   9D 08                       089D	;Clear A
-(CALT 86) 008C:   FF 08                       08FF	;Clear Screen 2 RAM
-(CALT 87) 008E:   02 09                       0902	;Clear Screen RAM
-(CALT 88) 0090:   15 09                       0915	;Clear C4B0~C593
-(CALT 89) 0092:   0D 09                       090D	;Clear C594~C7FF
-(CALT 8A) 0094:   1A 09                       091A	;Clear RAM (HL+)xB
-(CALT 8B) 0096:   1B 0C                       0C1B	;HL <== HL+DE
-(CALT 8C) 0098:   0E 0C                       0C0E	;[PC+1] HL +- byte
-(CALT 8D) 009A:   18 0C                       0C18	;HL <== HL+E
-(CALT 8E) 009C:   8C 09                       098C	;Swap C258+ <==> C000+
-(CALT 8F) 009E:   81 09                       0981	;C000+ ==> C258+
-(CALT 90) 00A0:   7E 09                       097E	;C258+ ==> C000+
-(CALT 91) 00A2:   CD 01                       01CD	;CALT 00A0, CALT 00A4
-(CALT 92) 00A4:   37 0B                       0B37	;?? (Move some RAM around...)
-(CALT 93) 00A6:   D7 08                       08D7	;HL <== AxE
-(CALT 94) 00A8:   A0 08                       08A0	;XCHG HL,DE
-(CALT 95) 00AA:   11 0D                       0D11	;((HL+) ==> (DE+))xB
-(CALT 96) 00AC:   0A 00                       000A	;((HL-) ==> (DE-))xB
-(CALT 97) 00AE:   F3 08                       08F3	;((HL+) <==> (DE+))xB
-(CALT 98) 00B0:   99 09                       0999	;Set Dot; B,C = X-,Y-position
-(CALT 99) 00B2:   C7 09                       09C7	;[PC+2] Draw Horizontal Line
-(CALT 9A) 00B4:   E4 09                       09E4	;[PC+3] Print Bytes on-Screen
-(CALT 9B) 00B6:   29 0A                       0A29	;[PC+3] Print Text on-Screen
-(CALT 9C) 00B8:   0E 0B                       0B0E	;Byte -> Point to Font Graphic
-(CALT 9D) 00BA:   F1 0B                       0BF1	;Set HL to screen (B,C)
-(CALT 9E) 00BC:   24 0C                       0C24	;HL=C4B0+(A*$10)
-(CALT 9F) 00BE:   1B 09                       091B	;A ==> (HL+)xB
-(CALT A0) 00C0:   6E 0C                       0C6E	;(RLR A)x4
-(CALT A1) 00C2:   5F 00                       005F	;(DE+)-(HL+) ==> A
-(CALT A2) 00C4:   63 00                       0063	;?? (Find 1st diff. byte in (HL),(DE)xB)
-(CALT A3) 00C6:   6D 00                       006D	;?? (Find diff. & Copy bytes)
-(CALT A4) 00C8:   5D 0F                       0F5D	;[PC+1] 8~32-bit Add/Subtract (dec/hex)
-(CALT A5) 00CA:   42 0F                       0F42	;[PC+1] Invert 8 bytes at (C4B8+A*$10)
-(CALT A6) 00CC:   2C 0F                       0F2C	;Invert Screen RAM (C000~)
-(CALT A7) 00CE:   2F 0F                       0F2F	;Invert Screen 2 RAM (C258~)
-(CALT A8) 00D0:   6E 0E                       0E6E	;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
-(CALT A9) 00D2:   98 0E                       0E98	;[PC+1] ?? (Unpack & Roll 8 bits)
-(CALT AA) 00D4:   A4 0E                       0EA4	;[PC+1] ?? (Roll 8 bits -> Byte?)
-(CALT AB) 00D6:   D2 0E                       0ED2	;[PC+x] ?? (Add/Sub multiple bytes)
-(CALT AC) 00D8:   D9 0F                       0FD9	;[PC+1] INC/DEC Range of bytes from (HL)
-(CALT AD) 00DA:   B1 09                       09B1	;Clear Dot; B,C = X-,Y-position
+(CALT 80) 0080:   A6 01                     DW 01A6	;[PC+1] Check Cartridge
+(CALT 81) 0082:   CF 01                     DW 01CF	;Copy Screen RAM to LCD Driver
+(CALT 82) 0084:   8E 01                     DW 018E	;[PC+2] Setup/Play Sound
+(CALT 83) 0086:   9C 01                     DW 019C	;Setup/Play Music
+(CALT 84) 0088:   1F 09                     DW 091F	;Read Controller FF90-FF95
+(CALT 85) 008A:   9D 08                     DW 089D	;Clear A
+(CALT 86) 008C:   FF 08                     DW 08FF	;Clear Screen 2 RAM
+(CALT 87) 008E:   02 09                     DW 0902	;Clear Screen RAM
+(CALT 88) 0090:   15 09                     DW 0915	;Clear C4B0~C593
+(CALT 89) 0092:   0D 09                     DW 090D	;Clear C594~C7FF
+(CALT 8A) 0094:   1A 09                     DW 091A	;Clear RAM (HL+)xB
+(CALT 8B) 0096:   1B 0C                     DW 0C1B	;HL <== HL+DE
+(CALT 8C) 0098:   0E 0C                     DW 0C0E	;[PC+1] HL +- byte
+(CALT 8D) 009A:   18 0C                     DW 0C18	;HL <== HL+E
+(CALT 8E) 009C:   8C 09                     DW 098C	;Swap C258+ <==> C000+
+(CALT 8F) 009E:   81 09                     DW 0981	;C000+ ==> C258+
+(CALT 90) 00A0:   7E 09                     DW 097E	;C258+ ==> C000+
+(CALT 91) 00A2:   CD 01                     DW 01CD	;CALT 00A0, CALT 00A4
+(CALT 92) 00A4:   37 0B                     DW 0B37	;?? (Move some RAM around...)
+(CALT 93) 00A6:   D7 08                     DW 08D7	;HL <== AxE
+(CALT 94) 00A8:   A0 08                     DW 08A0	;XCHG HL,DE
+(CALT 95) 00AA:   11 0D                     DW 0D11	;((HL+) ==> (DE+))xB
+(CALT 96) 00AC:   0A 00                     DW 000A	;((HL-) ==> (DE-))xB
+(CALT 97) 00AE:   F3 08                     DW 08F3	;((HL+) <==> (DE+))xB
+(CALT 98) 00B0:   99 09                     DW 0999	;Set Dot; B,C = X-,Y-position
+(CALT 99) 00B2:   C7 09                     DW 09C7	;[PC+2] Draw Horizontal Line
+(CALT 9A) 00B4:   E4 09                     DW 09E4	;[PC+3] Print Bytes on-Screen
+(CALT 9B) 00B6:   29 0A                     DW 0A29	;[PC+3] Print Text on-Screen
+(CALT 9C) 00B8:   0E 0B                     DW 0B0E	;Byte -> Point to Font Graphic
+(CALT 9D) 00BA:   F1 0B                     DW 0BF1	;Set HL to screen (B,C)
+(CALT 9E) 00BC:   24 0C                     DW 0C24	;HL=C4B0+(A*$10)
+(CALT 9F) 00BE:   1B 09                     DW 091B	;A ==> (HL+)xB
+(CALT A0) 00C0:   6E 0C                     DW 0C6E	;(RLR A)x4
+(CALT A1) 00C2:   5F 00                     DW 005F	;(DE+)-(HL+) ==> A
+(CALT A2) 00C4:   63 00                     DW 0063	;?? (Find 1st diff. byte in (HL),(DE)xB)
+(CALT A3) 00C6:   6D 00                     DW 006D	;?? (Find diff. & Copy bytes)
+(CALT A4) 00C8:   5D 0F                     DW 0F5D	;[PC+1] 8~32-bit Add/Subtract (dec/hex)
+(CALT A5) 00CA:   42 0F                     DW 0F42	;[PC+1] Invert 8 bytes at (C4B8+A*$10)
+(CALT A6) 00CC:   2C 0F                     DW 0F2C	;Invert Screen RAM (C000~)
+(CALT A7) 00CE:   2F 0F                     DW 0F2F	;Invert Screen 2 RAM (C258~)
+(CALT A8) 00D0:   6E 0E                     DW 0E6E	;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
+(CALT A9) 00D2:   98 0E                     DW 0E98	;[PC+1] ?? (Unpack & Roll 8 bits)
+(CALT AA) 00D4:   A4 0E                     DW 0EA4	;[PC+1] ?? (Roll 8 bits -> Byte?)
+(CALT AB) 00D6:   D2 0E                     DW 0ED2	;[PC+x] ?? (Add/Sub multiple bytes)
+(CALT AC) 00D8:   D9 0F                     DW 0FD9	;[PC+1] INC/DEC Range of bytes from (HL)
+(CALT AD) 00DA:   B1 09                     DW 09B1	;Clear Dot; B,C = X-,Y-position
 
-(CALT AE) 00DC:   12 40                       4012      ;Jump table for cartridge routines
-(CALT AF) 00DE:   15 40                       4015
-(CALT B0) 00E0:   18 40                       4018
-(CALT B1) 00E2:   1B 40                       401B
-(CALT B2) 00E4:   1E 40                       401E
-(CALT B3) 00E6:   21 40                       4021
-(CALT B4) 00E8:   24 40                       4024
-(CALT B5) 00EA:   27 40                       4027
-(CALT B6) 00EC:   2A 40                       402A
-(CALT B7) 00EE:   2D 40                       402D
+(CALT AE) 00DC:   12 40                     DW 4012      ;Jump table for cartridge routines
+(CALT AF) 00DE:   15 40                     DW 4015
+(CALT B0) 00E0:   18 40                     DW 4018
+(CALT B1) 00E2:   1B 40                     DW 401B
+(CALT B2) 00E4:   1E 40                     DW 401E
+(CALT B3) 00E6:   21 40                     DW 4021
+(CALT B4) 00E8:   24 40                     DW 4024
+(CALT B5) 00EA:   27 40                     DW 4027
+(CALT B6) 00EC:   2A 40                     DW 402A
+(CALT B7) 00EE:   2D 40                     DW 402D
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT:   00F0:   45 80 01                    ONIW    80,01	;If 1, don't jump to cart.
@@ -534,7 +534,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
 
 ;Main Loop starts here!
         05A9:   80                          CALT    0080	;[PC+1] Check Cartridge
-        05AA:   C1                          .DB $C1 		;Jump to ($4003) in cartridge
+        05AA:   C1                          DB $C1 		;Jump to ($4003) in cartridge
 
         05AB:   55 80 02                    OFFIW   80,02       ;If bit 1 is on, no music
         05AE:   C3                          JR      05B2
@@ -563,7 +563,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         05D4:   88                          CALT    0090	; "Clear C4B0~C593"
         05D5:   34 41 05                    LXI     H,0541      ;"GRA"
         05D8:   9B                          CALT    00B6	; "[PC+3] Print Text on-Screen"
-        05D9:   02 00 1C                    .DB $02,$00,$1C     ;Parameters for the text routine
+        05D9:   02 00 1C                    DB $02,$00,$1C     ;Parameters for the text routine
         05DC:   69 05                       MVI     A,05
         05DE:   34 B8 C4                    LXI     H,C4B8
         05E1:   3D                          STAX    H+
@@ -597,13 +597,13 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0607:   38 8A                       STAW    8A
         0609:   34 A0 FF                    LXI     H,FFA0      ;Print the X-, Y- position
         060C:   9A                          CALT    00B4	; "[PC+3] Print Bytes on-Screen"
-        060D:   26 00 19                    .DB $26,$00,$19     ;Parameters for the print routine
+        060D:   26 00 19                    DB $26,$00,$19     ;Parameters for the print routine
         0610:   34 A1 FF                    LXI     H,FFA1
         0613:   9A                          CALT    00B4	; "[PC+3] Print Bytes on-Screen"
-        0614:   3E 00 19                    .DB $3E,$00,$19     ;Parameters for the print routine
+        0614:   3E 00 19                    DB $3E,$00,$19     ;Parameters for the print routine
         0617:   91                          CALT    00A2	; "CALT A0, CALT A4"
         0618:   80                          CALT    0080	;[PC+1] Check Cartridge
-        0619:   C1                          .DB $C1		;Jump to ($4003) in cartridge
+        0619:   C1                          DB $C1		;Jump to ($4003) in cartridge
 
         061A:   45 8A 80                    ONIW    8A,80
         061D:   FA                          JR      0618
@@ -626,38 +626,38 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0639:   C5                          JR      063F
 
         063A:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        063B:   22 03                       .DB $22,$03
+        063B:   22 03                       DB $22,$03
         063D:   4F 9D                       JRE     05DC        ;Clear screen
 
         063F:   77 01                       EQI     A,01        ;Select goes to the Puzzle
         0641:   C5                          JR      0647
 
         0642:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0643:   23 03                       .DB $23,$03
+        0643:   23 03                       DB $23,$03
         0645:   4E A7                       JRE     06EE        ;To Puzzle Setup
 
         0647:   77 02                       EQI     A,02        ;Button 1
         0649:   C4                          JR      064E
         064A:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        064B:   19 03                       .DB $19,$03
+        064B:   19 03                       DB $19,$03
         064D:   D6                          JR      0664        ;Clear a dot
 
         064E:   77 10                       EQI     A,10        ;Button 2
         0650:   C4                          JR      0655
         0651:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0652:   1B 03                       .DB $1B,$03
+        0652:   1B 03                       DB $1B,$03
         0654:   CF                          JR      0664        ;Clear a dot
 
         0655:   77 04                       EQI     A,04        ;Button 3
         0657:   C4                          JR      065C
         0658:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0659:   1D 03                       .DB $1D,$03
+        0659:   1D 03                       DB $1D,$03
         065B:   D0                          JR      066C        ;Set a dot
 
         065C:   77 20                       EQI     A,20        ;Button 4
         065E:   4E 20                       JRE     0680
         0660:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0661:   1E 03                       .DB $1E,$03
+        0661:   1E 03                       DB $1E,$03
         0663:   C8                          JR      066C        ;Set a dot
 
         0664:   28 A6                       LDAW    A6
@@ -692,7 +692,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         068D:   61                          DAA
         068E:   38 A1                       STAW    A1
         0690:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0691:   12 03                       .DB $12,$03
+        0691:   12 03                       DB $12,$03
         0693:   DA                          JR      06AE
 
         0694:   47 04                       ONI     A,04        ;Down
@@ -711,7 +711,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         06A8:   61                          DAA     
         06A9:   38 A1                       STAW    A1
         06AB:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        06AC:   14 03                       .DB $14,$03
+        06AC:   14 03                       DB $14,$03
 
         06AE:   28 92                       LDAW    92
         06B0:   47 08                       ONI     A,08        ;Right
@@ -730,7 +730,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         06C4:   61                          DAA
         06C5:   38 A0                       STAW    A0
         06C7:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        06C8:   17 03                       .DB $17,$03
+        06C8:   17 03                       DB $17,$03
         06CA:   4F 39                       JRE     0605
 
         06CC:   47 02                       ONI     A,02        ;Left
@@ -748,11 +748,11 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         06E1:   61                          DAA     
         06E2:   38 A0                       STAW    A0
         06E4:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        06E5:   16 03                       .DB $16,$03
+        06E5:   16 03                       DB $16,$03
         06E7:   E2                          JR      06CA
 ;------------------------------------------------------------
         06E8:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        06E9:   01 03                       .DB $01,$03
+        06E9:   01 03                       DB $01,$03
         06EB:   FB                          JR      06E7
 ;------------------------------------------------------------
 ;Puzzle Setup Routines...
@@ -782,7 +782,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0715:   69 60                       MVI     A,60
         0717:   38 8A                       STAW    8A
         0719:   80                          CALT    0080	;[PC+1] Check Cartridge
-        071A:   C1                          .DB $C1		;Jump to ($4003) in cartridge
+        071A:   C1                          DB $C1		;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
         071B:   6A 0B                       MVI     B,0B
         071D:   34 52 C7                    LXI     H,C752
@@ -808,13 +808,13 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0743:   45 95 01                    ONIW    95,01	;Select trigger
         0746:   C6                          JR      074D
         0747:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0748:   14 03                       .DB $14,$03
+        0748:   14 03                       DB $14,$03
         074A:   54 D1 05                    JMP     05D1	;Go to Paint Program
         074D:   65 93 08                    NEIW    93,08	;Start
         0750:   45 95 08                    ONIW    95,08
         0753:   C4                          JR      0758
         0754:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        0755:   16 03                       .DB $16,$03
+        0755:   16 03                       DB $16,$03
         0757:   CD                          JR      0765
 ;------------------------------------------------------------
         0758:   75 8A 80                    EQIW    8A,80
@@ -826,7 +826,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0765:   86                          CALT    008C	; "Clear Screen 2 RAM"
         0766:   34 53 05                    LXI     H,0553      ;"TIME"
         0769:   9B                          CALT    00B6	; "[PC+3] Print Text on-Screen"
-        076A:   0E 00 1A                    .DB $0E,$00,$1A
+        076A:   0E 00 1A                    DB $0E,$00,$1A
         076D:   34 86 FF                    LXI     H,FF86
         0770:   6A 02                       MVI     B,02
         0772:   8A                          CALT    0094	; "Clear RAM (HL+)xB"
@@ -849,14 +849,14 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         078F:   69 60                       MVI     A,60
         0791:   38 8A                       STAW    8A
         0793:   80                          CALT    0080	;[PC+1] Check Cartridge
-        0794:   C1                          .DB $C1		;Jump to ($4003) in cartridge
+        0794:   C1                          DB $C1		;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
         0795:   34 86 FF                    LXI     H,FF86
         0798:   9A                          CALT    00B4	; "[PC+3] Print Bytes on-Screen"
-        0799:   2C 00 12                    .DB $2C,$00,$12
+        0799:   2C 00 12                    DB $2C,$00,$12
         079C:   34 88 FF                    LXI     H,FF88
         079F:   9A                          CALT    00B4	; "[PC+3] Print Bytes on-Screen"
-        07A0:   44 00 08                    .DB $44,$00,$08
+        07A0:   44 00 08                    DB $44,$00,$08
         07A3:   90                          CALT    00A0	; "C258+ ==> C000+"
         07A4:   81                          CALT    0082	;Copy Screen RAM to LCD Driver
         07A5:   84                          CALT    0088	;Read Controller FF90-FF95
@@ -876,7 +876,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         07C1:   C4                          JR      07C6
 ;------------------------------------------------------------
         07C2:   82                          CALT    0084	;[PC+2] Setup/Play Sound
-        07C3:   01 03                       .DB $01,$03
+        07C3:   01 03                       DB $01,$03
         07C5:   F7                          JR      07BD
 ;------------------------------------------------------------
         07C6:   48 0E                       PUSH    V
@@ -899,29 +899,29 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         07E4:   7C BF                       CALF    0CBF        ;Write Text(?)
         07E6:   32                          INX     H
         07E7:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        07E8:   00 8E                       .DB $00,$8E
+        07E8:   00 8E                       DB $00,$8E
         07EA:   7C 77                       CALF    0C77        ;HL + $3C
         07EC:   48 3E                       PUSH    H
         07EE:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        07EF:   F0 0E                       .DB $F0,$0E
+        07EF:   F0 0E                       DB $F0,$0E
         07F1:   48 3F                       POP     H
         07F3:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        07F4:   F0 8E                       .DB $F0,$8E
+        07F4:   F0 8E                       DB $F0,$8E
         07F6:   7C 77                       CALF    0C77        ;HL + $3C
         07F8:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        07F9:   1F 0F                       .DB $1F,$0F
+        07F9:   1F 0F                       DB $1F,$0F
         07FB:   48 1F                       POP     B
         07FD:   0A                          MOV     A,B
         07FE:   7C BF                       CALF    0CBF        ;Write Text(?)
         0800:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        0801:   F0 0F                       .DB $F0,$0F
+        0801:   F0 0F                       DB $F0,$0F
         0803:   7C 77                       CALF    0C77        ;HL + $3C
         0805:   48 3E                       PUSH    H
         0807:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        0808:   0F 0E                       .DB $0F,$0E
+        0808:   0F 0E                       DB $0F,$0E
         080A:   48 3F                       POP     H
         080C:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        080D:   0F 8E                       .DB $0F,$0E
+        080D:   0F 8E                       DB $0F,$0E
         080F:   6D 41                       MVI     E,41
         0811:   8D                          CALT    009A	; "HL <== HL+E"
         0812:   48 0F                       POP     V
@@ -944,15 +944,15 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         082A:   69 01                       MVI     A,01
         082C:   38 A5                       STAW    A5
         082E:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        082F:   E0 08                       .DB $E0,$08
+        082F:   E0 08                       DB $E0,$08
         0831:   6D 42                       MVI     E,42
         0833:   8D                          CALT    009A	; "HL <== HL+E"
         0834:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        0835:   FF 08                       .DB $FF,$08
+        0835:   FF 08                       DB $FF,$08
         0837:   6D 42                       MVI     E,42
         0839:   8D                          CALT    009A	; "HL <== HL+E"
         083A:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        083B:   1F 08                       .DB $1F,$08
+        083B:   1F 08                       DB $1F,$08
         083D:   28 A5                       LDAW    A5
         083F:   51                          DCR     A
         0840:   C1                          JR      0842
@@ -970,13 +970,13 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0850:   6D 09                       MVI     E,09
         0852:   8D                          CALT    009A	; "HL <== HL+E"
         0853:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        0854:   1F 8E                       .DB $1F,$8E
+        0854:   1F 8E                       DB $1F,$8E
         0856:   7C 77                       CALF    0C77        ;HL + $3C
         0858:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        0859:   00 8E                       .DB $00,$8E
+        0859:   00 8E                       DB $00,$8E
         085B:   7C 77                       CALF    0C77        ;HL + $3C
         085D:   99                          CALT    00B2	; "[PC+2] Draw Horizontal Line"
-        085E:   F0 8E                       .DB $F0,$8E
+        085E:   F0 8E                       DB $F0,$8E
         0860:   6A 54                       MVI     B,54        ;Decrement HL 55 times!
         0862:   33                          DCX     H		;Is this a delay or something?
         0863:   52                          DCR     B		;There's already a CALT that subs HL...
@@ -994,7 +994,7 @@ CALT 81 01CF:   64 98 08                    ORI     PA,08       ;(Port A, bit 3 
         0874:   FA                          JR      086F
         0875:   34 88 FF                    LXI     H,FF88
         0878:   9A                          CALT    00B4	; "[PC+3] Print Bytes on-Screen"
-        0879:   44 00 08                    .DB $44,$00,$08
+        0879:   44 00 08                    DB $44,$00,$08
         087C:   90                          CALT    00A0	; "C258+ ==> C000+"
         087D:   81                          CALT    0082	;Copy Screen RAM to LCD Driver
         087E:   7D 68                       CALF    0D68        ;Draw Border
@@ -1693,7 +1693,7 @@ CALF    0C77:   6D 3C                       MVI     E,3C	; 60 decimal...
 ;------------------------------------------------------------
 CALF    0C7B:   34 4D 05                    LXI     H,054D      ;"PUZZLE"
         0C7E:   9B                          CALT    00B6	; "[PC+3] Print Text on-Screen"
-        0C7F:   03 00 16                    .DB $03,$00,$16
+        0C7F:   03 00 16                    DB $03,$00,$16
         0C82:   7E 67                       CALF    0E67	;(C7F2 -> HL)
         0C84:   69 01                       MVI     A,01
         0C86:   38 83                       STAW    83
