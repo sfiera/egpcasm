@@ -1,9 +1,49 @@
 ;"Pokekon" BIOS disassembly & comments by Chris Covell
 
+#subruledef mov_a_reg {
+    b => 0xA
+    c => 0xB
+    d => 0xC
+    e => 0xD
+    h => 0xE
+    l => 0xF
+}
+
+#subruledef mov_a_port {
+    pa  => 0x0
+    pb  => 0x1
+    pc  => 0x2
+    mk  => 0x3
+    mb  => 0x4
+    mc  => 0x5
+    tm0 => 0x6
+    tm1 => 0x7
+    s   => 0x8
+    tmm => 0x9
+}
+
+#subruledef mov_addr_reg {
+    v => 0x8
+    a => 0x9
+    b => 0xA
+    c => 0xB
+    d => 0xC
+    e => 0xD
+    h => 0xE
+    l => 0xF
+}
+
 #ruledef {
     nop => $00
     ret => $08
     rets => $18
+
+    mov a, {reg: mov_a_reg} => 0x0 @ reg
+    mov {reg: mov_a_reg}, a => 0x1 @ reg
+    mov a, {port: mov_a_port} => 0x4cc @ port
+    mov {port: mov_a_port}, a => 0x4dc @ port
+    mov {reg: mov_addr_reg}, [{addr: u16}] => $706 @ reg @ le(addr)
+    mov [{addr: u16}], {reg: mov_addr_reg} => $707 @ reg @ le(addr)
 
     jmp {addr: u16} => $54 @ le(addr)
 
@@ -78,27 +118,27 @@ INT1____0010:   jmp $400F
 cont____0013:   #d8 $04, $00, $00                               ; LXI     SP,0000
 ________0016:   #d8 $48, $3C                                    ; PER			;Set Port E to AB mode
 ________0018:   #d8 $69, $C1                                    ; MVI     A,C1
-________001A:   #d8 $4D, $C0                                    ; MOV     PA,A
+________001A:   mov pa, a
 ________001C:   #d8 $64, $88, $FE                               ; ANI     PA,FE
 ________001F:   #d8 $64, $98, $01                               ; ORI     PA,01
 ________0022:   calt $008A                                      ; "Clear A"
-________0023:   #d8 $4D, $C4                                    ; MOV     MB,A	;Mode B = All outputs
+________0023:   mov mb, a                                       ;Mode B = All outputs
 ________0025:   #d8 $64, $98, $38                               ; ORI     PA,38
 
 ________0028:   #d8 $69, $39                                    ; MVI     A,39
-________002A:   #d8 $4D, $C1                                    ; MOV     PB,A
+________002A:   mov pb, a
 ________002C:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________002F:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________0032:   #d8 $69, $3E                                    ; MVI     A,3E
-________0034:   #d8 $4D, $C1                                    ; MOV     PB,A
+________0034:   mov pb, a
 ________0036:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0039:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________003C:   #d8 $64, $88, $C7                               ; ANI     PA,C7
 ________003F:   #d8 $64, $98, $04                               ; ORI     PA,04
 ________0042:   #d8 $69, $07                                    ; MVI     A,07
-________0044:   #d8 $4D, $C9                                    ; MOV     TMM,A	;Timer register = #$7
+________0044:   mov tmm, a                                      ;Timer register = #$7
 ________0046:   #d8 $69, $74                                    ; MVI     A,74
-________0048:   #d8 $4D, $C6                                    ; MOV     T0,A        ;Timer option reg = #$74
+________0048:   mov tm0, a                                      ;Timer option reg = #$74
 ________004A:   calt $008E                                      ; "Clear Screen RAM"
 ________004B:   calt $0090                                      ; "Clear C4B0~C593"
 ________004C:   calt $0092                                      ; "Clear C594~C86F?"
@@ -107,7 +147,7 @@ ________0050:   #d8 $6A, $49                                    ; MVI     B,49
 ________0052:   calt $0094                                      ; "Clear RAM (HL+)xB"
 ________0053:   calt $0082                                      ; Copy Screen RAM to LCD Driver
 ________0054:   #d8 $69, $05                                    ; MVI     A,05
-________0056:   #d8 $4D, $C3                                    ; MOV     MK,A        ;Mask = IntT,1 ON
+________0056:   mov mk, a                                       ;Mask = IntT,1 ON
 ________0058:   #d8 $48, $20                                    ; EI
 ________005A:   calt $0080                                      ; [PC+1] Check Cartridge
 ________005B:   #d8 $C0                                         ; DB $C0 		;Jump to ($4001) in cartridge
@@ -234,7 +274,7 @@ ________0103:   #d8 $48, $1E                                    ; PUSH    B
 ________0105:   #d8 $48, $2E                                    ; PUSH    D
 ________0107:   #d8 $48, $3E                                    ; PUSH    H
 ________0109:   #d8 $69, $03                                    ; MVI     A,03
-________010B:   #d8 $4D, $C9                                    ; MOV     TMM,A	;Adjust timer
+________010B:   mov tmm, a                                      ;Adjust timer
 ________010D:   #d8 $69, $53                                    ; MVI     A,53
 ________010F:   #d8 $51                                         ; DCR     A
 ________0110:   jr $010F
@@ -247,9 +287,9 @@ ________011B:   jr $0128
 
 ________011C:   #d8 $05, $80, $FC                               ; ANIW    80,FC
 ________011F:   #d8 $69, $07                                    ; MVI     A,07
-________0121:   #d8 $4D, $C9                                    ; MOV     TMM,A
+________0121:   mov tmm, a
 ________0123:   #d8 $69, $74                                    ; MVI     A,74
-________0125:   #d8 $4D, $C6                                    ; MOV     T0,A
+________0125:   mov tm0, a
 ________0127:   #d8 $19                                         ; STM
 ________0128:   #d8 $48, $3F                                    ; POP     H
 ________012A:   #d8 $48, $2F                                    ; POP     D
@@ -301,7 +341,7 @@ ________0173:   #d8 $60, $D7                                    ; ADC     A,L
 ________0175:   #d8 $38, $8C                                    ; STAW    8C
 ________0177:   #d8 $48, $30                                    ; RAL
 ________0179:   #d8 $48, $30                                    ; RAL
-________017B:   #d8 $1A                                         ; MOV     B,A
+________017B:   mov b, a
 ________017C:   #d8 $48, $2F                                    ; POP     D
 ________017E:   #d8 $48, $2E                                    ; PUSH    D
 ________0180:   #d8 $60, $D5                                    ; ADC     A,E
@@ -318,7 +358,7 @@ ________018C:   #d8 $4F, $9A                                    ; JRE     0128
 CALT_82_018E:   #d8 $48, $24                                    ; DI
 ________0190:   #d8 $48, $3F                                    ; POP     H
 ________0192:   #d8 $2D                                         ; LDAX    H+		;(PC+1)
-________0193:   #d8 $1A                                         ; MOV     B,A
+________0193:   mov b, a
 ________0194:   #d8 $2D                                         ; LDAX    H+          ;(PC+1)
 ________0195:   #d8 $48, $3E                                    ; PUSH    H
 ________0197:   #d8 $38, $99                                    ; STAW    99
@@ -365,9 +405,9 @@ ________01C6:   #d8 $51                                         ; DCR     A
 ________01C7:   jr $01C1
 
 ________01C8:   #d8 $2D                                         ; LDAX    H+
-________01C9:   #d8 $1B                                         ; MOV     C,A
+________01C9:   mov c, a
 ________01CA:   #d8 $2B                                         ; LDAX    H
-________01CB:   #d8 $1A                                         ; MOV     B,A
+________01CB:   mov b, a
 ________01CC:   #d8 $73                                         ; JB                  ;Jump to cartridge!
 ;-----------------------------------------------------------
 ;CALT 00A0, CALT 00A4
@@ -384,23 +424,23 @@ ________01D2:   #d8 $34, $31, $C0                               ; LXI     H,C031
 ________01D5:   #d8 $24, $7D, $00                               ; LXI     D,007D
 ________01D8:   #d8 $6A, $00                                    ; MVI     B,00
 ________01DA:   #d8 $64, $88, $FB                               ; ANI     PA,FB       ;bit 2 off
-________01DD:   #d8 $0A                                         ; MOV     A,B
-________01DE:   #d8 $4D, $C1                                    ; MOV     PB,A        ;Port B = (A)
+________01DD:   mov a, b
+________01DE:   mov pb, a                                       ;Port B = (A)
 ________01E0:   #d8 $64, $98, $02                               ; ORI     PA,02       ;bit 1 on
 ________01E3:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
 ________01E6:   #d8 $6B, $31                                    ; MVI     C,31
 ________01E8:   #d8 $64, $98, $04                               ; ORI     PA,04       ;bit 2 on
 ________01EB:   #d8 $2F                                         ; LDAX    H-          ;Screen data...
-________01EC:   #d8 $4D, $C1                                    ; MOV     PB,A	;...to Port B
+________01EC:   mov pb, a                                       ;...to Port B
 ________01EE:   #d8 $64, $98, $02                               ; ORI     PA,02       ;bit 1 on
 ________01F1:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
 ________01F4:   #d8 $53                                         ; DCR     C
 ________01F5:   jr $01EB
 ________01F6:   calt $0096                                      ; "HL <== HL+DE"
-________01F7:   #d8 $0A                                         ; MOV     A,B
+________01F7:   mov a, b
 ________01F8:   #d8 $26, $40                                    ; ADINC   A,40
 ________01FA:   jr $01FE
-________01FB:   #d8 $1A                                         ; MOV     B,A
+________01FB:   mov b, a
 ________01FC:   #d8 $4F, $DC                                    ; JRE     01DA
 								;Set up writing for LCD controller #2
 ________01FE:   #d8 $64, $88, $F7                               ; ANI     PA,F7       ;bit 3 off
@@ -409,23 +449,23 @@ ________0204:   #d8 $34, $2C, $C1                               ; LXI     H,C12C
 ________0207:   #d8 $24, $19, $00                               ; LXI     D,0019
 ________020A:   #d8 $6A, $00                                    ; MVI     B,00
 ________020C:   #d8 $64, $88, $FB                               ; ANI     PA,FB       ;Same as in 1st loop
-________020F:   #d8 $0A                                         ; MOV     A,B
-________0210:   #d8 $4D, $C1                                    ; MOV     PB,A
+________020F:   mov a, b
+________0210:   mov pb, a
 ________0212:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0215:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________0218:   #d8 $6B, $31                                    ; MVI     C,31
 ________021A:   #d8 $64, $98, $04                               ; ORI     PA,04
 ________021D:   #d8 $2D                                         ; LDAX    H+
-________021E:   #d8 $4D, $C1                                    ; MOV     PB,A
+________021E:   mov pb, a
 ________0220:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0223:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________0226:   #d8 $53                                         ; DCR     C
 ________0227:   jr $021D
 ________0228:   calt $0096                                      ; "HL <== HL+DE"
-________0229:   #d8 $0A                                         ; MOV     A,B
+________0229:   mov a, b
 ________022A:   #d8 $26, $40                                    ; ADINC   A,40
 ________022C:   jr $0230
-________022D:   #d8 $1A                                         ; MOV     B,A
+________022D:   mov b, a
 ________022E:   #d8 $4F, $DC                                    ; JRE     020C
 
 ________0230:   calt $008A                                      ; "Clear A"
@@ -437,8 +477,8 @@ ________0239:   #d8 $34, $32, $C0                               ; LXI     H,C032
 ________023C:   #d8 $24, $5E, $C1                               ; LXI     D,C15E
 ________023F:   #d8 $6A, $00                                    ; MVI     B,00
 ________0241:   #d8 $64, $88, $FB                               ; ANI     PA,FB
-________0244:   #d8 $0A                                         ; MOV     A,B
-________0245:   #d8 $4D, $C1                                    ; MOV     PB,A
+________0244:   mov a, b
+________0245:   mov pb, a
 ________0247:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________024A:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________024D:   nop
@@ -447,7 +487,7 @@ ________024E:   #d8 $64, $98, $04                               ; ORI     PA,04
 ________0251:   #d8 $6B, $18                                    ; MVI     C,18
 
 ________0253:   #d8 $2D                                         ; LDAX    H+
-________0254:   #d8 $4D, $C1                                    ; MOV     PB,A
+________0254:   mov pb, a
 ________0256:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0259:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________025C:   #d8 $53                                         ; DCR     C
@@ -462,10 +502,10 @@ ________0267:   #d8 $20, $96                                    ; INRW    96    
 ________0269:   #d8 $55, $96, $01                               ; OFFIW   96,01       ;Do alternating lines
 ________026C:   jr $0251
 
-________026D:   #d8 $0A                                         ; MOV     A,B
+________026D:   mov a, b
 ________026E:   #d8 $26, $40                                    ; ADINC   A,40
 ________0270:   jr $0274
-________0271:   #d8 $1A                                         ; MOV     B,A
+________0271:   mov b, a
 ________0272:   #d8 $4F, $CD                                    ; JRE     0241
 
 ________0274:   #d8 $64, $88, $DF                               ; ANI     PA,DF       ;bit 5 off
@@ -689,16 +729,16 @@ ________0661:   #d8 $1E, $03                                    ; DB $1E,$03
 ________0663:   jr $066C                                        ;Set a dot
 
 ________0664:   #d8 $28, $A6                                    ; LDAW    A6
-________0666:   #d8 $1A                                         ; MOV     B,A
+________0666:   mov b, a
 ________0667:   #d8 $28, $A7                                    ; LDAW    A7
-________0669:   #d8 $1B                                         ; MOV     C,A
+________0669:   mov c, a
 ________066A:   calt $00DA                                      ; "Clear Dot; B,C = X-,Y-position"
 ________066B:   jr $0673
 
 ________066C:   #d8 $28, $A6                                    ; LDAW    A6
-________066E:   #d8 $1A                                         ; MOV     B,A
+________066E:   mov b, a
 ________066F:   #d8 $28, $A7                                    ; LDAW    A7
-________0671:   #d8 $1B                                         ; MOV     C,A
+________0671:   mov c, a
 ________0672:   calt $00B0                                      ; "Set Dot; B,C = X-,Y-position"
 
 ________0673:   #d8 $28, $92                                    ; LDAW    92
@@ -714,7 +754,7 @@ ________0680:   jr $069B
 ________0681:   #d8 $51                                         ; DCR     A
 ________0682:   #d8 $38, $A7                                    ; STAW    A7
 ________0684:   #d8 $51                                         ; DCR     A
-________0685:   #d8 $70, $79, $71, $C5                          ; MOV     C571,A
+________0685:   mov [$C571], a
 ________0689:   #d8 $28, $A1                                    ; LDAW    A1
 ________068B:   #d8 $46, $01                                    ; ADI     A,01
 ________068D:   #d8 $61                                         ; DAA
@@ -733,7 +773,7 @@ ________069B:   jr $06B7
 ________069C:   #d8 $41                                         ; INR     A
 ________069D:   #d8 $38, $A7                                    ; STAW    A7
 ________069F:   #d8 $51                                         ; DCR     A
-________06A0:   #d8 $70, $79, $71, $C5                          ; MOV     C571,A
+________06A0:   mov [$C571], a
 ________06A4:   #d8 $28, $A1                                    ; LDAW    A1
 ________06A6:   #d8 $46, $99                                    ; ADI     A,99
 ________06A8:   #d8 $61                                         ; DAA     
@@ -752,7 +792,7 @@ ________06B7:   jr $06D4
 ________06B8:   #d8 $41                                         ; INR     A
 ________06B9:   #d8 $38, $A6                                    ; STAW    A6
 ________06BB:   #d8 $51                                         ; DCR     A
-________06BC:   #d8 $70, $79, $70, $C5                          ; MOV     C570,A
+________06BC:   mov [$C570], a
 ________06C0:   #d8 $28, $A0                                    ; LDAW    A0
 ________06C2:   #d8 $46, $01                                    ; ADI     A,01
 ________06C4:   #d8 $61                                         ; DAA
@@ -770,7 +810,7 @@ ________06D4:   jr $06E8
 ________06D5:   #d8 $51                                         ; DCR     A
 ________06D6:   #d8 $38, $A6                                    ; STAW    A6
 ________06D8:   #d8 $51                                         ; DCR     A
-________06D9:   #d8 $70, $79, $70, $C5                          ; MOV     C570,A
+________06D9:   mov [$C570], a
 ________06DD:   #d8 $28, $A0                                    ; LDAW    A0
 ________06DF:   #d8 $46, $99                                    ; ADI     A,99
 ________06E1:   #d8 $61                                         ; DAA     
@@ -792,7 +832,7 @@ ________06F4:   #d8 $3D                                         ; STAX    H+
 ________06F5:   #d8 $41                                         ; INR     A           ;Set up the puzzle tiles in RAM
 ________06F6:   #d8 $52                                         ; DCR     B
 ________06F7:   jr $06F4
-________06F8:   #d8 $0A                                         ; MOV     A,B         ;$FF
+________06F8:   mov a, b                                        ;$FF
 ________06F9:   #d8 $3D                                         ; STAX    H+
 ________06FA:   calf $0E67
 ________06FC:   #d8 $6A, $0B                                    ; MVI     B,0B
@@ -860,7 +900,7 @@ ________0770:   #d8 $6A, $02                                    ; MVI     B,02
 ________0772:   calt $0094                                      ; "Clear RAM (HL+)xB"
 ________0773:   #d8 $28, $8C                                    ; LDAW    8C
 ________0775:   #d8 $07, $0F                                    ; ANI     A,0F
-________0777:   #d8 $1A                                         ; MOV     B,A
+________0777:   mov b, a
 ________0778:   #d8 $34, $6F, $05                               ; LXI     H,056F
 ________077B:   #d8 $2D                                         ; LDAX    H+
 ________077C:   #d8 $48, $1E                                    ; PUSH    B
@@ -915,11 +955,11 @@ ________07CE:   calf $08B6                                      ;Play Music (Snd
 ________07D0:   #d8 $48, $20                                    ; EI
 ________07D2:   #d8 $34, $FE, $C7                               ; LXI     H,C7FE
 ________07D5:   #d8 $2D                                         ; LDAX    H+
-________07D6:   #d8 $1A                                         ; MOV     B,A
+________07D6:   mov b, a
 ________07D7:   #d8 $2F                                         ; LDAX    H-
 ________07D8:   #d8 $60, $BA                                    ; LTA     A,B
 ________07DA:   jr $07DD
-________07DB:   #d8 $1A                                         ; MOV     B,A
+________07DB:   mov b, a
 ________07DC:   #d8 $2B                                         ; LDAX    H
 ________07DD:   #d8 $48, $1E                                    ; PUSH    B
 ________07DF:   #d8 $75, $A2, $00                               ; EQIW    A2,00
@@ -939,7 +979,7 @@ ________07F6:   calf $0C77                                      ;HL + $3C
 ________07F8:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07F9:   #d8 $1F, $0F                                    ; DB $1F,$0F
 ________07FB:   #d8 $48, $1F                                    ; POP     B
-________07FD:   #d8 $0A                                         ; MOV     A,B
+________07FD:   mov a, b
 ________07FE:   calf $0CBF                                      ;Write Text(?)
 ________0800:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0801:   #d8 $F0, $0F                                    ; DB $F0,$0F
@@ -988,7 +1028,7 @@ ________0841:   jr $084C
 
 ________0842:   #d8 $38, $A5                                    ; STAW    A5
 ________0844:   #d8 $48, $1F                                    ; POP     B
-________0846:   #d8 $0A                                         ; MOV     A,B
+________0846:   mov a, b
 ________0847:   #d8 $38, $A2                                    ; STAW    A2
 ________0849:   calf $0CBF                                      ;Write Text(?)
 ________084B:   jr $082E
@@ -1056,18 +1096,18 @@ ________08A8:   ret
 ;------------------------------------------------------------
 ;Music-playing code...
 CALF____08A9:   #d8 $2D                                         ; LDAX    H+
-________08AA:   #d8 $1A                                         ; MOV     B,A
+________08AA:   mov b, a
 ________08AB:   #d8 $2D                                         ; LDAX    H+
 ________08AC:   #d8 $38, $99                                    ; STAW    99
 ________08AE:   #d8 $70, $3E, $84, $FF                          ; SHLD    FF84
-________08B2:   #d8 $0A                                         ; MOV     A,B
+________08B2:   mov a, b
 ________08B3:   #d8 $41                                         ; INR     A
 ________08B4:   jr $08B6
 ________08B5:   rets                                            ;Return & Skip if read "$FF"
 
 ;Move "note" into TM0
 CALF____08B6:   #d8 $34, $78, $02                               ; LXI     H,0278           ;Table Start
-________08B9:   #d8 $0A                                         ; MOV     A,B
+________08B9:   mov a, b
 ________08BA:   #d8 $36, $01                                    ; SUINB   A,01
 ________08BC:   jr $08C0
 ________08BD:   #d8 $32                                         ; INX     H          ;Add A*2 to HL (wastefully)
@@ -1075,14 +1115,14 @@ ________08BE:   #d8 $32                                         ; INX     H
 ________08BF:   jr $08BA
 
 ________08C0:   #d8 $2D                                         ; LDAX    H+
-________08C1:   #d8 $4D, $C6                                    ; MOV     T0,A
+________08C1:   mov tm0, a
 ________08C3:   #d8 $2B                                         ; LDAX    H
 ________08C4:   #d8 $38, $9A                                    ; STAW    9A
 ________08C6:   #d8 $38, $8F                                    ; STAW    8F
 ________08C8:   #d8 $52                                         ; DCR     B
 ________08C9:   #d8 $69, $00                                    ; MVI     A,00       ;Sound?
 ________08CB:   #d8 $69, $03                                    ; MVI     A,03       ;Silent
-________08CD:   #d8 $4D, $C9                                    ; MOV     TMM,A
+________08CD:   mov tmm, a
 ________08CF:   #d8 $15, $80, $01                               ; ORIW    80,01
 ________08D2:   #d8 $19                                         ; STM
 ________08D3:   ret
@@ -1090,7 +1130,7 @@ ________08D3:   ret
 ;Load a "multiplication table" for A,E from (HL) and do AxE
 ;Is this ever used?
 ________08D4:   #d8 $2D                                         ; LDAX    H+
-________08D5:   #d8 $1D                                         ; MOV     E,A
+________08D5:   mov e, a
 ________08D6:   #d8 $2B                                         ; LDAX    H
 ;HL <== AxE
 CALT_93_08D7:   #d8 $34, $00, $00                               ; LXI     H,0000
@@ -1102,12 +1142,12 @@ ________08E1:   #d8 $48, $31                                    ; RLR
 ________08E3:   #d8 $48, $0E                                    ; PUSH    V
 ________08E5:   #d8 $48, $1A                                    ; SKN     CY
 ________08E7:   calt $0096                                      ; "HL <== HL+DE"
-________08E8:   #d8 $0D                                         ; MOV     A,E
+________08E8:   mov a, e
 ________08E9:   #d8 $60, $C1                                    ; ADD     A,A
-________08EB:   #d8 $1D                                         ; MOV     E,A
-________08EC:   #d8 $0C                                         ; MOV     A,D
+________08EB:   mov e, a
+________08EC:   mov a, d
 ________08ED:   #d8 $48, $30                                    ; RAL
-________08EF:   #d8 $1C                                         ; MOV     D,A
+________08EF:   mov d, a
 ________08F0:   #d8 $48, $0F                                    ; POP     V
 ________08F2:   jr $08DC
 ;-----------------------------
@@ -1120,10 +1160,10 @@ ________08F7:   ret
 ;------------------------------------------------------------
 ;Swap (HL+)<->(DE+)
 CALF____08F8:   #d8 $2B                                         ; LDAX    H
-________08F9:   #d8 $1B                                         ; MOV     C,A
+________08F9:   mov c, a
 ________08FA:   #d8 $2A                                         ; LDAX    D
 ________08FB:   #d8 $3D                                         ; STAX    H+
-________08FC:   #d8 $0B                                         ; MOV     A,C
+________08FC:   mov a, c
 ________08FD:   #d8 $3C                                         ; STAX    D+
 ________08FE:   ret
 ;------------------------------------------------------------
@@ -1162,31 +1202,31 @@ ________0922:   #d8 $24, $90, $FF                               ; LXI     D,FF90
 ________0925:   #d8 $6A, $01                                    ; MVI     B,01        ;Copy 2 bytes from curr->old
 ________0927:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0928:   #d8 $64, $88, $BF                               ; ANI     PA,BF       ;PA Bit 6 off
-________092B:   #d8 $4C, $C2                                    ; MOV     A,PC	;Get port C
+________092B:   mov a, pc                                       ;Get port C
 ________092D:   #d8 $16, $FF                                    ; XRI     A,FF
-________092F:   #d8 $1B                                         ; MOV     C,A
+________092F:   mov c, a
 ________0930:   #d8 $6A, $40                                    ; MVI     B,40	;Debouncing delay
 ________0932:   #d8 $52                                         ; DCR     B
 ________0933:   jr $0932
-________0934:   #d8 $4C, $C2                                    ; MOV     A,PC	;Get port C a 2nd time
+________0934:   mov a, pc                                       ;Get port C a 2nd time
 ________0936:   #d8 $16, $FF                                    ; XRI     A,FF
 ________0938:   #d8 $60, $FB                                    ; EQA     A,C		;Check if both reads are equal
 ________093A:   jr $092F
 ________093B:   #d8 $64, $98, $40                               ; ORI     PA,40	;PA Bit 6 on
 ________093E:   #d8 $07, $03                                    ; ANI     A,03
 ________0940:   #d8 $3C                                         ; STAX    D+		;Save controller read in 92
-________0941:   #d8 $0B                                         ; MOV     A,C
+________0941:   mov a, c
 ________0942:   calf $0C72                                      ;RLR A x2
 ________0944:   #d8 $07, $07                                    ; ANI     A,07
 ________0946:   #d8 $3E                                         ; STAX    D-		;Save cont in 93
 ________0947:   #d8 $64, $88, $7F                               ; ANI     PA,7F	;PA bit 7 off
-________094A:   #d8 $4C, $C2                                    ; MOV     A,PC	;Get other controller bits
+________094A:   mov a, pc                                       ;Get other controller bits
 ________094C:   #d8 $16, $FF                                    ; XRI     A,FF
-________094E:   #d8 $1B                                         ; MOV     C,A
+________094E:   mov c, a
 ________094F:   #d8 $6A, $40                                    ; MVI     B,40	;...and debounce
 ________0951:   #d8 $52                                         ; DCR     B
 ________0952:   jr $0951
-________0953:   #d8 $4C, $C2                                    ; MOV     A,PC
+________0953:   mov a, pc
 ________0955:   #d8 $16, $FF                                    ; XRI     A,FF
 ________0957:   #d8 $60, $FB                                    ; EQA     A,C		;...check again
 ________0959:   jr $094E
@@ -1196,7 +1236,7 @@ ________095F:   #d8 $48, $30                                    ; RAL
 ________0961:   #d8 $07, $0C                                    ; ANI     A,0C
 ________0963:   #d8 $70, $9A                                    ; ORAX    D		;Or with FF92
 ________0965:   #d8 $3C                                         ; STAX    D+          ;...and save
-________0966:   #d8 $0B                                         ; MOV     A,C
+________0966:   mov a, c
 ________0967:   #d8 $48, $30                                    ; RAL 
 ________0969:   #d8 $07, $38                                    ; ANI     A,38
 ________096B:   #d8 $70, $9A                                    ; ORAX    D           ;Or with FF93
@@ -1240,9 +1280,9 @@ ________0998:   ret
 CALT_98_0999:   #d8 $48, $1E                                    ; PUSH    B
 ________099B:   calf $0BF4                                      ;Point to 2nd screen
 ________099D:   #d8 $48, $1F                                    ; POP     B
-________099F:   #d8 $0B                                         ; MOV     A,C
+________099F:   mov a, c
 ________09A0:   #d8 $07, $07                                    ; ANI     A,07
-________09A2:   #d8 $1B                                         ; MOV     C,A
+________09A2:   mov c, a
 ________09A3:   calt $008A                                      ; "Clear A"
 ________09A4:   #d8 $48, $2B                                    ; STC
 ________09A6:   #d8 $48, $30                                    ; RAL
@@ -1258,9 +1298,9 @@ ________09B0:   jr $0999
 CALT_AD_09B1:   #d8 $48, $1E                                    ; PUSH    B
 ________09B3:   calf $0BF4                                      ;Point to 2nd screen
 ________09B5:   #d8 $48, $1F                                    ; POP     B
-________09B7:   #d8 $0B                                         ; MOV     A,C
+________09B7:   mov a, c
 ________09B8:   #d8 $07, $07                                    ; ANI     A,07
-________09BA:   #d8 $1B                                         ; MOV     C,A
+________09BA:   mov c, a
 ________09BB:   #d8 $69, $FF                                    ; MVI     A,FF
 ________09BD:   #d8 $48, $2A                                    ; CLC
 ________09BF:   #d8 $48, $30                                    ; RAL
@@ -1275,13 +1315,13 @@ ________09C6:   ret
 ; 2nd byte is the length: 00-7F draws black lines; 80-FF draws white lines
 CALT_99_09C7:   #d8 $48, $2F                                    ; POP     D
 ________09C9:   #d8 $2C                                         ; LDAX    D+  	;SP+1
-________09CA:   #d8 $1B                                         ; MOV     C,A
+________09CA:   mov c, a
 ________09CB:   #d8 $2C                                         ; LDAX    D+		;SP+2
 ________09CC:   #d8 $48, $2E                                    ; PUSH    D
-________09CE:   #d8 $1C                                         ; MOV     D,A
+________09CE:   mov d, a
 ________09CF:   #d8 $07, $7F                                    ; ANI     A,7F
-________09D1:   #d8 $1A                                         ; MOV     B,A
-________09D2:   #d8 $0C                                         ; MOV     A,D
+________09D1:   mov b, a
+________09D2:   mov a, d
 ________09D3:   #d8 $47, $80                                    ; ONI     A,80
 ________09D5:   jr $09DD
 
@@ -1312,10 +1352,10 @@ ________09E3:   ret
 ;
 CALT_9A_09E4:   #d8 $48, $2F                                    ; POP     D
 ________09E6:   #d8 $2C                                         ; LDAX    D+
-________09E7:   #d8 $1A                                         ; MOV     B,A
+________09E7:   mov b, a
 ________09E8:   #d8 $38, $9B                                    ; STAW    9B
 ________09EA:   #d8 $2C                                         ; LDAX    D+
-________09EB:   #d8 $1B                                         ; MOV     C,A
+________09EB:   mov c, a
 ________09EC:   #d8 $07, $07                                    ; ANI     A,07
 ________09EE:   #d8 $38, $9C                                    ; STAW    9C
 ________09F0:   #d8 $2C                                         ; LDAX    D+
@@ -1327,7 +1367,7 @@ ________09F8:   #d8 $48, $1E                                    ; PUSH    B
 ________09FA:   #d8 $38, $98                                    ; STAW    98
 ________09FC:   #d8 $24, $A8, $FF                               ; LXI     D,FFA8
 ________09FF:   #d8 $70, $2E, $C0, $FF                          ; SDED    FFC0
-________0A03:   #d8 $1A                                         ; MOV     B,A
+________0A03:   mov b, a
 ________0A04:   #d8 $6B, $40                                    ; MVI     C,40
 ________0A06:   #d8 $45, $9D, $40                               ; ONIW    9D,40
 ________0A09:   #d8 $6B, $10                                    ; MVI     C,10
@@ -1366,10 +1406,10 @@ ________0A28:   jr $0A42
 ;
 CALT_9B_0A29:   #d8 $48, $2F                                    ; POP     D
 ________0A2B:   #d8 $2C                                         ; LDAX    D+
-________0A2C:   #d8 $1A                                         ; MOV     B,A
+________0A2C:   mov b, a
 ________0A2D:   #d8 $38, $9B                                    ; STAW    9B
 ________0A2F:   #d8 $2C                                         ; LDAX    D+
-________0A30:   #d8 $1B                                         ; MOV     C,A         ;Save X,Y position in BC
+________0A30:   mov c, a                                        ;Save X,Y position in BC
 ________0A31:   #d8 $07, $07                                    ; ANI     A,07
 ________0A33:   #d8 $38, $9C                                    ; STAW    9C
 ________0A35:   #d8 $2C                                         ; LDAX    D+
@@ -1385,7 +1425,7 @@ ________0A47:   calt $00BA                                      ; "Set HL to scr
 ________0A48:   jr $0A4B
 
 ________0A49:   calf $0BF4                                      ;This points to Sc 1
-________0A4B:   #d8 $70, $7B, $C6, $FF                          ; MOV     FFC6,C
+________0A4B:   mov [$FFC6], c
 ________0A4F:   #d8 $70, $3E, $C2, $FF                          ; SHLD    FFC2
 ________0A53:   #d8 $24, $4B, $00                               ; LXI     D,004B
 ________0A56:   calt $0096                                      ; "HL <== HL+DE"
@@ -1421,7 +1461,7 @@ ________0A96:   jr $0AA0
 ________0A97:   #d8 $70, $2F, $9D, $FF                          ; LDED    FF9D
 ________0A9B:   calt $009A                                      ; "HL <== HL+E"
 ________0A9C:   #d8 $70, $3E, $C4, $FF                          ; SHLD    FFC4
-________0AA0:   #d8 $70, $6A, $9C, $FF                          ; MOV     B,FF9C
+________0AA0:   mov b, [$FF9C]
 ________0AA4:   calt $008A                                      ; "Clear A"
 ________0AA5:   #d8 $52                                         ; DCR     B
 ________0AA6:   jr $0AA8
@@ -1432,7 +1472,7 @@ ________0AAA:   #d8 $48, $30                                    ; RAL
 ________0AAC:   jr $0AA5
 
 ________0AAD:   #d8 $48, $0E                                    ; PUSH    V
-________0AAF:   #d8 $1B                                         ; MOV     C,A
+________0AAF:   mov c, a
 ________0AB0:   calf $0E6A                                      ;(FFB0 -> HL)
 ________0AB2:   #d8 $6A, $04                                    ; MVI     B,04
 ________0AB4:   #d8 $2B                                         ; LDAX    H
@@ -1442,7 +1482,7 @@ ________0AB8:   #d8 $52                                         ; DCR     B
 ________0AB9:   jr $0AB4
 ________0ABA:   #d8 $48, $0F                                    ; POP     V
 ________0ABC:   #d8 $16, $FF                                    ; XRI     A,FF
-________0ABE:   #d8 $1B                                         ; MOV     C,A
+________0ABE:   mov c, a
 ________0ABF:   #d8 $6A, $04                                    ; MVI     B,04
 ________0AC1:   #d8 $2B                                         ; LDAX    H
 ________0AC2:   #d8 $60, $8B                                    ; ANA     A,C
@@ -1474,7 +1514,7 @@ ________0AFC:   #d8 $15, $80, $10                               ; ORIW    80,10
 ________0AFF:   calf $0BD3                                      ;Copy B*A bytes?
 ________0B01:   #d8 $28, $9B                                    ; LDAW    9B
 ________0B03:   #d8 $46, $05                                    ; ADI     A,05
-________0B05:   #d8 $1A                                         ; MOV     B,A
+________0B05:   mov b, a
 ________0B06:   #d8 $28, $9D                                    ; LDAW    9D
 ________0B08:   #d8 $60, $C2                                    ; ADD     A,B
 ________0B0A:   #d8 $38, $9B                                    ; STAW    9B
@@ -1489,12 +1529,12 @@ ________0B14:   jr $0B1B
 ________0B15:   #d8 $70, $2F, $05, $40                          ; LDED    4005       ;4005-6 on cart is the font pointer
 ________0B19:   #d8 $66, $64                                    ; SUI     A,64
 ________0B1B:   #d8 $70, $2E, $96, $FF                          ; SDED    FF96
-________0B1F:   #d8 $1B                                         ; MOV     C,A
+________0B1F:   mov c, a
 ________0B20:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0B22:   #d8 $6D, $05                                    ; MVI     E,05
 ________0B24:   calt $00A6                                      ; "Add A to "Pointer""
 ________0B25:   #d8 $48, $3E                                    ; PUSH    H
-________0B27:   #d8 $0B                                         ; MOV     A,C
+________0B27:   mov a, c
 ________0B28:   calt $00C0                                      ; "(RLR A)x4"
 ________0B29:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0B2B:   #d8 $6D, $50                                    ; MVI     E,50
@@ -1523,15 +1563,15 @@ ________0B4B:   ret
 ;------------------------------------------------------------
 CALF____0B4C:   #d8 $2D                                         ; LDAX    H+
 ________0B4D:   #d8 $38, $9B                                    ; STAW    9B
-________0B4F:   #d8 $1A                                         ; MOV     B,A
+________0B4F:   mov b, a
 ________0B50:   #d8 $46, $07                                    ; ADI     A,07
 ________0B52:   #d8 $37, $53                                    ; LTI     A,53
 ________0B54:   ret
 ________0B55:   #d8 $2D                                         ; LDAX    H+
-________0B56:   #d8 $1B                                         ; MOV     C,A
+________0B56:   mov c, a
 ________0B57:   #d8 $07, $07                                    ; ANI     A,07
 ________0B59:   #d8 $38, $9C                                    ; STAW    9C
-________0B5B:   #d8 $0B                                         ; MOV     A,C
+________0B5B:   mov a, c
 ________0B5C:   #d8 $46, $07                                    ; ADI     A,07
 ________0B5E:   #d8 $37, $47                                    ; LTI     A,47
 ________0B60:   ret
@@ -1541,7 +1581,7 @@ ________0B64:   #d8 $37, $0C                                    ; LTI     A,0C
 ________0B66:   ret
 ________0B67:   calt $00BA                                      ; "Set HL to screen (B,C)"
 ________0B68:   #d8 $70, $3E, $9E, $FF                          ; SHLD    FF9E
-________0B6C:   #d8 $0E                                         ; MOV     A,H
+________0B6C:   mov a, h
 ________0B6D:   #d8 $47, $40                                    ; ONI     A,40
 ________0B6F:   jr $0B75
 ________0B70:   #d8 $24, $B0, $FF                               ; LXI     D,FFB0
@@ -1576,7 +1616,7 @@ ________0BAB:   #d8 $24, $B0, $FF                               ; LXI     D,FFB0
 ________0BAE:   #d8 $14, $B8, $FF                               ; LXI     B,FFB8
 ________0BB1:   calf $0C2F
 ________0BB3:   #d8 $70, $2F, $9E, $FF                          ; LDED    FF9E
-________0BB7:   #d8 $0C                                         ; MOV     A,D
+________0BB7:   mov a, d
 ________0BB8:   #d8 $47, $40                                    ; ONI     A,40
 ________0BBA:   jr $0BC2
 ________0BBB:   calf $0E6A
@@ -1618,7 +1658,7 @@ ________0BF0:   ret
 CALT_9D_0BF1:   #d8 $34, $B5, $BF                               ; LXI     H,BFB5	;Point before Sc. RAM
 ________0BF4:   #d8 $34, $0D, $C2                               ; LXI     H,C20D	;Point before Sc.2 RAM
 ________0BF7:   #d8 $6D, $4B                                    ; MVI     E,4B
-________0BF9:   #d8 $0B                                         ; MOV     A,C
+________0BF9:   mov a, c
 ________0BFA:   #d8 $6B, $00                                    ; MVI     C,00
 ________0BFC:   #d8 $46, $08                                    ; ADI     A,08
 ________0BFE:   #d8 $36, $08                                    ; SUINB   A,08
@@ -1628,35 +1668,35 @@ ________0C03:   calt $009A                                      ; "HL <== HL+E"
 ________0C04:   #d8 $48, $0F                                    ; POP     V
 ________0C06:   #d8 $43                                         ; INR     C
 ________0C07:   jr $0BFE
-________0C08:   #d8 $0A                                         ; MOV     A,B
+________0C08:   mov a, b
 ________0C09:   #d8 $57, $80                                    ; OFFI    A,80
 ________0C0B:   ret
-________0C0C:   #d8 $1D                                         ; MOV     E,A
+________0C0C:   mov e, a
 ________0C0D:   jr $0C18
 ;------------------------------------------------------------
 ;[PC+1] HL +- byte
 CALT_8C_0C0E:   #d8 $48, $2F                                    ; POP     D
 ________0C10:   #d8 $2C                                         ; LDAX    D+          ;Get byte after PC
 ________0C11:   #d8 $48, $2E                                    ; PUSH    D
-________0C13:   #d8 $1D                                         ; MOV     E,A
+________0C13:   mov e, a
 ________0C14:   #d8 $37, $80                                    ; LTI     A,80	;Add or subtract that byte
 ________0C16:   #d8 $69, $FF                                    ; MVI     A,FF
 ;HL <== HL+E
 CALT_8D_0C18:   #d8 $69, $00                                    ; MVI     A,00
-________0C1A:   #d8 $1C                                         ; MOV     D,A
+________0C1A:   mov d, a
 ;HL <== HL+DE
-CALT_8B_0C1B:   #d8 $0D                                         ; MOV     A,E
+CALT_8B_0C1B:   mov a, e
 ________0C1C:   #d8 $60, $C7                                    ; ADD     A,L
-________0C1E:   #d8 $1F                                         ; MOV     L,A
-________0C1F:   #d8 $0C                                         ; MOV     A,D
+________0C1E:   mov l, a
+________0C1F:   mov a, d
 ________0C20:   #d8 $60, $D6                                    ; ADC     A,H
-________0C22:   #d8 $1E                                         ; MOV     H,A
+________0C22:   mov h, a
 ________0C23:   ret
 ;------------------------------------------------------------
 ;HL=C4B0+(A*$10)
 CALT_9E_0C24:   #d8 $34, $B0, $C4                               ; LXI     H,C4B0
 ________0C27:   #d8 $6D, $10                                    ; MVI     E,10
-________0C29:   #d8 $1A                                         ; MOV     B,A
+________0C29:   mov b, a
 ________0C2A:   #d8 $52                                         ; DCR     B
 ________0C2B:   jr $0C2D
 ________0C2C:   ret
@@ -1679,9 +1719,9 @@ ________0C3F:   jr $0C4D
 ________0C40:   #d8 $48, $2A                                    ; CLC
 ________0C42:   #d8 $48, $30                                    ; RAL
 ________0C44:   #d8 $48, $0E                                    ; PUSH    V
-________0C46:   #d8 $0B                                         ; MOV     A,C
+________0C46:   mov a, c
 ________0C47:   #d8 $48, $30                                    ; RAL
-________0C49:   #d8 $1B                                         ; MOV     C,A
+________0C49:   mov c, a
 ________0C4A:   #d8 $48, $0F                                    ; POP     V
 ________0C4C:   jr $0C3C
 
@@ -1692,7 +1732,7 @@ ________0C53:   jr $0C56
 
 ________0C54:   #d8 $70, $8A                                    ; ANAX    D
 ________0C56:   #d8 $3A                                         ; STAX    D
-________0C57:   #d8 $0B                                         ; MOV     A,C
+________0C57:   mov a, c
 ________0C58:   #d8 $48, $1F                                    ; POP     B
 ________0C5A:   #d8 $45, $80, $08                               ; ONIW    80,08
 ________0C5D:   jr $0C61
@@ -1754,8 +1794,8 @@ ________0CB3:   calt $00A0                                      ; "C258+ ==> C00
 ________0CB4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________0CB5:   ret
 ;------------------------------------------------------------
-________0CB6:   #d8 $70, $69, $83, $FF                          ; MOV     A,FF83	;A "LDAW 83" would've been faster here...
-________0CBA:   #d8 $70, $79, $FF, $C7                          ; MOV     C7FF,A
+________0CB6:   mov a, [$FF83]                                  ;A "LDAW 83" would've been faster here...
+________0CBA:   mov [$C7FF], a
 ________0CBE:   jr $0CA4
 ;------------------------------------------------------------
 CALF____0CBF:   #d8 $37, $09                                    ; LTI     A,09
@@ -1836,7 +1876,7 @@ ________0D34:   #d8 $67, $03                                    ; NEI     A,03
 ________0D36:   #d8 $4E, $24                                    ; JRE     0D5C
 
 ________0D38:   #d8 $52                                         ; DCR     B
-________0D39:   #d8 $0A                                         ; MOV     A,B
+________0D39:   mov a, b
 ________0D3A:   #d8 $38, $D3                                    ; STAW    D3
 ________0D3C:   calf $09AD                                      ;Draw a dot on-screen
 ________0D3E:   #d8 $30, $D0                                    ; DCRW    D0		;Decrement length counter...
@@ -1851,17 +1891,17 @@ ________0D4D:   calf $09AD
 ________0D4F:   #d8 $20, $D1                                    ; INRW    D1
 ________0D51:   ret
 ________0D52:   #d8 $53                                         ; DCR     C
-________0D53:   #d8 $0B                                         ; MOV     A,C
+________0D53:   mov a, c
 ________0D54:   #d8 $38, $D2                                    ; STAW    D2
 ________0D56:   jr $0D60
 ;------------------------------------------------------------
 ________0D57:   #d8 $42                                         ; INR     B
-________0D58:   #d8 $0A                                         ; MOV     A,B
+________0D58:   mov a, b
 ________0D59:   #d8 $38, $D3                                    ; STAW    D3
 ________0D5B:   jr $0D60
 ;------------------------------------------------------------
 ________0D5C:   #d8 $43                                         ; INR     C
-________0D5D:   #d8 $0B                                         ; MOV     A,C
+________0D5D:   mov a, c
 ________0D5E:   #d8 $38, $D2                                    ; STAW    D2
 ________0D60:   calf $09AD
 ________0D62:   #d8 $30, $D0                                    ; DCRW    D0
@@ -1942,7 +1982,7 @@ ________0DD8:   #d8 $4E, $22                                    ; JRE     0DFC
 ________0DDA:   #d8 $67, $02                                    ; NEI     A,02
 ________0DDC:   #d8 $4E, $2C                                    ; JRE     0E0A
 
-________0DDE:   #d8 $70, $69, $FF, $C7                          ; MOV     A,C7FF   	;More puzzle grid drawing, probably...
+________0DDE:   mov a, [$C7FF]                                  ;More puzzle grid drawing, probably...
 ________0DE2:   #d8 $07, $03                                    ; ANI     A,03
 ________0DE4:   #d8 $67, $01                                    ; NEI     A,01
 ________0DE6:   rets
@@ -1951,7 +1991,7 @@ ________0DE7:   #d8 $14, $FF, $12                               ; LXI     B,12FF
 ________0DEA:   #d8 $15, $A2, $FF                               ; ORIW    A2,FF
 ________0DED:   jr $0DFB
 ;------------------------------------------------------------
-________0DEE:   #d8 $70, $69, $FF, $C7                          ; MOV     A,C7FF
+________0DEE:   mov a, [$C7FF]
 ________0DF2:   #d8 $37, $09                                    ; LTI     A,09
 ________0DF4:   rets
 
@@ -1959,27 +1999,27 @@ ________0DF5:   #d8 $14, $04, $0D                               ; LXI     B,0D04
 ________0DF8:   #d8 $05, $A2, $00                               ; ANIW    A2,00
 ________0DFB:   jr $0E17
 ;------------------------------------------------------------
-________0DFC:   #d8 $70, $69, $FF, $C7                          ; MOV     A,C7FF
+________0DFC:   mov a, [$C7FF]
 ________0E00:   #d8 $27, $04                                    ; GTI     A,04
 ________0E02:   rets
 ________0E03:   #d8 $14, $FC, $0F                               ; LXI     B,0FFC
 ________0E06:   #d8 $05, $A2, $00                               ; ANIW    A2,00
 ________0E09:   jr $0E17
 ;------------------------------------------------------------
-________0E0A:   #d8 $70, $69, $FF, $C7                          ; MOV     A,C7FF
+________0E0A:   mov a, [$C7FF]
 ________0E0E:   #d8 $47, $03                                    ; ONI     A,03
 ________0E10:   rets
 
 ________0E11:   #d8 $14, $01, $11                               ; LXI     B,1101
 ________0E14:   #d8 $15, $A2, $FF                               ; ORIW    A2,FF
-________0E17:   #d8 $70, $69, $FF, $C7                          ; MOV     A,C7FF
-________0E1B:   #d8 $1D                                         ; MOV     E,A
-________0E1C:   #d8 $70, $79, $FE, $C7                          ; MOV     C7FE,A
+________0E17:   mov a, [$C7FF]
+________0E1B:   mov e, a
+________0E1C:   mov [$C7FE], a
 ________0E20:   #d8 $60, $C3                                    ; ADD     A,C
-________0E22:   #d8 $1C                                         ; MOV     D,A
-________0E23:   #d8 $70, $79, $FF, $C7                          ; MOV     C7FF,A
+________0E22:   mov d, a
+________0E23:   mov [$C7FF], a
 ________0E27:   #d8 $34, $F1, $C7                               ; LXI     H,C7F1
-________0E2A:   #d8 $0C                                         ; MOV     A,D
+________0E2A:   mov a, d
 ________0E2B:   #d8 $51                                         ; DCR     A
 ________0E2C:   jr $0E2E
 ________0E2D:   jr $0E30
@@ -1987,7 +2027,7 @@ ________0E2D:   jr $0E30
 ________0E2E:   #d8 $32                                         ; INX     H
 ________0E2F:   jr $0E2B
 
-________0E30:   #d8 $0D                                         ; MOV     A,E
+________0E30:   mov a, e
 ________0E31:   #d8 $24, $F1, $C7                               ; LXI     D,C7F1
 ________0E34:   #d8 $51                                         ; DCR     A
 ________0E35:   jr $0E39
@@ -2012,9 +2052,9 @@ ________0E4C:   ret
 ; Turns on a hardware timer
 CALF____0E4D:   #d8 $48, $24                                    ; DI
 ________0E4F:   #d8 $69, $07                                    ; MVI     A,07
-________0E51:   #d8 $4D, $C9                                    ; MOV     TMM,A
+________0E51:   mov tmm, a
 ________0E53:   #d8 $69, $74                                    ; MVI     A,74
-________0E55:   #d8 $4D, $C6                                    ; MOV     T0,A
+________0E55:   mov tm0, a
 ________0E57:   #d8 $05, $80, $FC                               ; ANIW    80,FC
 ________0E5A:   #d8 $19                                         ; STM
 ________0E5B:   #d8 $48, $20                                    ; EI
@@ -2106,10 +2146,10 @@ ________0ED1:   ret
 CALT_AB_0ED2:   #d8 $48, $3F                                    ; POP     H
 ________0ED4:   #d8 $2D                                         ; LDAX    H+
 ________0ED5:   #d8 $48, $3E                                    ; PUSH    H
-________0ED7:   #d8 $1A                                         ; MOV     B,A
+________0ED7:   mov b, a
 ________0ED8:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0EDA:   #d8 $38, $96                                    ; STAW    96
-________0EDC:   #d8 $0A                                         ; MOV     A,B
+________0EDC:   mov a, b
 ________0EDD:   calt $00C0                                      ; "(RLR A)x4"
 ________0EDE:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0EE0:   #d8 $37, $0D                                    ; LTI     A,0D
@@ -2197,9 +2237,9 @@ ________0F4E:   #d8 $6A, $07                                    ; MVI     B,07
 ________0F50:   jr $0F3B
 ;------------------------------------------------------------
 ;for the addition routine below...
-________0F51:   #d8 $0E                                         ; MOV     A,H
+________0F51:   mov a, h
 ________0F52:   #d8 $38, $B0                                    ; STAW    B0
-________0F54:   #d8 $0F                                         ; MOV     A,L
+________0F54:   mov a, l
 ________0F55:   #d8 $38, $B1                                    ; STAW    B1
 ________0F57:   #d8 $34, $B1, $FF                               ; LXI     H,FFB1
 ________0F5A:   #d8 $28, $96                                    ; LDAW    96
@@ -2224,13 +2264,13 @@ ________0F6A:   #d8 $57, $02                                    ; OFFI    A,02	;
 ________0F6C:   jr $0F51
 
 ________0F6D:   calf $0C72                                      ;"RLR A" x2
-________0F6F:   #d8 $1A                                         ; MOV     B,A		;Get our length bits (8-32 bits)
+________0F6F:   mov b, a                                        ;Get our length bits (8-32 bits)
 ________0F70:   #d8 $07, $03                                    ; ANI     A,03
-________0F72:   #d8 $1B                                         ; MOV     C,A
-________0F73:   #d8 $0A                                         ; MOV     A,B
+________0F72:   mov c, a
+________0F73:   mov a, b
 ________0F74:   calf $0C72                                      ;"RLR A" x2
 ________0F76:   #d8 $07, $03                                    ; ANI     A,03
-________0F78:   #d8 $1A                                         ; MOV     B,A
+________0F78:   mov b, a
 ________0F79:   #d8 $45, $96, $40                               ; ONIW    96,40	;Do we subtract instead of add?
 ________0F7C:   jr $0F83
 ________0F7D:   #d8 $45, $96, $80                               ; ONIW    96,80	;Do we work in binary-coded decimal?
@@ -2323,12 +2363,12 @@ CALT_AC_0FD9:   #d8 $48, $1F                                    ; POP     B
 ________0FDB:   #d8 $29                                         ; LDAX    B
 ________0FDC:   #d8 $12                                         ; INX     B
 ________0FDD:   #d8 $48, $1E                                    ; PUSH    B
-________0FDF:   #d8 $1A                                         ; MOV     B,A
+________0FDF:   mov b, a
 ________0FE0:   #d8 $47, $80                                    ; ONI     A,80	;do we Dec?
 ________0FE2:   jr $0FF1
 
 ________0FE3:   #d8 $07, $7F                                    ; ANI     A,7F	;Counter can be 00-7F
-________0FE5:   #d8 $1A                                         ; MOV     B,A
+________0FE5:   mov b, a
 ________0FE6:   #d8 $2B                                         ; LDAX    H		;Load a byte
 ________0FE7:   #d8 $66, $01                                    ; SUI     A,01	;Decrement it
 ________0FE9:   #d8 $3F                                         ; STAX    H-
