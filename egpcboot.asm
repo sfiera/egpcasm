@@ -5,6 +5,8 @@
     ret => $08
     rets => $18
 
+    jmp {addr: u16} => $54 @ le(addr)
+
     calt {addr: u16} => {
         assert(addr & 0x0001 == 0)
         assert(addr >= 0x0080)
@@ -50,7 +52,7 @@ RESET___0000:   nop
 ________0001:   #d8 $48, $24                                    ; DI
 ________0003:   jr $0013
 ;------------------------------------------------------------
-INT0____0004:   #d8 $54, $0C, $40                               ; JMP     400C
+INT0____0004:   jmp $400C
 ________0007:   nop
 ;------------------------------------------------------------
 INTT____0008:   #d8 $4E, $E6                                    ; JRE     00F0
@@ -65,7 +67,7 @@ ________000D:   jr $000a
 ________000E:   ret
 ________000F:   nop
 ;------------------------------------------------------------
-INT1____0010:   #d8 $54, $0F, $40                               ; JMP     400F
+INT1____0010:   jmp $400F
 ;------------------------------------------------------------
 cont____0013:   #d8 $04, $00, $00                               ; LXI     SP,0000
 ________0016:   #d8 $48, $3C                                    ; PER			;Set Port E to AB mode
@@ -103,7 +105,7 @@ ________0056:   #d8 $4D, $C3                                    ; MOV     MK,A  
 ________0058:   #d8 $48, $20                                    ; EI
 ________005A:   calt $0080                                      ; [PC+1] Check Cartridge
 ________005B:   #d8 $C0                                         ; DB $C0 		;Jump to ($4001) in cartridge
-________005C:   #d8 $54, $7F, $05                               ; JMP     057F        ;Flow continues if no cartridge is present.
+________005C:   jmp $057F                                       ;Flow continues if no cartridge is present.
 ;------------------------------------------------------------
 ;(DE+)-(HL+) ==> A
 ; Loads A with (DE), increments DE, then subtracts (HL) from A and increments HL.
@@ -282,7 +284,7 @@ ________015D:   #d8 $48, $1E                                    ; PUSH    B
 ________015F:   #d8 $48, $2E                                    ; PUSH    D
 ________0161:   #d8 $48, $3E                                    ; PUSH    H
 ________0163:   #d8 $55, $80, $80                               ; OFFIW   80,80	;If 0, don't go to cart's INT routine
-________0166:   #d8 $54, $09, $40                               ; JMP     4009
+________0166:   jmp $4009
 ;---------------------------------------
 ________0169:   #d8 $60, $D2                                    ; ADC     A,B         ;Probably a simple random-number generator.
 ________016B:   #d8 $60, $D3                                    ; ADC     A,C
@@ -562,7 +564,7 @@ ________05AF:   #d8 $7E, $64                                    ; CALF    0E64	;
 ________05B1:   calt $0086                                      ;Setup/Play Music
 ________05B2:   calt $0088                                      ;Read Controller FF90-FF95
 ________05B3:   #d8 $65, $93, $01                               ; NEIW    93,01       ;If Select is pressed...
-________05B6:   #d8 $54, $EC, $06                               ; JMP     06EC        ;Setup puzzle
+________05B6:   jmp $06EC                                       ;Setup puzzle
 ________05B9:   #d8 $65, $D2, $0F                               ; NEIW    D2,0F
 ________05BC:   #d8 $4F, $D3                                    ; JRE     0591        ;(go to main loop setup)
 ________05BE:   #d8 $7D, $1F                                    ; CALF    0D1F        ;Draw spiral dot-by-dot
@@ -829,7 +831,7 @@ ________0743:   #d8 $45, $95, $01                               ; ONIW    95,01	
 ________0746:   jr $074D
 ________0747:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0748:   #d8 $14, $03                                    ; DB $14,$03
-________074A:   #d8 $54, $D1, $05                               ; JMP     05D1	;Go to Paint Program
+________074A:   jmp $05D1                                       ;Go to Paint Program
 ________074D:   #d8 $65, $93, $08                               ; NEIW    93,08	;Start
 ________0750:   #d8 $45, $95, $08                               ; ONIW    95,08
 ________0753:   jr $0758
@@ -841,7 +843,7 @@ ________0758:   #d8 $75, $8A, $80                               ; EQIW    8A,80
 ________075B:   #d8 $4F, $BC                                    ; JRE     0719        ;Draw Tiles
 ________075D:   #d8 $75, $89, $3C                               ; EQIW    89,3C
 ________0760:   #d8 $4F, $B3                                    ; JRE     0715	;Reset timer?
-________0762:   #d8 $54, $7F, $05                               ; JMP     057F        ;Go back to startup screen(?)
+________0762:   jmp $057F                                       ;Go back to startup screen(?)
 ;------------------------------------------------------------
 ________0765:   calt $008C                                      ; "Clear Screen 2 RAM"
 ________0766:   #d8 $34, $53, $05                               ; LXI     H,0553      ;"TIME"
@@ -1031,7 +1033,7 @@ ________0892:   jr $088C
 ________0893:   #d8 $7E, $64                                    ; CALF    0E64	;Point HL to music data
 ________0895:   calt $0086                                      ;Setup/Play Music
 ________0896:   #d8 $45, $80, $03                               ; ONIW    80,03
-________0899:   #d8 $54, $12, $07                               ; JMP     0712        ;Continue puzzle
+________0899:   jmp $0712                                       ;Continue puzzle
 ________089C:   jr $0896
 ;End of Puzzle Code
 ;------------------------------------------------------------
@@ -1983,7 +1985,7 @@ ________0E30:   #d8 $0D                                         ; MOV     A,E
 ________0E31:   #d8 $24, $F1, $C7                               ; LXI     D,C7F1
 ________0E34:   #d8 $51                                         ; DCR     A
 ________0E35:   jr $0E39
-________0E36:   #d8 $54, $F8, $08                               ; JMP     08F8
+________0E36:   jmp $08F8
 
 ________0E39:   #d8 $22                                         ; INX     D
 ________0E3A:   jr $0E34
