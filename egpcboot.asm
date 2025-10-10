@@ -68,6 +68,8 @@
 }
 
 #ruledef {
+    dw {value: u16} => le(value)
+
     nop => $00
 
     ret => $08
@@ -334,63 +336,63 @@ ________007F:   ret
 ; "[PC+X]" means the subroutine uses the bytes after its call as parameters.
 ; the subroutine then usually advances the return address by X bytes before returning.
 
-_CALT_80__0080:   #d8 $A6, $01                     ; DW 01A6	;[PC+1] Check Cartridge
-_CALT_81__0082:   #d8 $CF, $01                     ; DW 01CF	;Copy Screen RAM to LCD Driver
-_CALT_82__0084:   #d8 $8E, $01                     ; DW 018E	;[PC+2] Setup/Play Sound
-_CALT_83__0086:   #d8 $9C, $01                     ; DW 019C	;Setup/Play Music
-_CALT_84__0088:   #d8 $1F, $09                     ; DW 091F	;Read Controller FF90-FF95
-_CALT_85__008A:   #d8 $9D, $08                     ; DW 089D	;Clear A
-_CALT_86__008C:   #d8 $FF, $08                     ; DW 08FF	;Clear Screen 2 RAM
-_CALT_87__008E:   #d8 $02, $09                     ; DW 0902	;Clear Screen RAM
-_CALT_88__0090:   #d8 $15, $09                     ; DW 0915	;Clear C4B0~C593
-_CALT_89__0092:   #d8 $0D, $09                     ; DW 090D	;Clear C594~C7FF
-_CALT_8A__0094:   #d8 $1A, $09                     ; DW 091A	;Clear RAM (HL+)xB
-_CALT_8B__0096:   #d8 $1B, $0C                     ; DW 0C1B	;HL <== HL+DE
-_CALT_8C__0098:   #d8 $0E, $0C                     ; DW 0C0E	;[PC+1] HL +- byte
-_CALT_8D__009A:   #d8 $18, $0C                     ; DW 0C18	;HL <== HL+E
-_CALT_8E__009C:   #d8 $8C, $09                     ; DW 098C	;Swap C258+ <==> C000+
-_CALT_8F__009E:   #d8 $81, $09                     ; DW 0981	;C000+ ==> C258+
-_CALT_90__00A0:   #d8 $7E, $09                     ; DW 097E	;C258+ ==> C000+
-_CALT_91__00A2:   #d8 $CD, $01                     ; DW 01CD	;CALT 00A0, CALT 00A4
-_CALT_92__00A4:   #d8 $37, $0B                     ; DW 0B37	;?? (Move some RAM around...)
-_CALT_93__00A6:   #d8 $D7, $08                     ; DW 08D7	;HL <== AxE
-_CALT_94__00A8:   #d8 $A0, $08                     ; DW 08A0	;XCHG HL,DE
-_CALT_95__00AA:   #d8 $11, $0D                     ; DW 0D11	;((HL+) ==> (DE+))xB
-_CALT_96__00AC:   #d8 $0A, $00                     ; DW 000A	;((HL-) ==> (DE-))xB
-_CALT_97__00AE:   #d8 $F3, $08                     ; DW 08F3	;((HL+) <==> (DE+))xB
-_CALT_98__00B0:   #d8 $99, $09                     ; DW 0999	;Set Dot; B,C = X-,Y-position
-_CALT_99__00B2:   #d8 $C7, $09                     ; DW 09C7	;[PC+2] Draw Horizontal Line
-_CALT_9A__00B4:   #d8 $E4, $09                     ; DW 09E4	;[PC+3] Print Bytes on-Screen
-_CALT_9B__00B6:   #d8 $29, $0A                     ; DW 0A29	;[PC+3] Print Text on-Screen
-_CALT_9C__00B8:   #d8 $0E, $0B                     ; DW 0B0E	;Byte -> Point to Font Graphic
-_CALT_9D__00BA:   #d8 $F1, $0B                     ; DW 0BF1	;Set HL to screen (B,C)
-_CALT_9E__00BC:   #d8 $24, $0C                     ; DW 0C24	;HL=C4B0+(A*$10)
-_CALT_9F__00BE:   #d8 $1B, $09                     ; DW 091B	;A ==> (HL+)xB
-_CALT_A0__00C0:   #d8 $6E, $0C                     ; DW 0C6E	;(RLR A)x4
-_CALT_A1__00C2:   #d8 $5F, $00                     ; DW 005F	;(DE+)-(HL+) ==> A
-_CALT_A2__00C4:   #d8 $63, $00                     ; DW 0063	;?? (Find 1st diff. byte in (HL),(DE)xB)
-_CALT_A3__00C6:   #d8 $6D, $00                     ; DW 006D	;?? (Find diff. & Copy bytes)
-_CALT_A4__00C8:   #d8 $5D, $0F                     ; DW 0F5D	;[PC+1] 8~32-bit Add/Subtract (dec/hex)
-_CALT_A5__00CA:   #d8 $42, $0F                     ; DW 0F42	;[PC+1] Invert 8 bytes at (C4B8+A*$10)
-_CALT_A6__00CC:   #d8 $2C, $0F                     ; DW 0F2C	;Invert Screen RAM (C000~)
-_CALT_A7__00CE:   #d8 $2F, $0F                     ; DW 0F2F	;Invert Screen 2 RAM (C258~)
-_CALT_A8__00D0:   #d8 $6E, $0E                     ; DW 0E6E	;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
-_CALT_A9__00D2:   #d8 $98, $0E                     ; DW 0E98	;[PC+1] ?? (Unpack & Roll 8 bits)
-_CALT_AA__00D4:   #d8 $A4, $0E                     ; DW 0EA4	;[PC+1] ?? (Roll 8 bits -> Byte?)
-_CALT_AB__00D6:   #d8 $D2, $0E                     ; DW 0ED2	;[PC+x] ?? (Add/Sub multiple bytes)
-_CALT_AC__00D8:   #d8 $D9, $0F                     ; DW 0FD9	;[PC+1] INC/DEC Range of bytes from (HL)
-_CALT_AD__00DA:   #d8 $B1, $09                     ; DW 09B1	;Clear Dot; B,C = X-,Y-position
+_CALT_80__0080:   dw CALT_80_01A6	;[PC+1] Check Cartridge
+_CALT_81__0082:   dw CALT_81_01CF	;Copy Screen RAM to LCD Driver
+_CALT_82__0084:   dw CALT_82_018E	;[PC+2] Setup/Play Sound
+_CALT_83__0086:   dw CALT_83_019C	;Setup/Play Music
+_CALT_84__0088:   dw CALT_84_091F	;Read Controller FF90-FF95
+_CALT_85__008A:   dw CALT_85_089D	;Clear A
+_CALT_86__008C:   dw CALT_86_08FF	;Clear Screen 2 RAM
+_CALT_87__008E:   dw CALT_87_0902	;Clear Screen RAM
+_CALT_88__0090:   dw CALT_88_0915	;Clear C4B0~C593
+_CALT_89__0092:   dw CALT_89_090D	;Clear C594~C7FF
+_CALT_8A__0094:   dw CALT_8A_091A	;Clear RAM (HL+)xB
+_CALT_8B__0096:   dw CALT_8B_0C1B	;HL <== HL+DE
+_CALT_8C__0098:   dw CALT_8C_0C0E	;[PC+1] HL +- byte
+_CALT_8D__009A:   dw CALT_8D_0C18	;HL <== HL+E
+_CALT_8E__009C:   dw CALT_8E_098C	;Swap C258+ <==> C000+
+_CALT_8F__009E:   dw CALT_8F_0981	;C000+ ==> C258+
+_CALT_90__00A0:   dw CALT_90_097E	;C258+ ==> C000+
+_CALT_91__00A2:   dw CALT_91_01CD	;CALT 00A0, CALT 00A4
+_CALT_92__00A4:   dw CALT_92_0B37	;?? (Move some RAM around...)
+_CALT_93__00A6:   dw CALT_93_08D7	;HL <== AxE
+_CALT_94__00A8:   dw CALT_94_08A0	;XCHG HL,DE
+_CALT_95__00AA:   dw CALT_95_0D11	;((HL+) ==> (DE+))xB
+_CALT_96__00AC:   dw CALT_96_000A	;((HL-) ==> (DE-))xB
+_CALT_97__00AE:   dw CALT_97_08F3	;((HL+) <==> (DE+))xB
+_CALT_98__00B0:   dw CALT_98_0999	;Set Dot; B,C = X-,Y-position
+_CALT_99__00B2:   dw CALT_99_09C7	;[PC+2] Draw Horizontal Line
+_CALT_9A__00B4:   dw CALT_9A_09E4	;[PC+3] Print Bytes on-Screen
+_CALT_9B__00B6:   dw CALT_9B_0A29	;[PC+3] Print Text on-Screen
+_CALT_9C__00B8:   dw CALT_9C_0B0E	;Byte -> Point to Font Graphic
+_CALT_9D__00BA:   dw CALT_9D_0BF1	;Set HL to screen (B,C)
+_CALT_9E__00BC:   dw CALT_9E_0C24	;HL=C4B0+(A*$10)
+_CALT_9F__00BE:   dw CALT_9F_091B	;A ==> (HL+)xB
+_CALT_A0__00C0:   dw CALT_A0_0C6E	;(RLR A)x4
+_CALT_A1__00C2:   dw CALT_A1_005F	;(DE+)-(HL+) ==> A
+_CALT_A2__00C4:   dw CALT_A2_0063	;?? (Find 1st diff. byte in (HL),(DE)xB)
+_CALT_A3__00C6:   dw CALT_A3_006D	;?? (Find diff. & Copy bytes)
+_CALT_A4__00C8:   dw CALT_A4_0F5D	;[PC+1] 8~32-bit Add/Subtract (dec/hex)
+_CALT_A5__00CA:   dw CALT_A5_0F42	;[PC+1] Invert 8 bytes at (C4B8+A*$10)
+_CALT_A6__00CC:   dw CALT_A6_0F2C	;Invert Screen RAM (C000~)
+_CALT_A7__00CE:   dw CALT_A7_0F2F	;Invert Screen 2 RAM (C258~)
+_CALT_A8__00D0:   dw CALT_A8_0E6E	;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
+_CALT_A9__00D2:   dw CALT_A9_0E98	;[PC+1] ?? (Unpack & Roll 8 bits)
+_CALT_AA__00D4:   dw CALT_AA_0EA4	;[PC+1] ?? (Roll 8 bits -> Byte?)
+_CALT_AB__00D6:   dw CALT_AB_0ED2	;[PC+x] ?? (Add/Sub multiple bytes)
+_CALT_AC__00D8:   dw CALT_AC_0FD9	;[PC+1] INC/DEC Range of bytes from (HL)
+_CALT_AD__00DA:   dw CALT_AD_09B1	;Clear Dot; B,C = X-,Y-position
 
-_CALT_AE__00DC:   #d8 $12, $40                     ; DW 4012      ;Jump table for cartridge routines
-_CALT_AF__00DE:   #d8 $15, $40                     ; DW 4015
-_CALT_B0__00E0:   #d8 $18, $40                     ; DW 4018
-_CALT_B1__00E2:   #d8 $1B, $40                     ; DW 401B
-_CALT_B2__00E4:   #d8 $1E, $40                     ; DW 401E
-_CALT_B3__00E6:   #d8 $21, $40                     ; DW 4021
-_CALT_B4__00E8:   #d8 $24, $40                     ; DW 4024
-_CALT_B5__00EA:   #d8 $27, $40                     ; DW 4027
-_CALT_B6__00EC:   #d8 $2A, $40                     ; DW 402A
-_CALT_B7__00EE:   #d8 $2D, $40                     ; DW 402D
+_CALT_AE__00DC:   dw $4012      ;Jump table for cartridge routines
+_CALT_AF__00DE:   dw $4015
+_CALT_B0__00E0:   dw $4018
+_CALT_B1__00E2:   dw $401B
+_CALT_B2__00E4:   dw $401E
+_CALT_B3__00E6:   dw $4021
+_CALT_B4__00E8:   dw $4024
+_CALT_B5__00EA:   dw $4027
+_CALT_B6__00EC:   dw $402A
+_CALT_B7__00EE:   dw $402D
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT____00F0:   #d8 $45, $80, $01                               ; ONIW    80,01	;If 1, don't jump to cart.
