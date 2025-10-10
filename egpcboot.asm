@@ -54,6 +54,13 @@
     {r: reg_vbcdehl} => r
 }
 
+#subruledef ani_port {
+    pa  => 0b00
+    pb  => 0b01
+    pc  => 0b10
+    mk  => 0b11
+}
+
 #subruledef mov_a_port {
     pa  => 0x0
     pb  => 0x1
@@ -215,6 +222,11 @@
     neiw    [{addr: hi_addr}], {value: u8} => $65 @ addr @ value
     eqiw    [{addr: hi_addr}], {value: u8} => $75 @ addr @ value
 
+    ani  {port: ani_port}, {value: u8} => $648 @ 0b10 @ port @ value
+    ori  {port: ani_port}, {value: u8} => $649 @ 0b10 @ port @ value
+    oni  {port: ani_port}, {value: u8} => $64c @ 0b10 @ port @ value
+    offi {port: ani_port}, {value: u8} => $64d @ 0b10 @ port @ value
+
     push {reg: push_reg} => $48 @ reg @ $e
     pop {reg: push_reg} => $48 @ reg @ $f
 
@@ -310,22 +322,22 @@ cont____0013:   lxi sp, $0000
 ________0016:   per                                             ;Set Port E to AB mode
 ________0018:   mvi a, $C1
 ________001A:   mov pa, a
-________001C:   #d8 $64, $88, $FE                               ; ANI     PA,FE
-________001F:   #d8 $64, $98, $01                               ; ORI     PA,01
+________001C:   ani pa, $FE
+________001F:   ori pa, $01
 ________0022:   calt $008A                                      ; "Clear A"
 ________0023:   mov mb, a                                       ;Mode B = All outputs
-________0025:   #d8 $64, $98, $38                               ; ORI     PA,38
+________0025:   ori pa, $38
 
 ________0028:   mvi a, $39
 ________002A:   mov pb, a
-________002C:   #d8 $64, $98, $02                               ; ORI     PA,02
-________002F:   #d8 $64, $88, $FD                               ; ANI     PA,FD
+________002C:   ori pa, $02
+________002F:   ani pa, $FD
 ________0032:   mvi a, $3E
 ________0034:   mov pb, a
-________0036:   #d8 $64, $98, $02                               ; ORI     PA,02
-________0039:   #d8 $64, $88, $FD                               ; ANI     PA,FD
-________003C:   #d8 $64, $88, $C7                               ; ANI     PA,C7
-________003F:   #d8 $64, $98, $04                               ; ORI     PA,04
+________0036:   ori pa, $02
+________0039:   ani pa, $FD
+________003C:   ani pa, $C7
+________003F:   ori pa, $04
 ________0042:   mvi a, $07
 ________0044:   mov tmm, a                                      ;Timer register = #$7
 ________0046:   mvi a, $74
@@ -610,21 +622,21 @@ ________01CE:   calt $00A4                                      ; "?? (Move some
 ;Copy Screen RAM to LCD Driver
 ; A very important and often-used function.  The LCD won't show anything without it...
 								;Set up writing for LCD controller #1
-CALT_81_01CF:   #d8 $64, $98, $08                               ; ORI     PA,08       ;(Port A, bit 3 on)
+CALT_81_01CF:   ori pa, $08                                     ;(Port A, bit 3 on)
 ________01D2:   lxi hl, $C031
 ________01D5:   lxi de, $007D
 ________01D8:   mvi b, $00
-________01DA:   #d8 $64, $88, $FB                               ; ANI     PA,FB       ;bit 2 off
+________01DA:   ani pa, $FB                                     ;bit 2 off
 ________01DD:   mov a, b
 ________01DE:   mov pb, a                                       ;Port B = (A)
-________01E0:   #d8 $64, $98, $02                               ; ORI     PA,02       ;bit 1 on
-________01E3:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
+________01E0:   ori pa, $02                                     ;bit 1 on
+________01E3:   ani pa, $FD                                     ;bit 1 off
 ________01E6:   mvi c, $31
-________01E8:   #d8 $64, $98, $04                               ; ORI     PA,04       ;bit 2 on
+________01E8:   ori pa, $04                                     ;bit 2 on
 ________01EB:   ldax [hl-]                                      ;Screen data...
 ________01EC:   mov pb, a                                       ;...to Port B
-________01EE:   #d8 $64, $98, $02                               ; ORI     PA,02       ;bit 1 on
-________01F1:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
+________01EE:   ori pa, $02                                     ;bit 1 on
+________01F1:   ani pa, $FD                                     ;bit 1 off
 ________01F4:   dcr c
 ________01F5:   jr $01EB
 ________01F6:   calt $0096                                      ; "HL <== HL+DE"
@@ -634,22 +646,22 @@ ________01FA:   jr $01FE
 ________01FB:   mov b, a
 ________01FC:   jre $01DA
 								;Set up writing for LCD controller #2
-________01FE:   #d8 $64, $88, $F7                               ; ANI     PA,F7       ;bit 3 off
-________0201:   #d8 $64, $98, $10                               ; ORI     PA,10       ;bit 4 on
+________01FE:   ani pa, $F7                                     ;bit 3 off
+________0201:   ori pa, $10                                     ;bit 4 on
 ________0204:   lxi hl, $C12C
 ________0207:   lxi de, $0019
 ________020A:   mvi b, $00
-________020C:   #d8 $64, $88, $FB                               ; ANI     PA,FB       ;Same as in 1st loop
+________020C:   ani pa, $FB                                     ;Same as in 1st loop
 ________020F:   mov a, b
 ________0210:   mov pb, a
-________0212:   #d8 $64, $98, $02                               ; ORI     PA,02
-________0215:   #d8 $64, $88, $FD                               ; ANI     PA,FD
+________0212:   ori pa, $02
+________0215:   ani pa, $FD
 ________0218:   mvi c, $31
-________021A:   #d8 $64, $98, $04                               ; ORI     PA,04
+________021A:   ori pa, $04
 ________021D:   ldax [hl+]
 ________021E:   mov pb, a
-________0220:   #d8 $64, $98, $02                               ; ORI     PA,02
-________0223:   #d8 $64, $88, $FD                               ; ANI     PA,FD
+________0220:   ori pa, $02
+________0223:   ani pa, $FD
 ________0226:   dcr c
 ________0227:   jr $021D
 ________0228:   calt $0096                                      ; "HL <== HL+DE"
@@ -662,25 +674,25 @@ ________022E:   jre $020C
 ________0230:   calt $008A                                      ; "Clear A"
 ________0231:   staw [$FF96]
         						;Set up writing for LCD controller #3
-________0233:   #d8 $64, $88, $EF                               ; ANI     PA,EF	;bit 4 off
-________0236:   #d8 $64, $98, $20                               ; ORI     PA,20       ;bit 5 on
+________0233:   ani pa, $EF                                     ;bit 4 off
+________0236:   ori pa, $20                                     ;bit 5 on
 ________0239:   lxi hl, $C032
 ________023C:   lxi de, $C15E
 ________023F:   mvi b, $00
-________0241:   #d8 $64, $88, $FB                               ; ANI     PA,FB
+________0241:   ani pa, $FB
 ________0244:   mov a, b
 ________0245:   mov pb, a
-________0247:   #d8 $64, $98, $02                               ; ORI     PA,02
-________024A:   #d8 $64, $88, $FD                               ; ANI     PA,FD
+________0247:   ori pa, $02
+________024A:   ani pa, $FD
 ________024D:   nop
-________024E:   #d8 $64, $98, $04                               ; ORI     PA,04
+________024E:   ori pa, $04
 
 ________0251:   mvi c, $18
 
 ________0253:   ldax [hl+]
 ________0254:   mov pb, a
-________0256:   #d8 $64, $98, $02                               ; ORI     PA,02
-________0259:   #d8 $64, $88, $FD                               ; ANI     PA,FD
+________0256:   ori pa, $02
+________0259:   ani pa, $FD
 ________025C:   dcr c
 ________025D:   jr $0253
 
@@ -699,7 +711,7 @@ ________0270:   jr $0274
 ________0271:   mov b, a
 ________0272:   jre $0241
 
-________0274:   #d8 $64, $88, $DF                               ; ANI     PA,DF       ;bit 5 off
+________0274:   ani pa, $DF                                     ;bit 5 off
 ________0277:   ret
 ;-----------------------------------------------------------
 	;Sound note and timer data...
@@ -1392,7 +1404,7 @@ CALT_84_091F:   lxi hl, $FF92                                   ;Current joy sto
 ________0922:   lxi de, $FF90                                   ;Old joy storage
 ________0925:   mvi b, $01                                      ;Copy 2 bytes from curr->old
 ________0927:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
-________0928:   #d8 $64, $88, $BF                               ; ANI     PA,BF       ;PA Bit 6 off
+________0928:   ani pa, $BF                                     ;PA Bit 6 off
 ________092B:   mov a, pc                                       ;Get port C
 ________092D:   xri a, $FF
 ________092F:   mov c, a
@@ -1403,14 +1415,14 @@ ________0934:   mov a, pc                                       ;Get port C a 2n
 ________0936:   xri a, $FF
 ________0938:   eqa a, c                                        ;Check if both reads are equal
 ________093A:   jr $092F
-________093B:   #d8 $64, $98, $40                               ; ORI     PA,40	;PA Bit 6 on
+________093B:   ori pa, $40                                     ;PA Bit 6 on
 ________093E:   ani a, $03
 ________0940:   stax [de+]                                      ;Save controller read in 92
 ________0941:   mov a, c
 ________0942:   calf $0C72                                      ;RLR A x2
 ________0944:   ani a, $07
 ________0946:   stax [de-]                                      ;Save cont in 93
-________0947:   #d8 $64, $88, $7F                               ; ANI     PA,7F	;PA bit 7 off
+________0947:   ani pa, $7F                                     ;PA bit 7 off
 ________094A:   mov a, pc                                       ;Get other controller bits
 ________094C:   xri a, $FF
 ________094E:   mov c, a
@@ -1421,7 +1433,7 @@ ________0953:   mov a, pc
 ________0955:   xri a, $FF
 ________0957:   eqa a, c                                        ;...check again
 ________0959:   jr $094E
-________095A:   #d8 $64, $98, $80                               ; ORI     PA,80       ;PA bit 7 on
+________095A:   ori pa, $80                                     ;PA bit 7 on
 ________095D:   ral
 ________095F:   ral
 ________0961:   ani a, $0C
