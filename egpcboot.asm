@@ -67,6 +67,13 @@
     tmm => 0x9
 }
 
+#subruledef hi_addr {
+    {addr: u16} => {
+        assert(addr >= 0xFF00)
+        (addr & 0xFF)`8
+    }
+}
+
 #ruledef {
     dw {value: u16} => le(value)
 
@@ -105,6 +112,9 @@
     dcx {reg: inx_reg} => reg @ $3
     ldax [{reg: ldax_reg}] => $2 @ reg
     stax [{reg: ldax_reg}] => $3 @ reg
+
+    ldaw [{addr: hi_addr}] => $28 @ addr
+    staw [{addr: hi_addr}] => $38 @ addr
 
     inr {reg: reg_inr} => $4 @ reg
     dcr {reg: reg_inr} => $5 @ reg
@@ -402,8 +412,8 @@ ________00F5:   #d8 $30, $9A                                    ; DCRW    9A
 ________00F7:   jre $0158
 
 ________00F9:   push va
-________00FB:   #d8 $28, $8F                                    ; LDAW    8F
-________00FD:   #d8 $38, $9A                                    ; STAW    9A
+________00FB:   ldaw [$FF8F]
+________00FD:   staw [$FF9A]
 ________00FF:   #d8 $30, $99                                    ; DCRW    99
 ________0101:   jre $012E
 
@@ -431,28 +441,28 @@ ________0127:   stm
 ________0128:   pop hl
 ________012A:   pop de
 ________012C:   pop bc
-________012E:   #d8 $28, $88                                    ; LDAW    88
+________012E:   ldaw [$FF88]
 ________0130:   adi a, $01
 ________0132:   daa
-________0133:   #d8 $38, $88                                    ; STAW    88
+________0133:   staw [$FF88]
 ________0135:   #d8 $48, $1A                                    ; SKN     CY
 ________0137:   jr $0139
 ________0138:   jr $014E
 
 ________0139:   #d8 $20, $89                                    ; INRW    89
 ________013B:   nop
-________013C:   #d8 $28, $87                                    ; LDAW    87
+________013C:   ldaw [$FF87]
 ________013E:   adi a, $01
 ________0140:   daa
-________0141:   #d8 $38, $87                                    ; STAW    87
+________0141:   staw [$FF87]
 ________0143:   #d8 $48, $1A                                    ; SKN     CY
 ________0145:   jr $0147
 ________0146:   jr $014E
 
-________0147:   #d8 $28, $86                                    ; LDAW    86
+________0147:   ldaw [$FF86]
 ________0149:   adi a, $01
 ________014B:   daa
-________014C:   #d8 $38, $86                                    ; STAW    86
+________014C:   staw [$FF86]
 ________014E:   #d8 $45, $8A, $80                               ; ONIW    8A,80
 ________0151:   #d8 $20, $8A                                    ; INRW    8A
 ________0153:   #d8 $20, $8B                                    ; INRW    8B
@@ -475,18 +485,18 @@ ________016D:   adc a, d
 ________016F:   adc a, e
 ________0171:   adc a, h
 ________0173:   adc a, l
-________0175:   #d8 $38, $8C                                    ; STAW    8C
+________0175:   staw [$FF8C]
 ________0177:   ral
 ________0179:   ral
 ________017B:   mov b, a
 ________017C:   pop de
 ________017E:   push de
 ________0180:   adc a, e
-________0182:   #d8 $38, $8D                                    ; STAW    8D
+________0182:   staw [$FF8D]
 ________0184:   #d8 $48, $31                                    ; RLR
 ________0186:   #d8 $48, $31                                    ; RLR
 ________0188:   adc a, b
-________018A:   #d8 $38, $8E                                    ; STAW    8E
+________018A:   staw [$FF8E]
 ________018C:   jre $0128
 ;------------------------------------------------------------
 ;[PC+2] Setup/Play Sound
@@ -498,7 +508,7 @@ ________0192:   ldax [hl+]                                      ;(PC+1)
 ________0193:   mov b, a
 ________0194:   ldax [hl+]                                      ;(PC+1)
 ________0195:   push hl
-________0197:   #d8 $38, $99                                    ; STAW    99
+________0197:   staw [$FF99]
 ________0199:   calf $08B6                                      ;Set note timers
 ________019B:   jr $01A3
 ;------------------------------------------------------------
@@ -520,7 +530,7 @@ ________01AA:   eqi a, $55
 ________01AC:   rets
 
 ________01AD:   calt $008A                                      ; "Clear A"
-________01AE:   #d8 $38, $89                                    ; STAW    89
+________01AE:   staw [$FF89]
 ________01B0:   ldax [hl]
 ________01B1:   eqi a, $55
 ________01B3:   rets
@@ -606,7 +616,7 @@ ________022D:   mov b, a
 ________022E:   jre $020C
 
 ________0230:   calt $008A                                      ; "Clear A"
-________0231:   #d8 $38, $96                                    ; STAW    96
+________0231:   staw [$FF96]
         						;Set up writing for LCD controller #3
 ________0233:   #d8 $64, $88, $EF                               ; ANI     PA,EF	;bit 4 off
 ________0236:   #d8 $64, $98, $20                               ; ORI     PA,20       ;bit 5 on
@@ -716,26 +726,26 @@ ________056F:   #d8 $08, $04, $02, $04, $08, $08, $08, $01, $02,$01, $08, $04, $
 ;from 005C -
 
 ________057F:   calt $008C                                      ;Clear Screen 2 RAM
-________0580:   #d8 $38, $D8                                    ; STAW    D8          ;Set mem locations to 0
-________0582:   #d8 $38, $82                                    ; STAW    82
-________0584:   #d8 $38, $A5                                    ; STAW    A5
+________0580:   staw [$FFD8]                                    ;Set mem locations to 0
+________0582:   staw [$FF82]
+________0584:   staw [$FFA5]
 ________0586:   lxi hl, $04B8                                   ;Start of scrolltext
 ________0589:   #d8 $70, $3E, $D6, $FF                          ; SHLD    FFD6	;Save pointer
 ________058D:   calf $0D68                                      ;Setup RAM vars
 ________058F:   calt $00A0                                      ; "C258+ ==> C000+"
 ________0590:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________0591:   calt $008A                                      ; "Clear A"
-________0592:   #d8 $38, $DA                                    ; STAW    DA
-________0594:   #d8 $38, $D1                                    ; STAW    D1
-________0596:   #d8 $38, $D2                                    ; STAW    D2
-________0598:   #d8 $38, $D5                                    ; STAW    D5
+________0592:   staw [$FFDA]
+________0594:   staw [$FFD1]
+________0596:   staw [$FFD2]
+________0598:   staw [$FFD5]
 ________059A:   mvi a, $FF
-________059C:   #d8 $38, $D0                                    ; STAW    D0
+________059C:   staw [$FFD0]
 ________059E:   lxi hl, $FFD8
 ________05A1:   #d8 $70, $93                                    ; XRAX    H		;A=$FF XOR ($FFD8)
-________05A3:   #d8 $38, $D8                                    ; STAW    D8
+________05A3:   staw [$FFD8]
 ________05A5:   mvi a, $60                                      ;A delay value for the scrolltext
-________05A7:   #d8 $38, $8A                                    ; STAW    8A
+________05A7:   staw [$FF8A]
 
 ;Main Loop starts here!
 ________05A9:   calt $0080                                      ;[PC+1] Check Cartridge
@@ -778,15 +788,15 @@ ________05E4:   inr a
 ________05E5:   lxi hl, $C570
 ________05E8:   stax [hl+]
 ________05E9:   inr a
-________05EA:   #d8 $38, $A6                                    ; STAW    A6
+________05EA:   staw [$FFA6]
 ________05EC:   mvi a, $39
 ________05EE:   stax [hl+]
 ________05EF:   inr a
-________05F0:   #d8 $38, $A7                                    ; STAW    A7
+________05F0:   staw [$FFA7]
 ________05F2:   calt $008A                                      ; "Clear A"
 ________05F3:   stax [hl+]
-________05F4:   #d8 $38, $A0                                    ; STAW    A0          ;X,Y position for cursor
-________05F6:   #d8 $38, $A1                                    ; STAW    A1
+________05F4:   staw [$FFA0]                                    ;X,Y position for cursor
+________05F6:   staw [$FFA1]
 ________05F8:   mvi a, $99                                      ;What does this do?
 ________05FA:   mvi b, $0A
 ________05FC:   inx hl
@@ -799,7 +809,7 @@ ________0602:   jr $05FE
 ________0603:   calf $0D68                                      ;Draw Border
 
 ________0605:   mvi a, $70
-________0607:   #d8 $38, $8A                                    ; STAW    8A
+________0607:   staw [$FF8A]
 ________0609:   lxi hl, $FFA0                                   ;Print the X-, Y- position
 ________060C:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________060D:   #d8 $26, $00, $19                               ; DB $26,$00,$19     ;Parameters for the print routine
@@ -817,10 +827,10 @@ ________0621:   ldax [hl]
 ________0622:   xri a, $FF
 ________0624:   stax [hl]
 ________0625:   calt $0088                                      ;Read Controller FF90-FF95
-________0626:   #d8 $28, $93                                    ; LDAW    93
+________0626:   ldaw [$FF93]
 ________0628:   offi a, $3F                                     ;Test Buttons 1,2,3,4
 ________062A:   jr $0633
-________062B:   #d8 $28, $92                                    ; LDAW    92
+________062B:   ldaw [$FF92]
 ________062D:   offi a, $0F                                     ;Test U,D,L,R
 ________062F:   jre $0673
 ________0631:   jre $0605
@@ -865,37 +875,37 @@ ________0660:   calt $0084                                      ;[PC+2] Setup/Pl
 ________0661:   #d8 $1E, $03                                    ; DB $1E,$03
 ________0663:   jr $066C                                        ;Set a dot
 
-________0664:   #d8 $28, $A6                                    ; LDAW    A6
+________0664:   ldaw [$FFA6]
 ________0666:   mov b, a
-________0667:   #d8 $28, $A7                                    ; LDAW    A7
+________0667:   ldaw [$FFA7]
 ________0669:   mov c, a
 ________066A:   calt $00DA                                      ; "Clear Dot; B,C = X-,Y-position"
 ________066B:   jr $0673
 
-________066C:   #d8 $28, $A6                                    ; LDAW    A6
+________066C:   ldaw [$FFA6]
 ________066E:   mov b, a
-________066F:   #d8 $28, $A7                                    ; LDAW    A7
+________066F:   ldaw [$FFA7]
 ________0671:   mov c, a
 ________0672:   calt $00B0                                      ; "Set Dot; B,C = X-,Y-position"
 
-________0673:   #d8 $28, $92                                    ; LDAW    92
+________0673:   ldaw [$FF92]
 ________0675:   nei a, $0F                                      ;Check if U,D,L,R pressed at once??
 ________0677:   jre $0605
 ________0679:   oni a, $01                                      ;Up
 ________067B:   jr $0694
 
-________067C:   #d8 $28, $A7                                    ; LDAW    A7
+________067C:   ldaw [$FFA7]
 ________067E:   nei a, $0E                                      ;Check lower limits of X-pos
 ________0680:   jr $069B
 
 ________0681:   dcr a
-________0682:   #d8 $38, $A7                                    ; STAW    A7
+________0682:   staw [$FFA7]
 ________0684:   dcr a
 ________0685:   mov [$C571], a
-________0689:   #d8 $28, $A1                                    ; LDAW    A1
+________0689:   ldaw [$FFA1]
 ________068B:   adi a, $01
 ________068D:   daa
-________068E:   #d8 $38, $A1                                    ; STAW    A1
+________068E:   staw [$FFA1]
 ________0690:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0691:   #d8 $12, $03                                    ; DB $12,$03
 ________0693:   jr $06AE
@@ -903,55 +913,55 @@ ________0693:   jr $06AE
 ________0694:   oni a, $04                                      ;Down
 ________0696:   jr $06AE
 
-________0697:   #d8 $28, $A7                                    ; LDAW    A7
+________0697:   ldaw [$FFA7]
 ________0699:   nei a, $3A                                      ;Check lower cursor limit
 ________069B:   jr $06B7
 
 ________069C:   inr a
-________069D:   #d8 $38, $A7                                    ; STAW    A7
+________069D:   staw [$FFA7]
 ________069F:   dcr a
 ________06A0:   mov [$C571], a
-________06A4:   #d8 $28, $A1                                    ; LDAW    A1
+________06A4:   ldaw [$FFA1]
 ________06A6:   adi a, $99
 ________06A8:   daa
-________06A9:   #d8 $38, $A1                                    ; STAW    A1
+________06A9:   staw [$FFA1]
 ________06AB:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06AC:   #d8 $14, $03                                    ; DB $14,$03
 
-________06AE:   #d8 $28, $92                                    ; LDAW    92
+________06AE:   ldaw [$FF92]
 ________06B0:   oni a, $08                                      ;Right
 ________06B2:   jr $06CC
 
-________06B3:   #d8 $28, $A6                                    ; LDAW    A6
+________06B3:   ldaw [$FFA6]
 ________06B5:   nei a, $43
 ________06B7:   jr $06D4
 
 ________06B8:   inr a
-________06B9:   #d8 $38, $A6                                    ; STAW    A6
+________06B9:   staw [$FFA6]
 ________06BB:   dcr a
 ________06BC:   mov [$C570], a
-________06C0:   #d8 $28, $A0                                    ; LDAW    A0
+________06C0:   ldaw [$FFA0]
 ________06C2:   adi a, $01
 ________06C4:   daa
-________06C5:   #d8 $38, $A0                                    ; STAW    A0
+________06C5:   staw [$FFA0]
 ________06C7:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06C8:   #d8 $17, $03                                    ; DB $17,$03
 ________06CA:   jre $0605
 
 ________06CC:   oni a, $02                                      ;Left
 ________06CE:   jre $0605
-________06D0:   #d8 $28, $A6                                    ; LDAW    A6
+________06D0:   ldaw [$FFA6]
 ________06D2:   nei a, $07
 ________06D4:   jr $06E8
 
 ________06D5:   dcr a
-________06D6:   #d8 $38, $A6                                    ; STAW    A6
+________06D6:   staw [$FFA6]
 ________06D8:   dcr a
 ________06D9:   mov [$C570], a
-________06DD:   #d8 $28, $A0                                    ; LDAW    A0
+________06DD:   ldaw [$FFA0]
 ________06DF:   adi a, $99
 ________06E1:   daa
-________06E2:   #d8 $38, $A0                                    ; STAW    A0
+________06E2:   staw [$FFA0]
 ________06E4:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06E5:   #d8 $16, $03                                    ; DB $16,$03
 ________06E7:   jr $06CA
@@ -985,7 +995,7 @@ ________070E:   calf $0D92                                      ;Draw the grid
 ________0710:   calf $0C7B                                      ;Write "PUZZLE"
 ________0712:   #d8 $05, $89, $00                               ; ANIW    89,00
 ________0715:   mvi a, $60
-________0717:   #d8 $38, $8A                                    ; STAW    8A
+________0717:   staw [$FF8A]
 ________0719:   calt $0080                                      ;[PC+1] Check Cartridge
 ________071A:   #d8 $C1                                         ; DB $C1		;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
@@ -1035,7 +1045,7 @@ ________076A:   #d8 $0E, $00, $1A                               ; DB $0E,$00,$1A
 ________076D:   lxi hl, $FF86
 ________0770:   mvi b, $02
 ________0772:   calt $0094                                      ; "Clear RAM (HL+)xB"
-________0773:   #d8 $28, $8C                                    ; LDAW    8C
+________0773:   ldaw [$FF8C]
 ________0775:   ani a, $0F
 ________0777:   mov b, a
 ________0778:   lxi hl, $056F
@@ -1052,7 +1062,7 @@ ________0789:   calf $0D68                                      ;Draw Border (ag
 ________078B:   calf $0D92                                      ;Draw the grid (again)
 ________078D:   calf $0C82                                      ;Scroll text? Write time in decimal?
 ________078F:   mvi a, $60
-________0791:   #d8 $38, $8A                                    ; STAW    8A
+________0791:   staw [$FF8A]
 ________0793:   calt $0080                                      ;[PC+1] Check Cartridge
 ________0794:   #d8 $C1                                         ; DB $C1		;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
@@ -1074,7 +1084,7 @@ ________07B2:   jre $0754                                       ;Restart puzzle
 ;------------------------------------------------------------
 ________07B4:   #d8 $75, $8A, $80                               ; EQIW    8A,80
 ________07B7:   jre $0793
-________07B9:   #d8 $28, $92                                    ; LDAW    92          ;Joypad
+________07B9:   ldaw [$FF92]                                    ;Joypad
 ________07BB:   oni a, $0F
 ________07BD:   jre $078F                                       ;Keep looping
 ________07BF:   calf $0DD3                                      ;Draw Tiles
@@ -1086,7 +1096,7 @@ ________07C5:   jr $07BD
 ;------------------------------------------------------------
 ________07C6:   push va
 ________07C8:   mvi a, $03
-________07CA:   #d8 $38, $99                                    ; STAW    99
+________07CA:   staw [$FF99]
 ________07CC:   di  
 ________07CE:   calf $08B6                                      ;Play Music (Snd)
 ________07D0:   ei
@@ -1147,7 +1157,7 @@ ________0827:   inx hl
 ________0828:   dcr b
 ________0829:   jr $0827
 ________082A:   mvi a, $01
-________082C:   #d8 $38, $A5                                    ; STAW    A5
+________082C:   staw [$FFA5]
 ________082E:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________082F:   #d8 $E0, $08                                    ; DB $E0,$08
 ________0831:   mvi e, $42
@@ -1158,19 +1168,19 @@ ________0837:   mvi e, $42
 ________0839:   calt $009A                                      ; "HL <== HL+E"
 ________083A:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________083B:   #d8 $1F, $08                                    ; DB $1F,$08
-________083D:   #d8 $28, $A5                                    ; LDAW    A5
+________083D:   ldaw [$FFA5]
 ________083F:   dcr a
 ________0840:   jr $0842
 ________0841:   jr $084C
 
-________0842:   #d8 $38, $A5                                    ; STAW    A5
+________0842:   staw [$FFA5]
 ________0844:   pop bc
 ________0846:   mov a, b
-________0847:   #d8 $38, $A2                                    ; STAW    A2
+________0847:   staw [$FFA2]
 ________0849:   calf $0CBF                                      ;Write Text(?)
 ________084B:   jr $082E
 
-________084C:   #d8 $28, $A2                                    ; LDAW    A2
+________084C:   ldaw [$FFA2]
 ________084E:   calf $0CBF                                      ;Write Text(?)
 ________0850:   mvi e, $09
 ________0852:   calt $009A                                      ; "HL <== HL+E"
@@ -1235,7 +1245,7 @@ ________08A8:   ret
 CALF____08A9:   ldax [hl+]
 ________08AA:   mov b, a
 ________08AB:   ldax [hl+]
-________08AC:   #d8 $38, $99                                    ; STAW    99
+________08AC:   staw [$FF99]
 ________08AE:   #d8 $70, $3E, $84, $FF                          ; SHLD    FF84
 ________08B2:   mov a, b
 ________08B3:   inr a
@@ -1254,8 +1264,8 @@ ________08BF:   jr $08BA
 ________08C0:   ldax [hl+]
 ________08C1:   mov tm0, a
 ________08C3:   ldax [hl]
-________08C4:   #d8 $38, $9A                                    ; STAW    9A
-________08C6:   #d8 $38, $8F                                    ; STAW    8F
+________08C4:   staw [$FF9A]
+________08C6:   staw [$FF8F]
 ________08C8:   dcr b
 ________08C9:   mvi a, $00                                      ;Sound?
 ________08CB:   mvi a, $03                                      ;Silent
@@ -1490,18 +1500,18 @@ ________09E3:   ret
 CALT_9A_09E4:   pop de
 ________09E6:   ldax [de+]
 ________09E7:   mov b, a
-________09E8:   #d8 $38, $9B                                    ; STAW    9B
+________09E8:   staw [$FF9B]
 ________09EA:   ldax [de+]
 ________09EB:   mov c, a
 ________09EC:   ani a, $07
-________09EE:   #d8 $38, $9C                                    ; STAW    9C
+________09EE:   staw [$FF9C]
 ________09F0:   ldax [de+]
 ________09F1:   push de
-________09F3:   #d8 $38, $9D                                    ; STAW    9D
+________09F3:   staw [$FF9D]
 ________09F5:   ani a, $07
 ________09F7:   inr a
 ________09F8:   push bc
-________09FA:   #d8 $38, $98                                    ; STAW    98
+________09FA:   staw [$FF98]
 ________09FC:   lxi de, $FFA8
 ________09FF:   #d8 $70, $2E, $C0, $FF                          ; SDED    FFC0
 ________0A03:   mov b, a
@@ -1544,18 +1554,18 @@ ________0A28:   jr $0A42
 CALT_9B_0A29:   pop de
 ________0A2B:   ldax [de+]
 ________0A2C:   mov b, a
-________0A2D:   #d8 $38, $9B                                    ; STAW    9B
+________0A2D:   staw [$FF9B]
 ________0A2F:   ldax [de+]
 ________0A30:   mov c, a                                        ;Save X,Y position in BC
 ________0A31:   ani a, $07
-________0A33:   #d8 $38, $9C                                    ; STAW    9C
+________0A33:   staw [$FF9C]
 ________0A35:   ldax [de+]
 ________0A36:   push de
-________0A38:   #d8 $38, $9D                                    ; STAW    9D
+________0A38:   staw [$FF9D]
 ________0A3A:   ani a, $0F                                      ;Get # of characters to write
 ________0A3C:   #d8 $70, $3E, $C0, $FF                          ; SHLD    FFC0
-________0A40:   #d8 $38, $98                                    ; STAW    98  	;# saved in 98
-________0A42:   #d8 $28, $9D                                    ; LDAW    9D
+________0A40:   staw [$FF98]                                    ;# saved in 98
+________0A42:   ldaw [$FF9D]
 ________0A44:   oni a, $80                                      ;Check if 0 (2nd screen) or 1 (1st screen)
 ________0A46:   jr $0A49
 ________0A47:   calt $00BA                                      ; "Set HL to screen (B,C)"
@@ -1567,10 +1577,10 @@ ________0A4F:   #d8 $70, $3E, $C2, $FF                          ; SHLD    FFC2
 ________0A53:   lxi de, $004B
 ________0A56:   calt $0096                                      ; "HL <== HL+DE"
 ________0A57:   #d8 $70, $3E, $C4, $FF                          ; SHLD    FFC4
-________0A5B:   #d8 $28, $9D                                    ; LDAW    9D
+________0A5B:   ldaw [$FF9D]
 ________0A5D:   calt $00C0                                      ; "(RLR A)x4"
 ________0A5E:   ani a, $07                                      ;Get text spacing (0-7)
-________0A60:   #d8 $38, $9D                                    ; STAW    9D		;Save in 9D
+________0A60:   staw [$FF9D]                                    ;Save in 9D
 ;--
 ________0A62:   #d8 $30, $98                                    ; DCRW    98		;The loop starts here
 ________0A64:   jr $0A66
@@ -1649,12 +1659,12 @@ ________0AF7:   lxi hl, $FFB5
 ________0AFA:   mvi b, $04
 ________0AFC:   #d8 $15, $80, $10                               ; ORIW    80,10
 ________0AFF:   calf $0BD3                                      ;Copy B*A bytes?
-________0B01:   #d8 $28, $9B                                    ; LDAW    9B
+________0B01:   ldaw [$FF9B]
 ________0B03:   adi a, $05
 ________0B05:   mov b, a
-________0B06:   #d8 $28, $9D                                    ; LDAW    9D
+________0B06:   ldaw [$FF9D]
 ________0B08:   add a, b
-________0B0A:   #d8 $38, $9B                                    ; STAW    9B
+________0B0A:   staw [$FF9B]
 ________0B0C:   jre $0A62
 ;------------------------------------------------------------
 ;Byte -> Point to Font Graphic
@@ -1699,7 +1709,7 @@ ________0B4A:   jr $0B3C
 ________0B4B:   ret
 ;------------------------------------------------------------
 CALF____0B4C:   ldax [hl+]
-________0B4D:   #d8 $38, $9B                                    ; STAW    9B
+________0B4D:   staw [$FF9B]
 ________0B4F:   mov b, a
 ________0B50:   adi a, $07
 ________0B52:   lti a, $53
@@ -1707,13 +1717,13 @@ ________0B54:   ret
 ________0B55:   ldax [hl+]
 ________0B56:   mov c, a
 ________0B57:   ani a, $07
-________0B59:   #d8 $38, $9C                                    ; STAW    9C
+________0B59:   staw [$FF9C]
 ________0B5B:   mov a, c
 ________0B5C:   adi a, $07
 ________0B5E:   lti a, $47
 ________0B60:   ret
 ________0B61:   ldax [hl]
-________0B62:   #d8 $38, $9D                                    ; STAW    9D
+________0B62:   staw [$FF9D]
 ________0B64:   lti a, $0C
 ________0B66:   ret
 ________0B67:   calt $00BA                                      ; "Set HL to screen (B,C)"
@@ -1733,7 +1743,7 @@ ________0B84:   calf $0E6A
 ________0B86:   lxi de, $FFC0
 ________0B89:   mvi b, $0F
 ________0B8B:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
-________0B8C:   #d8 $28, $9D                                    ; LDAW    9D
+________0B8C:   ldaw [$FF9D]
 ________0B8E:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0B8F:   lxi de, $FFB0
 ________0B92:   lxi bc, $FFB8
@@ -1768,7 +1778,7 @@ ________0BCB:   lxi hl, $FFB8
 ________0BCE:   #d8 $15, $80, $10                               ; ORIW    80,10
 ;--
 ________0BD1:   mvi b, $07
-________0BD3:   #d8 $28, $9B                                    ; LDAW    9B
+________0BD3:   ldaw [$FF9B]
 ________0BD5:   offi a, $80
 ________0BD7:   jr $0BE2
 ________0BD8:   lti a, $4B
@@ -1842,10 +1852,10 @@ ________0C2D:   calt $009A                                      ; "HL <== HL+E"
 ________0C2E:   jr $0C2A
 ;------------------------------------------------------------
 CALF____0C2F:   mvi a, $07
-________0C31:   #d8 $38, $96                                    ; STAW    96
+________0C31:   staw [$FF96]
 
-________0C33:   #d8 $28, $9C                                    ; LDAW    9C
-________0C35:   #d8 $38, $97                                    ; STAW    97
+________0C33:   ldaw [$FF9C]
+________0C35:   staw [$FF97]
 ________0C37:   push bc
 ________0C39:   mvi c, $00
 ________0C3B:   ldax [hl+]
@@ -1901,14 +1911,14 @@ ________0C7E:   calt $00B6                                      ; "[PC+3] Print 
 ________0C7F:   #d8 $03, $00, $16                               ; DB $03,$00,$16
 ________0C82:   calf $0E67                                      ;(C7F2 -> HL)
 ________0C84:   mvi a, $01
-________0C86:   #d8 $38, $83                                    ; STAW    83
+________0C86:   staw [$FF83]
 ________0C88:   ldax [hl+]
 ________0C89:   push hl
 ________0C8B:   nei a, $FF                                      ;If it's a terminator, loop
 ________0C8D:   jre $0CB6
 ________0C8F:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0C90:   calt $00A8                                      ; "XCHG HL,DE"
-________0C91:   #d8 $28, $83                                    ; LDAW    83
+________0C91:   ldaw [$FF83]
 ________0C93:   calf $0CBF                                      ;(Scroll text)
 ________0C95:   push de
 ________0C97:   mvi e, $51
@@ -1995,13 +2005,13 @@ ________0D15:   ret
 ________0D16:   #d8 $20, $DA                                    ; INRW    DA
 ________0D18:   lxi hl, $FFDA
 ________0D1B:   ldax [hl]
-________0D1C:   #d8 $38, $D0                                    ; STAW    D0
+________0D1C:   staw [$FFD0]
 ________0D1E:   jr $0D23
 
 ;Draw a spiral dot-by-dot
 CALF____0D1F:   #d8 $65, $D0, $FF                               ; NEIW    D0,FF
 ________0D22:   jr $0D16
-________0D23:   #d8 $28, $D1                                    ; LDAW    D1		;This stores the direction
+________0D23:   ldaw [$FFD1]                                    ;This stores the direction
 ________0D25:   nei a, $00                                      ;that the spiral draws in...
 ________0D27:   jr $0D46
 ________0D28:   #d8 $70, $1F, $D2, $FF                          ; LBCD    FFD2
@@ -2014,12 +2024,12 @@ ________0D36:   jre $0D5C
 
 ________0D38:   dcr b
 ________0D39:   mov a, b
-________0D3A:   #d8 $38, $D3                                    ; STAW    D3
+________0D3A:   staw [$FFD3]
 ________0D3C:   calf $09AD                                      ;Draw a dot on-screen
 ________0D3E:   #d8 $30, $D0                                    ; DCRW    D0		;Decrement length counter...
 ________0D40:   ret
 ________0D41:   mvi a, $01                                      ;If zero, turn corners
-________0D43:   #d8 $38, $D1                                    ; STAW    D1
+________0D43:   staw [$FFD1]
 ________0D45:   ret
 ;------------------------------------------------------------
 ________0D46:   lxi bc, $2524
@@ -2029,17 +2039,17 @@ ________0D4F:   #d8 $20, $D1                                    ; INRW    D1
 ________0D51:   ret
 ________0D52:   dcr c
 ________0D53:   mov a, c
-________0D54:   #d8 $38, $D2                                    ; STAW    D2
+________0D54:   staw [$FFD2]
 ________0D56:   jr $0D60
 ;------------------------------------------------------------
 ________0D57:   inr b
 ________0D58:   mov a, b
-________0D59:   #d8 $38, $D3                                    ; STAW    D3
+________0D59:   staw [$FFD3]
 ________0D5B:   jr $0D60
 ;------------------------------------------------------------
 ________0D5C:   inr c
 ________0D5D:   mov a, c
-________0D5E:   #d8 $38, $D2                                    ; STAW    D2
+________0D5E:   staw [$FFD2]
 ________0D60:   calf $09AD
 ________0D62:   #d8 $30, $D0                                    ; DCRW    D0
 ________0D64:   ret
@@ -2109,7 +2119,7 @@ ________0DC9:   lxi hl, $C3D4
 ________0DCC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DCD:   #d8 $10, $40                                    ; DB $10,$40
 ________0DCF:   calt $008A                                      ; "Clear A"
-________0DD0:   #d8 $38, $D5                                    ; STAW    D5
+________0DD0:   staw [$FFD5]
 ________0DD2:   ret
 ;------------------------------------------------------------
 ________0DD3:   nei a, $01
@@ -2285,13 +2295,13 @@ ________0ED4:   ldax [hl+]
 ________0ED5:   push hl
 ________0ED7:   mov b, a
 ________0ED8:   ani a, $0F
-________0EDA:   #d8 $38, $96                                    ; STAW    96
+________0EDA:   staw [$FF96]
 ________0EDC:   mov a, b
 ________0EDD:   calt $00C0                                      ; "(RLR A)x4"
 ________0EDE:   ani a, $0F
 ________0EE0:   lti a, $0D
 ________0EE2:   ret
-________0EE3:   #d8 $38, $97                                    ; STAW    97
+________0EE3:   staw [$FF97]
 ________0EE5:   #d8 $30, $97                                    ; DCRW    97
 ________0EE7:   jr $0EF0                                        ;Based on 97, jump to cart (4007)!
 ________0EE8:   calt $00A2                                      ; "CALT A0, CALT A4"
@@ -2301,7 +2311,7 @@ ________0EEF:   jb                                              ;...all 5 Pokeko
 ________0EF0:   pop hl
 ________0EF2:   ldax [hl+]
 ________0EF3:   push hl
-________0EF5:   #d8 $38, $98                                    ; STAW    98
+________0EF5:   staw [$FF98]
 ________0EF7:   ani a, $0F
 ________0EF9:   lti a, $0C
 ________0EFB:   jr $0EE5
@@ -2375,11 +2385,11 @@ ________0F50:   jr $0F3B
 ;------------------------------------------------------------
 ;for the addition routine below...
 ________0F51:   mov a, h
-________0F52:   #d8 $38, $B0                                    ; STAW    B0
+________0F52:   staw [$FFB0]
 ________0F54:   mov a, l
-________0F55:   #d8 $38, $B1                                    ; STAW    B1
+________0F55:   staw [$FFB1]
 ________0F57:   lxi hl, $FFB1
-________0F5A:   #d8 $28, $96                                    ; LDAW    96
+________0F5A:   ldaw [$FF96]
 ________0F5C:   jr $0F6D
 ;------------------------------------------------------------
 ;[PC+1] 8~32-bit Add/Subtract (dec/hex)
@@ -2394,7 +2404,7 @@ CALT_A4_0F5D:   pop bc
 ________0F5F:   ldax [bc]
 ________0F60:   inx bc
 ________0F61:   push bc
-________0F63:   #d8 $38, $96                                    ; STAW    96		;Get extra byte, keep in 96
+________0F63:   staw [$FF96]                                    ;Get extra byte, keep in 96
 ________0F65:   offi a, $01                                     ;If set, load from $FFA2 instead
 ________0F67:   lxi de, $FFA2
 ________0F6A:   offi a, $02                                     ;If set, load from $FFB1
