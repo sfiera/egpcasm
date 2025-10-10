@@ -7,13 +7,23 @@
     hl => 0x3
 }
 
-#subruledef mov_a_reg {
-    b => 0xA
-    c => 0xB
-    d => 0xC
-    e => 0xD
-    h => 0xE
-    l => 0xF
+#subruledef reg_bcdehl {
+    b => 0b010
+    c => 0b011
+    d => 0b100
+    e => 0b101
+    h => 0b110
+    l => 0b111
+}
+
+#subruledef reg_vbcdehl {
+    v => 0b000
+    {r: reg_bcdehl} => r
+}
+
+#subruledef reg_vabcdehl {
+    a => 0b001
+    {r: reg_vbcdehl} => r
 }
 
 #subruledef mov_a_port {
@@ -27,17 +37,6 @@
     tm1 => 0x7
     s   => 0x8
     tmm => 0x9
-}
-
-#subruledef mov_addr_reg {
-    v => 0x8
-    a => 0x9
-    b => 0xA
-    c => 0xB
-    d => 0xC
-    e => 0xD
-    h => 0xE
-    l => 0xF
 }
 
 #ruledef {
@@ -56,13 +55,40 @@
     rrd => $4839
     per => $483C
 
-
-    mov a, {reg: mov_a_reg} => 0x0 @ reg
-    mov {reg: mov_a_reg}, a => 0x1 @ reg
+    mov a, {reg: reg_bcdehl} => 0x0 @ 0b1 @ reg
+    mov {reg: reg_bcdehl}, a => 0x1 @ 0b1 @ reg
     mov a, {port: mov_a_port} => 0x4cc @ port
     mov {port: mov_a_port}, a => 0x4dc @ port
-    mov {reg: mov_addr_reg}, [{addr: u16}] => $706 @ reg @ le(addr)
-    mov [{addr: u16}], {reg: mov_addr_reg} => $707 @ reg @ le(addr)
+    mov {reg: reg_vabcdehl}, [{addr: u16}] => $706 @ 0b1 @ reg @ le(addr)
+    mov [{addr: u16}], {reg: reg_vabcdehl} => $707 @ 0b1 @ reg @ le(addr)
+
+    ana     {reg: reg_vbcdehl}, a => $600 @ 0b1 @ reg
+    xra     {reg: reg_vbcdehl}, a => $601 @ 0b0 @ reg
+    ora     {reg: reg_vbcdehl}, a => $601 @ 0b1 @ reg
+    addnc   {reg: reg_vbcdehl}, a => $602 @ 0b0 @ reg
+    gta     {reg: reg_vbcdehl}, a => $602 @ 0b1 @ reg
+    subnb   {reg: reg_vbcdehl}, a => $603 @ 0b0 @ reg
+    lta     {reg: reg_vbcdehl}, a => $603 @ 0b1 @ reg
+    add     {reg: reg_vbcdehl}, a => $604 @ 0b0 @ reg
+    adc     {reg: reg_vbcdehl}, a => $605 @ 0b0 @ reg
+    sub     {reg: reg_vbcdehl}, a => $606 @ 0b0 @ reg
+    nea     {reg: reg_vbcdehl}, a => $606 @ 0b1 @ reg
+    sbb     {reg: reg_vbcdehl}, a => $607 @ 0b0 @ reg
+    eqa     {reg: reg_vbcdehl}, a => $607 @ 0b1 @ reg
+
+    ana     a, {reg: reg_vabcdehl} => $608 @ 0b1 @ reg
+    xra     a, {reg: reg_vabcdehl} => $609 @ 0b0 @ reg
+    ora     a, {reg: reg_vabcdehl} => $609 @ 0b1 @ reg
+    addnc   a, {reg: reg_vabcdehl} => $60A @ 0b0 @ reg
+    gta     a, {reg: reg_vabcdehl} => $60A @ 0b1 @ reg
+    subnb   a, {reg: reg_vabcdehl} => $60B @ 0b0 @ reg
+    lta     a, {reg: reg_vabcdehl} => $60B @ 0b1 @ reg
+    add     a, {reg: reg_vabcdehl} => $60C @ 0b0 @ reg
+    adc     a, {reg: reg_vabcdehl} => $60D @ 0b0 @ reg
+    sub     a, {reg: reg_vabcdehl} => $60E @ 0b0 @ reg
+    nea     a, {reg: reg_vabcdehl} => $60E @ 0b1 @ reg
+    sbb     a, {reg: reg_vabcdehl} => $60F @ 0b0 @ reg
+    eqa     a, {reg: reg_vabcdehl} => $60F @ 0b1 @ reg
 
     push {reg: push_reg} => $48 @ reg @ $e
     pop {reg: push_reg} => $48 @ reg @ $f
@@ -201,7 +227,7 @@ ________0067:   ret
 
 ________0068:   #d8 $52                                         ; DCR     B
 ________0069:   jr $0063
-________006A:   #d8 $60, $91                                    ; XRA     A,A
+________006A:   xra a, a
 ________006C:   ret
 ;------------------------------------------------------------
 ;?? (Find diff. & Copy bytes)
@@ -364,23 +390,23 @@ ________0161:   push hl
 ________0163:   #d8 $55, $80, $80                               ; OFFIW   80,80	;If 0, don't go to cart's INT routine
 ________0166:   jmp $4009
 ;---------------------------------------
-________0169:   #d8 $60, $D2                                    ; ADC     A,B         ;Probably a simple random-number generator.
-________016B:   #d8 $60, $D3                                    ; ADC     A,C
-________016D:   #d8 $60, $D4                                    ; ADC     A,D
-________016F:   #d8 $60, $D5                                    ; ADC     A,E
-________0171:   #d8 $60, $D6                                    ; ADC     A,H
-________0173:   #d8 $60, $D7                                    ; ADC     A,L
+________0169:   adc a, b                                        ;Probably a simple random-number generator.
+________016B:   adc a, c
+________016D:   adc a, d
+________016F:   adc a, e
+________0171:   adc a, h
+________0173:   adc a, l
 ________0175:   #d8 $38, $8C                                    ; STAW    8C
 ________0177:   ral
 ________0179:   ral
 ________017B:   mov b, a
 ________017C:   pop de
 ________017E:   push de
-________0180:   #d8 $60, $D5                                    ; ADC     A,E
+________0180:   adc a, e
 ________0182:   #d8 $38, $8D                                    ; STAW    8D
 ________0184:   #d8 $48, $31                                    ; RLR
 ________0186:   #d8 $48, $31                                    ; RLR
-________0188:   #d8 $60, $D2                                    ; ADC     A,B
+________0188:   adc a, b
 ________018A:   #d8 $38, $8E                                    ; STAW    8E
 ________018C:   jre $0128
 ;------------------------------------------------------------
@@ -989,7 +1015,7 @@ ________07D2:   #d8 $34, $FE, $C7                               ; LXI     H,C7FE
 ________07D5:   #d8 $2D                                         ; LDAX    H+
 ________07D6:   mov b, a
 ________07D7:   #d8 $2F                                         ; LDAX    H-
-________07D8:   #d8 $60, $BA                                    ; LTA     A,B
+________07D8:   lta a, b
 ________07DA:   jr $07DD
 ________07DB:   mov b, a
 ________07DC:   #d8 $2B                                         ; LDAX    H
@@ -1175,7 +1201,7 @@ ________08E3:   push va
 ________08E5:   #d8 $48, $1A                                    ; SKN     CY
 ________08E7:   calt $0096                                      ; "HL <== HL+DE"
 ________08E8:   mov a, e
-________08E9:   #d8 $60, $C1                                    ; ADD     A,A
+________08E9:   add a, a
 ________08EB:   mov e, a
 ________08EC:   mov a, d
 ________08ED:   ral
@@ -1242,7 +1268,7 @@ ________0932:   #d8 $52                                         ; DCR     B
 ________0933:   jr $0932
 ________0934:   mov a, pc                                       ;Get port C a 2nd time
 ________0936:   #d8 $16, $FF                                    ; XRI     A,FF
-________0938:   #d8 $60, $FB                                    ; EQA     A,C		;Check if both reads are equal
+________0938:   eqa a, c                                        ;Check if both reads are equal
 ________093A:   jr $092F
 ________093B:   #d8 $64, $98, $40                               ; ORI     PA,40	;PA Bit 6 on
 ________093E:   #d8 $07, $03                                    ; ANI     A,03
@@ -1260,7 +1286,7 @@ ________0951:   #d8 $52                                         ; DCR     B
 ________0952:   jr $0951
 ________0953:   mov a, pc
 ________0955:   #d8 $16, $FF                                    ; XRI     A,FF
-________0957:   #d8 $60, $FB                                    ; EQA     A,C		;...check again
+________0957:   eqa a, c                                        ;...check again
 ________0959:   jr $094E
 ________095A:   #d8 $64, $98, $80                               ; ORI     PA,80       ;PA bit 7 on
 ________095D:   ral
@@ -1358,14 +1384,14 @@ ________09D3:   #d8 $47, $80                                    ; ONI     A,80
 ________09D5:   jr $09DD
 
 ________09D6:   #d8 $2B                                         ; LDAX    H
-________09D7:   #d8 $60, $8B                                    ; ANA     A,C
+________09D7:   ana a, c
 ________09D9:   #d8 $3D                                         ; STAX    H+
 ________09DA:   #d8 $52                                         ; DCR     B
 ________09DB:   jr $09D6
 ________09DC:   ret
 
 ________09DD:   #d8 $2B                                         ; LDAX    H
-________09DE:   #d8 $60, $9B                                    ; ORA     A,C
+________09DE:   ora a, c
 ________09E0:   #d8 $3D                                         ; STAX    H+
 ________09E1:   #d8 $52                                         ; DCR     B
 ________09E2:   jr $09DD
@@ -1412,7 +1438,7 @@ ________0A11:   jr $0A23
 ________0A12:   #d8 $2B                                         ; LDAX    H
 ________0A13:   calt $00C0                                      ; "(RLR A)x4"
 ________0A14:   #d8 $07, $0F                                    ; ANI     A,0F
-________0A16:   #d8 $60, $9B                                    ; ORA     A,C
+________0A16:   ora a, c
 ________0A18:   #d8 $3C                                         ; STAX    D+
 ________0A19:   #d8 $52                                         ; DCR     B
 ________0A1A:   jr $0A1C
@@ -1420,7 +1446,7 @@ ________0A1B:   jr $0A23
 
 ________0A1C:   #d8 $2D                                         ; LDAX    H+
 ________0A1D:   #d8 $07, $0F                                    ; ANI     A,0F
-________0A1F:   #d8 $60, $9B                                    ; ORA     A,C
+________0A1F:   ora a, c
 ________0A21:   #d8 $3C                                         ; STAX    D+
 ________0A22:   jr $0A0F
 
@@ -1508,7 +1534,7 @@ ________0AAF:   mov c, a
 ________0AB0:   calf $0E6A                                      ;(FFB0 -> HL)
 ________0AB2:   #d8 $6A, $04                                    ; MVI     B,04
 ________0AB4:   #d8 $2B                                         ; LDAX    H
-________0AB5:   #d8 $60, $8B                                    ; ANA     A,C
+________0AB5:   ana a, c
 ________0AB7:   #d8 $3D                                         ; STAX    H+
 ________0AB8:   #d8 $52                                         ; DCR     B
 ________0AB9:   jr $0AB4
@@ -1517,7 +1543,7 @@ ________0ABC:   #d8 $16, $FF                                    ; XRI     A,FF
 ________0ABE:   mov c, a
 ________0ABF:   #d8 $6A, $04                                    ; MVI     B,04
 ________0AC1:   #d8 $2B                                         ; LDAX    H
-________0AC2:   #d8 $60, $8B                                    ; ANA     A,C
+________0AC2:   ana a, c
 ________0AC4:   #d8 $3D                                         ; STAX    H+
 ________0AC5:   #d8 $52                                         ; DCR     B
 ________0AC6:   jr $0AC1
@@ -1548,7 +1574,7 @@ ________0B01:   #d8 $28, $9B                                    ; LDAW    9B
 ________0B03:   #d8 $46, $05                                    ; ADI     A,05
 ________0B05:   mov b, a
 ________0B06:   #d8 $28, $9D                                    ; LDAW    9D
-________0B08:   #d8 $60, $C2                                    ; ADD     A,B
+________0B08:   add a, b
 ________0B0A:   #d8 $38, $9B                                    ; STAW    9B
 ________0B0C:   jre $0A62
 ;------------------------------------------------------------
@@ -1718,10 +1744,10 @@ CALT_8D_0C18:   #d8 $69, $00                                    ; MVI     A,00
 ________0C1A:   mov d, a
 ;HL <== HL+DE
 CALT_8B_0C1B:   mov a, e
-________0C1C:   #d8 $60, $C7                                    ; ADD     A,L
+________0C1C:   add a, l
 ________0C1E:   mov l, a
 ________0C1F:   mov a, d
-________0C20:   #d8 $60, $D6                                    ; ADC     A,H
+________0C20:   adc a, h
 ________0C22:   mov h, a
 ________0C23:   ret
 ;------------------------------------------------------------
@@ -2047,7 +2073,7 @@ ________0E14:   #d8 $15, $A2, $FF                               ; ORIW    A2,FF
 ________0E17:   mov a, [$C7FF]
 ________0E1B:   mov e, a
 ________0E1C:   mov [$C7FE], a
-________0E20:   #d8 $60, $C3                                    ; ADD     A,C
+________0E20:   add a, c
 ________0E22:   mov d, a
 ________0E23:   mov [$C7FF], a
 ________0E27:   #d8 $34, $F1, $C7                               ; LXI     H,C7F1
