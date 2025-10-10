@@ -308,12 +308,12 @@
 ;------------------------------------------------------------
 RESET___0000:   nop
 ________0001:   di
-________0003:   jr $0013
+________0003:   jr cont____0013
 ;------------------------------------------------------------
 INT0____0004:   jmp $400C
 ________0007:   nop
 ;------------------------------------------------------------
-INTT____0008:   jre $00F0
+INTT____0008:   jre INTT____00F0
 ;------------------------------------------------------------
 ;((HL-) ==> (DE-))xB
 ; Copies the data pointed to by HL "(HL)" to (DE).
@@ -321,7 +321,7 @@ INTT____0008:   jre $00F0
 CALT_96_000A:   ldax [hl-]
 ________000B:   stax [de-]
 ________000C:   dcr b
-________000D:   jr $000a
+________000D:   jr CALT_96_000A
 ________000E:   ret
 ________000F:   nop
 ;------------------------------------------------------------
@@ -363,7 +363,7 @@ ________0056:   mov mk, a                                       ;Mask = IntT,1 O
 ________0058:   ei
 ________005A:   calt $0080                                      ; [PC+1] Check Cartridge
 ________005B:   db $C0                                          ;Jump to ($4001) in cartridge
-________005C:   jmp $057F                                       ;Flow continues if no cartridge is present.
+________005C:   jmp ________057F                                ;Flow continues if no cartridge is present.
 ;------------------------------------------------------------
 ;(DE+)-(HL+) ==> A
 ; Loads A with (DE), increments DE, then subtracts (HL) from A and increments HL.
@@ -376,11 +376,11 @@ ________0062:   ret
 ; the first difference between 2 buffers, etc.
 CALT_A2_0063:   calt $00C2                                      ; "(DE+)-(HL+) ==> A"
 ________0064:   skn z
-________0066:   jr $0068
+________0066:   jr ________0068
 ________0067:   ret
 
 ________0068:   dcr b
-________0069:   jr $0063
+________0069:   jr CALT_A2_0063
 ________006A:   xra a, a
 ________006C:   ret
 ;------------------------------------------------------------
@@ -394,7 +394,7 @@ ________0074:   pop bc
 ________0076:   pop de
 ________0078:   pop hl
 ________007A:   skn cy
-________007C:   jr $007E
+________007C:   jr ________007E
 ________007D:   ret
 
 ________007E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
@@ -471,16 +471,16 @@ _CALT_B7__00EE:   dw $402D
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT____00F0:   oniw [$FF80], $01                               ;If 1, don't jump to cart.
-________00F3:   jre $015B
+________00F3:   jre ________015B
 
 ________00F5:   dcrw [$FF9A]
-________00F7:   jre $0158
+________00F7:   jre ________0158
 
 ________00F9:   push va
 ________00FB:   ldaw [$FF8F]
 ________00FD:   staw [$FF9A]
 ________00FF:   dcrw [$FF99]
-________0101:   jre $012E
+________0101:   jre ________012E
 
 ________0103:   push bc
 ________0105:   push de
@@ -489,13 +489,13 @@ ________0109:   mvi a, $03
 ________010B:   mov tmm, a                                      ;Adjust timer
 ________010D:   mvi a, $53
 ________010F:   dcr a
-________0110:   jr $010F
+________0110:   jr ________010F
 ________0111:   oniw [$FF80], $02
-________0114:   jr $011C
+________0114:   jr ________011C
 
 ________0115:   lhld [$FF84]
-________0119:   calf $08A9                                      ;Music-playing code...
-________011B:   jr $0128
+________0119:   calf CALF____08A9                               ;Music-playing code...
+________011B:   jr ________0128
 
 ________011C:   aniw [$ff80], $fc
 ________011F:   mvi a, $07
@@ -511,8 +511,8 @@ ________0130:   adi a, $01
 ________0132:   daa
 ________0133:   staw [$FF88]
 ________0135:   skn cy
-________0137:   jr $0139
-________0138:   jr $014E
+________0137:   jr ________0139
+________0138:   jr ________014E
 
 ________0139:   inrw [$FF89]
 ________013B:   nop
@@ -521,8 +521,8 @@ ________013E:   adi a, $01
 ________0140:   daa
 ________0141:   staw [$FF87]
 ________0143:   skn cy
-________0145:   jr $0147
-________0146:   jr $014E
+________0145:   jr ________0147
+________0146:   jr ________014E
 
 ________0147:   ldaw [$FF86]
 ________0149:   adi a, $01
@@ -562,7 +562,7 @@ ________0184:   rar
 ________0186:   rar
 ________0188:   adc a, b
 ________018A:   staw [$FF8E]
-________018C:   jre $0128
+________018C:   jre ________0128
 ;------------------------------------------------------------
 ;[PC+2] Setup/Play Sound
 ; 1st byte is sound pitch (00[silence] to $25); 2nd byte is length.
@@ -574,15 +574,15 @@ ________0193:   mov b, a
 ________0194:   ldax [hl+]                                      ;(PC+1)
 ________0195:   push hl
 ________0197:   staw [$FF99]
-________0199:   calf $08B6                                      ;Set note timers
-________019B:   jr $01A3
+________0199:   calf CALF____08B6                               ;Set note timers
+________019B:   jr ________01A3
 ;------------------------------------------------------------
 ;Setup/Play Music
 ;HL should already contain the address of the music data.
 ;Format of the data string is the same as "Play Sound", with $FF terminating the song.
 CALT_83_019C:   di
 ________019E:   oriw [$FF80], $02
-________01A1:   calf $08A9                                      ;Read notes & set timers
+________01A1:   calf CALF____08A9                               ;Read notes & set timers
 ________01A3:   ei                                              ;(sometimes skipped)
 ________01A5:   ret
 ;------------------------------------------------------------
@@ -601,20 +601,20 @@ ________01B1:   eqi a, $55
 ________01B3:   rets
 ;----------------------------------
 ________01B4:   eqiw [$FF89], $03
-________01B7:   jr $01B0
+________01B7:   jr ________01B0
 
-________01B8:   calf $0E4D                                      ;Sets a timer
+________01B8:   calf CALF____0E4D                               ;Sets a timer
 ________01BA:   oriw [$FF80], $80
 ________01BD:   inx hl                                          ;->$4001
 ________01BE:   pop bc
 ________01C0:   ldax [bc]
 ________01C1:   nei a, $C0                                      ;To cart if it's $C0
-________01C3:   jr $01C8
+________01C3:   jr ________01C8
 
 ________01C4:   inx hl                                          ;->$4003
 ________01C5:   inx hl
 ________01C6:   dcr a
-________01C7:   jr $01C1
+________01C7:   jr ________01C1
 
 ________01C8:   ldax [hl+]
 ________01C9:   mov c, a
@@ -647,13 +647,13 @@ ________01EC:   mov pb, a                                       ;...to Port B
 ________01EE:   ori pa, $02                                     ;bit 1 on
 ________01F1:   ani pa, $FD                                     ;bit 1 off
 ________01F4:   dcr c
-________01F5:   jr $01EB
+________01F5:   jr ________01EB
 ________01F6:   calt $0096                                      ; "HL <== HL+DE"
 ________01F7:   mov a, b
 ________01F8:   adinc a, $40
-________01FA:   jr $01FE
+________01FA:   jr ________01FE
 ________01FB:   mov b, a
-________01FC:   jre $01DA
+________01FC:   jre ________01DA
 								;Set up writing for LCD controller #2
 ________01FE:   ani pa, $F7                                     ;bit 3 off
 ________0201:   ori pa, $10                                     ;bit 4 on
@@ -672,13 +672,13 @@ ________021E:   mov pb, a
 ________0220:   ori pa, $02
 ________0223:   ani pa, $FD
 ________0226:   dcr c
-________0227:   jr $021D
+________0227:   jr ________021D
 ________0228:   calt $0096                                      ; "HL <== HL+DE"
 ________0229:   mov a, b
 ________022A:   adinc a, $40
-________022C:   jr $0230
+________022C:   jr ________0230
 ________022D:   mov b, a
-________022E:   jre $020C
+________022E:   jre ________020C
 
 ________0230:   calt $008A                                      ; "Clear A"
 ________0231:   staw [$FF96]
@@ -703,7 +703,7 @@ ________0254:   mov pb, a
 ________0256:   ori pa, $02
 ________0259:   ani pa, $FD
 ________025C:   dcr c
-________025D:   jr $0253
+________025D:   jr ________0253
 
 ________025E:   push de
 ________0260:   lxi de, $0032
@@ -712,13 +712,13 @@ ________0264:   pop de
 ________0266:   calt $00A8                                      ; "XCHG HL,DE"
 ________0267:   inrw [$FF96]                                    ;Skip if a carry...
 ________0269:   offiw [$FF96], $01                              ;Do alternating lines
-________026C:   jr $0251
+________026C:   jr ________0251
 
 ________026D:   mov a, b
 ________026E:   adinc a, $40
-________0270:   jr $0274
+________0270:   jr ________0274
 ________0271:   mov b, a
-________0272:   jre $0241
+________0272:   jre ________0241
 
 ________0274:   ani pa, $DF                                     ;bit 5 off
 ________0277:   ret
@@ -794,9 +794,9 @@ ________057F:   calt $008C                                      ;Clear Screen 2 
 ________0580:   staw [$FFD8]                                    ;Set mem locations to 0
 ________0582:   staw [$FF82]
 ________0584:   staw [$FFA5]
-________0586:   lxi hl, $04B8                                   ;Start of scrolltext
+________0586:   lxi hl, ________04B8                            ;Start of scrolltext
 ________0589:   shld [$FFD6]                                    ;Save pointer
-________058D:   calf $0D68                                      ;Setup RAM vars
+________058D:   calf CALF____0D68                               ;Setup RAM vars
 ________058F:   calt $00A0                                      ; "C258+ ==> C000+"
 ________0590:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________0591:   calt $008A                                      ; "Clear A"
@@ -817,31 +817,31 @@ ________05A9:   calt $0080                                      ;[PC+1] Check Ca
 ________05AA:   db $C1                                          ;Jump to ($4003) in cartridge
 
 ________05AB:   offiw [$FF80], $02                              ;If bit 1 is on, no music
-________05AE:   jr $05B2
-________05AF:   calf $0E64                                      ;Point HL to the music data
+________05AE:   jr ________05B2
+________05AF:   calf CALF____0E64                               ;Point HL to the music data
 ________05B1:   calt $0086                                      ;Setup/Play Music
 ________05B2:   calt $0088                                      ;Read Controller FF90-FF95
 ________05B3:   neiw [$FF93], $01                               ;If Select is pressed...
-________05B6:   jmp $06EC                                       ;Setup puzzle
+________05B6:   jmp ________06EC                                ;Setup puzzle
 ________05B9:   neiw [$FFD2], $0F
-________05BC:   jre $0591                                       ;(go to main loop setup)
-________05BE:   calf $0D1F                                      ;Draw spiral dot-by-dot
-________05C0:   calf $0D1F                                      ;Draw spiral dot-by-dot
+________05BC:   jre ________0591                                ;(go to main loop setup)
+________05BE:   calf CALF____0D1F                               ;Draw spiral dot-by-dot
+________05C0:   calf CALF____0D1F                               ;Draw spiral dot-by-dot
 ________05C2:   calt $00A0                                      ; "C258+ ==> C000+"
 ________05C3:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________05C4:   neiw [$FF93], $08                               ;If Start is pressed...
-________05C7:   jr $05D1                                        ;Jump to graphic program
+________05C7:   jr ________05D1                                 ;Jump to graphic program
 
 ________05C8:   eqiw [$FF8A], $80                               ;Delay for the scrolltext
-________05CB:   jre $05A9                                       ;JRE Main Loop
-________05CD:   calf $0CE2                                      ;Scroll Text routine
-________05CF:   jre $05A5                                       ;Reset scrolltext delay...
+________05CB:   jre ________05A9                                ;JRE Main Loop
+________05CD:   calf CALF____0CE2                               ;Scroll Text routine
+________05CF:   jre ________05A5                                ;Reset scrolltext delay...
 ;-----------------------------------------------------------
 ;"Paint" program setup routines
-________05D1:   calf $0E4D                                      ;Turn timer on
+________05D1:   calf CALF____0E4D                               ;Turn timer on
 ________05D3:   calt $008C                                      ; "Clear Screen 2 RAM"
 ________05D4:   calt $0090                                      ; "Clear C4B0~C593"
-________05D5:   lxi hl, $0541                                   ;"GRA"
+________05D5:   lxi hl, ________0541                            ;"GRA"
 ________05D8:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
 ________05D9:   db $02, $00, $1C                                ;Parameters for the text routine
 ________05DC:   mvi a, $05
@@ -870,8 +870,8 @@ ________05FE:   stax [hl+]		                                ;Just writes "99s" 3
 ________05FF:   inx hl
 ________0600:   inx hl
 ________0601:   dcr b
-________0602:   jr $05FE
-________0603:   calf $0D68                                      ;Draw Border
+________0602:   jr ________05FE
+________0603:   calf CALF____0D68                               ;Draw Border
 
 ________0605:   mvi a, $70
 ________0607:   staw [$FF8A]
@@ -886,7 +886,7 @@ ________0618:   calt $0080                                      ;[PC+1] Check Ca
 ________0619:   db $C1                                          ;Jump to ($4003) in cartridge
 
 ________061A:   oniw [$FF8A], $80
-________061D:   jr $0618
+________061D:   jr ________0618
 ________061E:   lxi hl, $C572
 ________0621:   ldax [hl]
 ________0622:   xri a, $FF
@@ -894,58 +894,58 @@ ________0624:   stax [hl]
 ________0625:   calt $0088                                      ;Read Controller FF90-FF95
 ________0626:   ldaw [$FF93]
 ________0628:   offi a, $3F                                     ;Test Buttons 1,2,3,4
-________062A:   jr $0633
+________062A:   jr ________0633
 ________062B:   ldaw [$FF92]
 ________062D:   offi a, $0F                                     ;Test U,D,L,R
-________062F:   jre $0673
-________0631:   jre $0605
+________062F:   jre ________0673
+________0631:   jre ________0605
 ;------------------------------------------------------------
 ________0633:   oniw [$FF95], $09
-________0636:   jr $0647
+________0636:   jr ________0647
 ________0637:   eqi a, $08                                      ;Start clears the screen
-________0639:   jr $063F
+________0639:   jr ________063F
 
 ________063A:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________063B:   db $22, $03
-________063D:   jre $05DC                                       ;Clear screen
+________063D:   jre ________05DC                                ;Clear screen
 
 ________063F:   eqi a, $01                                      ;Select goes to the Puzzle
-________0641:   jr $0647
+________0641:   jr ________0647
 
 ________0642:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0643:   db $23, $03
-________0645:   jre $06EE                                       ;To Puzzle Setup
+________0645:   jre ________06EE                                ;To Puzzle Setup
 
 ________0647:   eqi a, $02                                      ;Button 1
-________0649:   jr $064E
+________0649:   jr ________064E
 ________064A:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________064B:   db $19, $03
-________064D:   jr $0664                                        ;Clear a dot
+________064D:   jr ________0664                                 ;Clear a dot
 
 ________064E:   eqi a, $10                                      ;Button 2
-________0650:   jr $0655
+________0650:   jr ________0655
 ________0651:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0652:   db $1B, $03
-________0654:   jr $0664                                        ;Clear a dot
+________0654:   jr ________0664                                 ;Clear a dot
 
 ________0655:   eqi a, $04                                      ;Button 3
-________0657:   jr $065C
+________0657:   jr ________065C
 ________0658:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0659:   db $1D, $03
-________065B:   jr $066C                                        ;Set a dot
+________065B:   jr ________066C                                 ;Set a dot
 
 ________065C:   eqi a, $20                                      ;Button 4
-________065E:   jre $0680
+________065E:   jre ________0680
 ________0660:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0661:   db $1E, $03
-________0663:   jr $066C                                        ;Set a dot
+________0663:   jr ________066C                                 ;Set a dot
 
 ________0664:   ldaw [$FFA6]
 ________0666:   mov b, a
 ________0667:   ldaw [$FFA7]
 ________0669:   mov c, a
 ________066A:   calt $00DA                                      ; "Clear Dot; B,C = X-,Y-position"
-________066B:   jr $0673
+________066B:   jr ________0673
 
 ________066C:   ldaw [$FFA6]
 ________066E:   mov b, a
@@ -955,13 +955,13 @@ ________0672:   calt $00B0                                      ; "Set Dot; B,C 
 
 ________0673:   ldaw [$FF92]
 ________0675:   nei a, $0F                                      ;Check if U,D,L,R pressed at once??
-________0677:   jre $0605
+________0677:   jre ________0605
 ________0679:   oni a, $01                                      ;Up
-________067B:   jr $0694
+________067B:   jr ________0694
 
 ________067C:   ldaw [$FFA7]
 ________067E:   nei a, $0E                                      ;Check lower limits of X-pos
-________0680:   jr $069B
+________0680:   jr ________069B
 
 ________0681:   dcr a
 ________0682:   staw [$FFA7]
@@ -973,14 +973,14 @@ ________068D:   daa
 ________068E:   staw [$FFA1]
 ________0690:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0691:   db $12, $03
-________0693:   jr $06AE
+________0693:   jr ________06AE
 
 ________0694:   oni a, $04                                      ;Down
-________0696:   jr $06AE
+________0696:   jr ________06AE
 
 ________0697:   ldaw [$FFA7]
 ________0699:   nei a, $3A                                      ;Check lower cursor limit
-________069B:   jr $06B7
+________069B:   jr ________06B7
 
 ________069C:   inr a
 ________069D:   staw [$FFA7]
@@ -995,11 +995,11 @@ ________06AC:   db $14, $03
 
 ________06AE:   ldaw [$FF92]
 ________06B0:   oni a, $08                                      ;Right
-________06B2:   jr $06CC
+________06B2:   jr ________06CC
 
 ________06B3:   ldaw [$FFA6]
 ________06B5:   nei a, $43
-________06B7:   jr $06D4
+________06B7:   jr ________06D4
 
 ________06B8:   inr a
 ________06B9:   staw [$FFA6]
@@ -1011,13 +1011,13 @@ ________06C4:   daa
 ________06C5:   staw [$FFA0]
 ________06C7:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06C8:   db $17, $03
-________06CA:   jre $0605
+________06CA:   jre ________0605
 
 ________06CC:   oni a, $02                                      ;Left
-________06CE:   jre $0605
+________06CE:   jre ________0605
 ________06D0:   ldaw [$FFA6]
 ________06D2:   nei a, $07
-________06D4:   jr $06E8
+________06D4:   jr ________06E8
 
 ________06D5:   dcr a
 ________06D6:   staw [$FFA6]
@@ -1029,24 +1029,24 @@ ________06E1:   daa
 ________06E2:   staw [$FFA0]
 ________06E4:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06E5:   db $16, $03
-________06E7:   jr $06CA
+________06E7:   jr ________06CA
 ;------------------------------------------------------------
 ________06E8:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________06E9:   db $01, $03
-________06EB:   jr $06E7
+________06EB:   jr ________06E7
 ;------------------------------------------------------------
 ;Puzzle Setup Routines...
-________06EC:   calf $0E4D                                      ;Reset the timer?
+________06EC:   calf CALF____0E4D                               ;Reset the timer?
 ________06EE:   mvi a, $21
 ________06F0:   mvi b, $0A
-________06F2:   calf $0E67                                      ;LXI H,$C7F2
+________06F2:   calf CALF____0E67                               ;LXI H,$C7F2
 ________06F4:   stax [hl+]
 ________06F5:   inr a                                           ;Set up the puzzle tiles in RAM
 ________06F6:   dcr b
-________06F7:   jr $06F4
+________06F7:   jr ________06F4
 ________06F8:   mov a, b                                        ;$FF
 ________06F9:   stax [hl+]
-________06FA:   calf $0E67
+________06FA:   calf CALF____0E67
 ________06FC:   mvi b, $0B
 ________06FE:   lxi de, $C75E
 ________0701:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
@@ -1055,9 +1055,9 @@ ________0704:   lxi hl, $C75E
 ________0707:   lxi de, $C752
 ________070A:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________070B:   calt $008C                                      ; "Clear Screen 2 RAM"
-________070C:   calf $0D68                                      ;Draw Border
-________070E:   calf $0D92                                      ;Draw the grid
-________0710:   calf $0C7B                                      ;Write "PUZZLE"
+________070C:   calf CALF____0D68                               ;Draw Border
+________070E:   calf CALF____0D92                               ;Draw the grid
+________0710:   calf CALF____0C7B                               ;Write "PUZZLE"
 ________0712:   aniw [$FF89], $00
 ________0715:   mvi a, $60
 ________0717:   staw [$FF8A]
@@ -1069,42 +1069,42 @@ ________071D:   lxi hl, $C752
 ________0720:   lxi de, $C7F2
 ________0723:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0724:   mvi b, $11
-________0726:   lxi hl, $055D                                   ;Point to "grid" data
+________0726:   lxi hl, ________055D                            ;Point to "grid" data
 ________0729:   ldax [hl+]
 ________072A:   push bc
 ________072C:   push hl
-________072E:   calf $0DD3                                      ;This probably draws the tiles
+________072E:   calf CALF____0DD3                               ;This probably draws the tiles
 ________0730:   nop                                             ;Or randomizes them??
 ________0731:   pop hl
 ________0733:   pop bc
 ________0735:   dcr b
-________0736:   jr $0729
+________0736:   jr ________0729
 ________0737:   mvi b, $0B        
-________0739:   calf $0E67                                      ;LXI H,$C7F2
+________0739:   calf CALF____0E67                               ;LXI H,$C7F2
 ________073B:   lxi de, $C752
 ________073E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________073F:   calt $0088                                      ;Read Controller FF90-FF95
 ________0740:   neiw [$FF93], $01                               ;Select
 ________0743:   oniw [$FF95], $01                               ;Select trigger
-________0746:   jr $074D
+________0746:   jr ________074D
 ________0747:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0748:   db $14, $03
-________074A:   jmp $05D1                                       ;Go to Paint Program
+________074A:   jmp ________05D1                                ;Go to Paint Program
 ________074D:   neiw [$FF93], $08                               ;Start
 ________0750:   oniw [$FF95], $08
-________0753:   jr $0758
+________0753:   jr ________0758
 ________0754:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0755:   db $16, $03
-________0757:   jr $0765
+________0757:   jr ________0765
 ;------------------------------------------------------------
 ________0758:   eqiw [$FF8A], $80
-________075B:   jre $0719                                       ;Draw Tiles
+________075B:   jre ________0719                                ;Draw Tiles
 ________075D:   eqiw [$FF89], $3C
-________0760:   jre $0715                                       ;Reset timer?
-________0762:   jmp $057F                                       ;Go back to startup screen(?)
+________0760:   jre ________0715                                ;Reset timer?
+________0762:   jmp ________057F                                ;Go back to startup screen(?)
 ;------------------------------------------------------------
 ________0765:   calt $008C                                      ; "Clear Screen 2 RAM"
-________0766:   lxi hl, $0553                                   ;"TIME"
+________0766:   lxi hl, ________0553                            ;"TIME"
 ________0769:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
 ________076A:   db $0E, $00, $1A
 ________076D:   lxi hl, $FF86
@@ -1113,19 +1113,19 @@ ________0772:   calt $0094                                      ; "Clear RAM (HL
 ________0773:   ldaw [$FF8C]
 ________0775:   ani a, $0F
 ________0777:   mov b, a
-________0778:   lxi hl, $056F
+________0778:   lxi hl, ________056F
 ________077B:   ldax [hl+]
 ________077C:   push bc
 ________077E:   push hl
-________0780:   calf $0DD3                                      ;Draw Tiles
+________0780:   calf CALF____0DD3                               ;Draw Tiles
 ________0782:   nop
 ________0783:   pop hl
 ________0785:   pop bc
 ________0787:   dcr b
-________0788:   jr $077B
-________0789:   calf $0D68                                      ;Draw Border (again)
-________078B:   calf $0D92                                      ;Draw the grid (again)
-________078D:   calf $0C82                                      ;Scroll text? Write time in decimal?
+________0788:   jr ________077B
+________0789:   calf CALF____0D68                               ;Draw Border (again)
+________078B:   calf CALF____0D92                               ;Draw the grid (again)
+________078D:   calf CALF____0C82                               ;Scroll text? Write time in decimal?
 ________078F:   mvi a, $60
 ________0791:   staw [$FF8A]
 ________0793:   calt $0080                                      ;[PC+1] Check Cartridge
@@ -1141,61 +1141,61 @@ ________07A3:   calt $00A0                                      ; "C258+ ==> C00
 ________07A4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________07A5:   calt $0088                                      ;Read Controller FF90-FF95
 ________07A6:   neiw [$FF93], $01                               ;Select
-________07A9:   jre $0747                                       ;To Paint Program
+________07A9:   jre ________0747                                ;To Paint Program
 ________07AB:   neiw [$FF93], $08                               ;Start
 ________07AE:   oniw [$FF95], $08                               ;Start trigger
-________07B1:   jr $07B4
-________07B2:   jre $0754                                       ;Restart puzzle
+________07B1:   jr ________07B4
+________07B2:   jre ________0754                                ;Restart puzzle
 ;------------------------------------------------------------
 ________07B4:   eqiw [$FF8A], $80
-________07B7:   jre $0793
+________07B7:   jre ________0793
 ________07B9:   ldaw [$FF92]                                    ;Joypad
 ________07BB:   oni a, $0F
-________07BD:   jre $078F                                       ;Keep looping
-________07BF:   calf $0DD3                                      ;Draw Tiles
-________07C1:   jr $07C6
+________07BD:   jre ________078F                                ;Keep looping
+________07BF:   calf CALF____0DD3                               ;Draw Tiles
+________07C1:   jr ________07C6
 ;------------------------------------------------------------
 ________07C2:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________07C3:   db $01, $03
-________07C5:   jr $07BD
+________07C5:   jr ________07BD
 ;------------------------------------------------------------
 ________07C6:   push va
 ________07C8:   mvi a, $03
 ________07CA:   staw [$FF99]
 ________07CC:   di  
-________07CE:   calf $08B6                                      ;Play Music (Snd)
+________07CE:   calf CALF____08B6                               ;Play Music (Snd)
 ________07D0:   ei
 ________07D2:   lxi hl, $C7FE
 ________07D5:   ldax [hl+]
 ________07D6:   mov b, a
 ________07D7:   ldax [hl-]
 ________07D8:   lta a, b
-________07DA:   jr $07DD
+________07DA:   jr ________07DD
 ________07DB:   mov b, a
 ________07DC:   ldax [hl]
 ________07DD:   push bc
 ________07DF:   eqiw [$FFA2], $00
-________07E2:   jre $0823
-________07E4:   calf $0CBF                                      ;Write Text(?)
+________07E2:   jre ________0823
+________07E4:   calf CALF____0CBF                               ;Write Text(?)
 ________07E6:   inx hl
 ________07E7:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07E8:   db $00, $8E
-________07EA:   calf $0C77                                      ;HL + $3C
+________07EA:   calf CALF____0C77                               ;HL + $3C
 ________07EC:   push hl
 ________07EE:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07EF:   db $F0, $0E
 ________07F1:   pop hl
 ________07F3:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07F4:   db $F0, $8E
-________07F6:   calf $0C77                                      ;HL + $3C
+________07F6:   calf CALF____0C77                               ;HL + $3C
 ________07F8:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________07F9:   db $1F, $0F
 ________07FB:   pop bc
 ________07FD:   mov a, b
-________07FE:   calf $0CBF                                      ;Write Text(?)
+________07FE:   calf CALF____0CBF                               ;Write Text(?)
 ________0800:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0801:   db $F0, $0F
-________0803:   calf $0C77                                      ;HL + $3C
+________0803:   calf CALF____0C77                               ;HL + $3C
 ________0805:   push hl
 ________0807:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0808:   db $0F, $0E
@@ -1213,14 +1213,14 @@ ________081B:   ldax [hl+]
 ________081C:   ral
 ________081E:   stax [de+]
 ________081F:   dcr b
-________0820:   jr $081B
-________0821:   jre $0875
+________0820:   jr ________081B
+________0821:   jre ________0875
 ;------------------------------------------------------------
-________0823:   calf $0CBF                                      ;Write Text(?)
+________0823:   calf CALF____0CBF                               ;Write Text(?)
 ________0825:   mvi b, $07
 ________0827:   inx hl
 ________0828:   dcr b
-________0829:   jr $0827
+________0829:   jr ________0827
 ________082A:   mvi a, $01
 ________082C:   staw [$FFA5]
 ________082E:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
@@ -1235,32 +1235,32 @@ ________083A:   calt $00B2                                      ; "[PC+2] Draw H
 ________083B:   db $1F, $08
 ________083D:   ldaw [$FFA5]
 ________083F:   dcr a
-________0840:   jr $0842
-________0841:   jr $084C
+________0840:   jr ________0842
+________0841:   jr ________084C
 
 ________0842:   staw [$FFA5]
 ________0844:   pop bc
 ________0846:   mov a, b
 ________0847:   staw [$FFA2]
-________0849:   calf $0CBF                                      ;Write Text(?)
-________084B:   jr $082E
+________0849:   calf CALF____0CBF                               ;Write Text(?)
+________084B:   jr ________082E
 
 ________084C:   ldaw [$FFA2]
-________084E:   calf $0CBF                                      ;Write Text(?)
+________084E:   calf CALF____0CBF                               ;Write Text(?)
 ________0850:   mvi e, $09
 ________0852:   calt $009A                                      ; "HL <== HL+E"
 ________0853:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0854:   db $1F, $8E
-________0856:   calf $0C77                                      ;HL + $3C
+________0856:   calf CALF____0C77                               ;HL + $3C
 ________0858:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0859:   db $00, $8E
-________085B:   calf $0C77                                      ;HL + $3C
+________085B:   calf CALF____0C77                               ;HL + $3C
 ________085D:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________085E:   db $F0, $8E
 ________0860:   mvi b, $54                                      ;Decrement HL 55 times!
 ________0862:   dcx hl                                          ;Is this a delay or something?
 ________0863:   dcr b                                           ;There's already a CALT that subs HL...
-________0864:   jr $0862
+________0864:   jr ________0862
 ________0865:   calt $00A8                                      ; "XCHG HL,DE"
 ________0866:   pop va
 ________0868:   push de
@@ -1271,28 +1271,28 @@ ________086F:   ldax [hl+]
 ________0870:   ral 
 ________0872:   stax [de+]
 ________0873:   dcr b
-________0874:   jr $086F
+________0874:   jr ________086F
 ________0875:   lxi hl, $FF88
 ________0878:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
 ________0879:   db $44, $00, $08
 ________087C:   calt $00A0                                      ; "C258+ ==> C000+"
 ________087D:   calt $0082                                      ;Copy Screen RAM to LCD Driver
-________087E:   calf $0D68                                      ;Draw Border
-________0880:   calf $0D92                                      ;Draw Puzzle Grid
-________0882:   calf $0C82                                      ;Scroll text? Write time in decimal?
+________087E:   calf CALF____0D68                               ;Draw Border
+________0880:   calf CALF____0D92                               ;Draw Puzzle Grid
+________0882:   calf CALF____0C82                               ;Scroll text? Write time in decimal?
 ________0884:   mvi b, $0B
 ________0886:   lxi hl, $C75E
 ________0889:   lxi de, $C7F2
 ________088C:   ldax [hl+]
 ________088D:   eqax [de+]
-________088F:   jre $07C5
+________088F:   jre ________07C5
 ________0891:   dcr b
-________0892:   jr $088C
-________0893:   calf $0E64                                      ;Point HL to music data
+________0892:   jr ________088C
+________0893:   calf CALF____0E64                               ;Point HL to music data
 ________0895:   calt $0086                                      ;Setup/Play Music
 ________0896:   oniw [$FF80], $03
-________0899:   jmp $0712                                       ;Continue puzzle
-________089C:   jr $0896
+________0899:   jmp ________0712                                ;Continue puzzle
+________089C:   jr ________0896
 ;End of Puzzle Code
 ;------------------------------------------------------------
 ;Clear A
@@ -1314,17 +1314,17 @@ ________08AC:   staw [$FF99]
 ________08AE:   shld [$FF84]
 ________08B2:   mov a, b
 ________08B3:   inr a
-________08B4:   jr $08B6
+________08B4:   jr CALF____08B6
 ________08B5:   rets                                            ;Return & Skip if read "$FF"
 
 ;Move "note" into TM0
-CALF____08B6:   lxi hl, $0278                                   ;Table Start
+CALF____08B6:   lxi hl, ________0278                            ;Table Start
 ________08B9:   mov a, b
 ________08BA:   suinb a, $01
-________08BC:   jr $08C0
+________08BC:   jr ________08C0
 ________08BD:   inx hl                                          ;Add A*2 to HL (wastefully)
 ________08BE:   inx hl
-________08BF:   jr $08BA
+________08BF:   jr ________08BA
 
 ________08C0:   ldax [hl+]
 ________08C1:   mov tm0, a
@@ -1361,13 +1361,13 @@ ________08EC:   mov a, d
 ________08ED:   ral
 ________08EF:   mov d, a
 ________08F0:   pop va
-________08F2:   jr $08DC
+________08F2:   jr ________08DC
 ;-----------------------------
 ;((HL+) <==> (DE+))xB
 ;This function swaps the contents of (HL)<->(DE) B times
-CALT_97_08F3:   calf $08F8                                      ;Swap (HL+)<->(DE+)
+CALT_97_08F3:   calf CALF____08F8                               ;Swap (HL+)<->(DE+)
 ________08F5:   dcr b
-________08F6:   jr $08F3
+________08F6:   jr CALT_97_08F3
 ________08F7:   ret
 ;------------------------------------------------------------
 ;Swap (HL+)<->(DE+)
@@ -1383,18 +1383,18 @@ ________08FE:   ret
 CALT_86_08FF:   lxi hl, $C258                                   ;RAM for screen 2
 ;Clear Screen RAM
 CALT_87_0902:   lxi hl, $C000                                   ;RAM for screen 1
-________0905:   mvi c, $02
+CALF____0905:   mvi c, $02
 ________0907:   mvi b, $C7                                      ;$C8 bytes * 3 loops
 ________0909:   calt $0094                                      ; "Clear RAM (HL+)xB"
 ________090A:   dcr c
-________090B:   jr $0907
+________090B:   jr ________0907
 ________090C:   ret
 ;------------------------------------------------------------
 ;Clear C594~C7FF
 CALT_89_090D:   lxi hl, $C594                                   ;Set HL
-________0910:   calf $0905                                      ;And jump to above routine
+________0910:   calf CALF____0905                               ;And jump to above routine
 ________0912:   mvi b, $13                                      ;Then clear $14 more bytes
-________0914:   jr $091A                                        ;Clear RAM (HL+)xB
+________0914:   jr CALT_8A_091A                                 ;Clear RAM (HL+)xB
 
 ;Clear C4B0~C593
 CALT_88_0915:   lxi hl, $C4B0                                   ;Set RAM pointer
@@ -1405,7 +1405,7 @@ CALT_8A_091A:   calt $008A                                      ; "Clear A"
 ;A ==> (HL+)xB
 CALT_9F_091B:   stax [hl+]
 ________091C:   dcr b
-________091D:   jr $091B
+________091D:   jr CALT_9F_091B
 ________091E:   ret
 ;------------------------------------------------------------
 ;Read Controller FF90-FF95
@@ -1419,16 +1419,16 @@ ________092D:   xri a, $FF
 ________092F:   mov c, a
 ________0930:   mvi b, $40                                      ;Debouncing delay
 ________0932:   dcr b
-________0933:   jr $0932
+________0933:   jr ________0932
 ________0934:   mov a, pc                                       ;Get port C a 2nd time
 ________0936:   xri a, $FF
 ________0938:   eqa a, c                                        ;Check if both reads are equal
-________093A:   jr $092F
+________093A:   jr ________092F
 ________093B:   ori pa, $40                                     ;PA Bit 6 on
 ________093E:   ani a, $03
 ________0940:   stax [de+]                                      ;Save controller read in 92
 ________0941:   mov a, c
-________0942:   calf $0C72                                      ;RLR A x2
+________0942:   calf CALF____0C72                               ;RLR A x2
 ________0944:   ani a, $07
 ________0946:   stax [de-]                                      ;Save cont in 93
 ________0947:   ani pa, $7F                                     ;PA bit 7 off
@@ -1437,11 +1437,11 @@ ________094C:   xri a, $FF
 ________094E:   mov c, a
 ________094F:   mvi b, $40                                      ;...and debounce
 ________0951:   dcr b
-________0952:   jr $0951
+________0952:   jr ________0951
 ________0953:   mov a, pc
 ________0955:   xri a, $FF
 ________0957:   eqa a, c                                        ;...check again
-________0959:   jr $094E
+________0959:   jr ________094E
 ________095A:   ori pa, $80                                     ;PA bit 7 on
 ________095D:   ral
 ________095F:   ral
@@ -1465,32 +1465,32 @@ ________097C:   stax [bc]
 ________097D:   ret
 ;------------------------------------------------------------
 ;C258+ ==> C000+
-CALT_90_097E:   calf $0E5E
-________0980:   jr $0984
+CALT_90_097E:   calf CALF____0E5E
+________0980:   jr ________0984
 ;C000+ ==> C258+
-CALT_8F_0981:   calf $0E5E
+CALT_8F_0981:   calf CALF____0E5E
 ________0983:   calt $00A8                                      ; "XCHG HL,DE"
 ________0984:   mvi c, $02
 ________0986:   mvi b, $C7
 ________0988:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0989:   dcr c
-________098A:   jr $0986
+________098A:   jr ________0986
 ________098B:   ret
 ;------------------------------------------------------------
 ;Swap C258+ <==> C000+
-CALT_8E_098C:   calf $0E5E
+CALT_8E_098C:   calf CALF____0E5E
 ________098E:   lxi bc, $C702
 ________0991:   push bc
 ________0993:   calt $00AE                                      ; "((HL+) <==> (DE+))xB"
 ________0994:   pop bc
 ________0996:   dcr c
-________0997:   jr $0991
+________0997:   jr ________0991
 ________0998:   ret
 ;------------------------------------------------------------
 ;Set Dot; B,C = X-,Y-position
 ;(Oddly enough, this writes dots to the 2nd screen RAM area!)
 CALT_98_0999:   push bc
-________099B:   calf $0BF4                                      ;Point to 2nd screen
+________099B:   calf CALF____0BF4                               ;Point to 2nd screen
 ________099D:   pop bc
 ________099F:   mov a, c
 ________09A0:   ani a, $07
@@ -1499,16 +1499,16 @@ ________09A3:   calt $008A                                      ; "Clear A"
 ________09A4:   stc
 ________09A6:   ral
 ________09A8:   dcr c
-________09A9:   jr $09A6
+________09A9:   jr ________09A6
 ________09AA:   orax [hl]
-________09AC:   jr $09C5
+________09AC:   jr ________09C5
 ;------------------------------------------------------------
 CALF____09AD:   eqiw [$FFD8], $00                               ;"Invert Dot", then...
-________09B0:   jr $0999
+________09B0:   jr CALT_98_0999
 
 ;Clear Dot; B,C = X-,Y-position
 CALT_AD_09B1:   push bc
-________09B3:   calf $0BF4                                      ;Point to 2nd screen
+________09B3:   calf CALF____0BF4                               ;Point to 2nd screen
 ________09B5:   pop bc
 ________09B7:   mov a, c
 ________09B8:   ani a, $07
@@ -1517,7 +1517,7 @@ ________09BB:   mvi a, $FF
 ________09BD:   clc
 ________09BF:   ral
 ________09C1:   dcr c
-________09C2:   jr $09BF
+________09C2:   jr ________09BF
 ________09C3:   anax [hl]
 ________09C5:   stax [hl]
 ________09C6:   ret
@@ -1535,20 +1535,20 @@ ________09CF:   ani a, $7F
 ________09D1:   mov b, a
 ________09D2:   mov a, d
 ________09D3:   oni a, $80
-________09D5:   jr $09DD
+________09D5:   jr ________09DD
 
 ________09D6:   ldax [hl]
 ________09D7:   ana a, c
 ________09D9:   stax [hl+]
 ________09DA:   dcr b
-________09DB:   jr $09D6
+________09DB:   jr ________09D6
 ________09DC:   ret
 
 ________09DD:   ldax [hl]
 ________09DE:   ora a, c
 ________09E0:   stax [hl+]
 ________09E1:   dcr b
-________09E2:   jr $09DD
+________09E2:   jr ________09DD
 ________09E3:   ret
 ;------------------------------------------------------------
 ;[PC+3] Print Bytes on-Screen
@@ -1584,10 +1584,10 @@ ________0A04:   mvi c, $40
 ________0A06:   oniw [$FF9D], $40
 ________0A09:   mvi c, $10
 ________0A0B:   oniw [$FF9D], $08
-________0A0E:   jr $0A19
+________0A0E:   jr ________0A19
 ________0A0F:   dcr b
-________0A10:   jr $0A12
-________0A11:   jr $0A23
+________0A10:   jr ________0A12
+________0A11:   jr ________0A23
 
 ________0A12:   ldax [hl]
 ________0A13:   calt $00C0                                      ; "(RLR A)x4"
@@ -1595,18 +1595,18 @@ ________0A14:   ani a, $0F
 ________0A16:   ora a, c
 ________0A18:   stax [de+]
 ________0A19:   dcr b
-________0A1A:   jr $0A1C
-________0A1B:   jr $0A23
+________0A1A:   jr ________0A1C
+________0A1B:   jr ________0A23
 
 ________0A1C:   ldax [hl+]
 ________0A1D:   ani a, $0F
 ________0A1F:   ora a, c
 ________0A21:   stax [de+]
-________0A22:   jr $0A0F
+________0A22:   jr ________0A0F
 
 ________0A23:   pop bc
 ________0A25:   aniw [$FF9D], $BF
-________0A28:   jr $0A42
+________0A28:   jr ________0A42
 ;-----------------------------------------------------------
 ;[PC+3] Print Text on-Screen
 ;This prints a text string (pointed to by HL) anywhere on-screen.
@@ -1632,11 +1632,11 @@ ________0A3C:   shld [$FFC0]
 ________0A40:   staw [$FF98]                                    ;# saved in 98
 ________0A42:   ldaw [$FF9D]
 ________0A44:   oni a, $80                                      ;Check if 0 (2nd screen) or 1 (1st screen)
-________0A46:   jr $0A49
+________0A46:   jr ________0A49
 ________0A47:   calt $00BA                                      ; "Set HL to screen (B,C)"
-________0A48:   jr $0A4B
+________0A48:   jr ________0A4B
 
-________0A49:   calf $0BF4                                      ;This points to Sc 1
+________0A49:   calf CALF____0BF4                               ;This points to Sc 1
 ________0A4B:   mov [$FFC6], c
 ________0A4F:   shld [$FFC2]
 ________0A53:   lxi de, $004B
@@ -1648,18 +1648,18 @@ ________0A5E:   ani a, $07                                      ;Get text spacin
 ________0A60:   staw [$FF9D]                                    ;Save in 9D
 ;--
 ________0A62:   dcrw [$FF98]                                    ;The loop starts here
-________0A64:   jr $0A66
+________0A64:   jr ________0A66
 ________0A65:   ret
 
 ________0A66:   oniw [$FFC6], $FF
-________0A69:   jr $0A85
+________0A69:   jr ________0A85
 ________0A6A:   lhld [$FFC2]
 ________0A6E:   shld [$FFC7]
 ________0A72:   lxi de, $FFB0
 ________0A75:   mvi b, $04
-________0A77:   calf $0BD3
+________0A77:   calf CALF____0BD3
 ________0A79:   offi a, $80
-________0A7B:   jr $0A85
+________0A7B:   jr ________0A85
 ________0A7C:   lded [$FF9D]
 ________0A80:   calt $009A                                      ; "HL <== HL+E"
 ________0A81:   shld [$FFC2]
@@ -1667,31 +1667,31 @@ ________0A85:   lhld [$FFC4]
 ________0A89:   shld [$FFC9]
 ________0A8D:   lxi de, $FFB5
 ________0A90:   mvi b, $04
-________0A92:   calf $0BD3                                      ;Copy B*A bytes?
+________0A92:   calf CALF____0BD3                               ;Copy B*A bytes?
 ________0A94:   offi a, $80
-________0A96:   jr $0AA0
+________0A96:   jr ________0AA0
 ________0A97:   lded [$FF9D]
 ________0A9B:   calt $009A                                      ; "HL <== HL+E"
 ________0A9C:   shld [$FFC4]
 ________0AA0:   mov b, [$FF9C]
 ________0AA4:   calt $008A                                      ; "Clear A"
 ________0AA5:   dcr b
-________0AA6:   jr $0AA8
-________0AA7:   jr $0AAD
+________0AA6:   jr ________0AA8
+________0AA7:   jr ________0AAD
 
 ________0AA8:   stc
 ________0AAA:   ral
-________0AAC:   jr $0AA5
+________0AAC:   jr ________0AA5
 
 ________0AAD:   push va
 ________0AAF:   mov c, a
-________0AB0:   calf $0E6A                                      ;(FFB0 -> HL)
+________0AB0:   calf CALF____0E6A                               ;(FFB0 -> HL)
 ________0AB2:   mvi b, $04
 ________0AB4:   ldax [hl]
 ________0AB5:   ana a, c
 ________0AB7:   stax [hl+]
 ________0AB8:   dcr b
-________0AB9:   jr $0AB4
+________0AB9:   jr ________0AB4
 ________0ABA:   pop va
 ________0ABC:   xri a, $FF
 ________0ABE:   mov c, a
@@ -1700,7 +1700,7 @@ ________0AC1:   ldax [hl]
 ________0AC2:   ana a, c
 ________0AC4:   stax [hl+]
 ________0AC5:   dcr b
-________0AC6:   jr $0AC1
+________0AC6:   jr ________0AC1
 ________0AC7:   lhld [$FFC0]
 ________0ACB:   ldax [hl+]
 ________0ACC:   shld [$FFC0]
@@ -1709,34 +1709,34 @@ ________0AD1:   lxi de, $FFB0
 ________0AD4:   lxi bc, $FFB5
 ________0AD7:   mvi a, $04
 ________0AD9:   oriw [$FF80], $08
-________0ADC:   calf $0C31                                      ;Roll graphics a bit (shift up/dn)
+________0ADC:   calf CALF____0C31                               ;Roll graphics a bit (shift up/dn)
 ________0ADE:   oniw [$FFC6], $FF
-________0AE1:   jr $0AEF
+________0AE1:   jr ________0AEF
 ________0AE2:   lded [$FFC7]
-________0AE6:   calf $0E6A                                      ;(FFB0 -> HL)
+________0AE6:   calf CALF____0E6A                               ;(FFB0 -> HL)
 ________0AE8:   mvi b, $04
 ________0AEA:   oriw [$FF80], $10
-________0AED:   calf $0BD3                                      ;Copy B*A bytes?
+________0AED:   calf CALF____0BD3                               ;Copy B*A bytes?
 ________0AEF:   offiw [$FFC6], $08
-________0AF2:   jr $0B01
+________0AF2:   jr ________0B01
 ________0AF3:   lded [$FFC9]
 ________0AF7:   lxi hl, $FFB5
 ________0AFA:   mvi b, $04
 ________0AFC:   oriw [$FF80], $10
-________0AFF:   calf $0BD3                                      ;Copy B*A bytes?
+________0AFF:   calf CALF____0BD3                               ;Copy B*A bytes?
 ________0B01:   ldaw [$FF9B]
 ________0B03:   adi a, $05
 ________0B05:   mov b, a
 ________0B06:   ldaw [$FF9D]
 ________0B08:   add a, b
 ________0B0A:   staw [$FF9B]
-________0B0C:   jre $0A62
+________0B0C:   jre ________0A62
 ;------------------------------------------------------------
 ;Byte -> Point to Font Graphic
 CALT_9C_0B0E:   lti a, $64                                      ;If it's greater than 64, use cart font
-________0B10:   jr $0B15                                        ;or...
-________0B11:   lxi de, $02C4                                   ;Point to built-in font
-________0B14:   jr $0B1B
+________0B10:   jr ________0B15                                 ;or...
+________0B11:   lxi de, ________02C4                            ;Point to built-in font
+________0B14:   jr ________0B1B
 
 ________0B15:   lded [$4005]                                    ;4005-6 on cart is the font pointer
 ________0B19:   sui a, $64
@@ -1763,14 +1763,14 @@ ________0B3A:   mvi b, $0B
 
 ________0B3C:   push hl
 ________0B3E:   push bc
-________0B40:   calf $0B4C
+________0B40:   calf CALF____0B4C
 ________0B42:   pop bc
 ________0B44:   pop hl
 ________0B46:   dcx hl
 ________0B47:   dcx hl
 ________0B48:   dcx hl
 ________0B49:   dcr b
-________0B4A:   jr $0B3C
+________0B4A:   jr ________0B3C
 ________0B4B:   ret
 ;------------------------------------------------------------
 CALF____0B4C:   ldax [hl+]
@@ -1795,16 +1795,16 @@ ________0B67:   calt $00BA                                      ; "Set HL to scr
 ________0B68:   shld [$FF9E]
 ________0B6C:   mov a, h
 ________0B6D:   oni a, $40
-________0B6F:   jr $0B75
+________0B6F:   jr ________0B75
 ________0B70:   lxi de, $FFB0
-________0B73:   calf $0BD1
+________0B73:   calf CALF____0BD1
 ________0B75:   lhld [$FF9E]
 ________0B79:   lxi de, $004B
 ________0B7C:   calt $0096                                      ; "HL <== HL+DE"
 ________0B7D:   push hl
 ________0B7F:   lxi de, $FFB8
-________0B82:   calf $0BD1
-________0B84:   calf $0E6A
+________0B82:   calf CALF____0BD1
+________0B84:   calf CALF____0E6A
 ________0B86:   lxi de, $FFC0
 ________0B89:   mvi b, $0F
 ________0B8B:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
@@ -1812,28 +1812,28 @@ ________0B8C:   ldaw [$FF9D]
 ________0B8E:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0B8F:   lxi de, $FFB0
 ________0B92:   lxi bc, $FFB8
-________0B95:   calf $0C2F
+________0B95:   calf CALF____0C2F
 ________0B97:   push hl
-________0B99:   calf $0E6A
+________0B99:   calf CALF____0E6A
 ________0B9B:   lxi de, $FFC0
 ________0B9E:   mvi b, $0F
 ________0BA0:   ldax [hl]
 ________0BA1:   xrax [de+]
 ________0BA3:   stax [hl+]
 ________0BA4:   dcr b
-________0BA5:   jr $0BA0
+________0BA5:   jr ________0BA0
 ________0BA6:   pop hl
 ________0BA8:   oriw [$FF80], $08
 ________0BAB:   lxi de, $FFB0
 ________0BAE:   lxi bc, $FFB8
-________0BB1:   calf $0C2F
+________0BB1:   calf CALF____0C2F
 ________0BB3:   lded [$FF9E]
 ________0BB7:   mov a, d
 ________0BB8:   oni a, $40
-________0BBA:   jr $0BC2
-________0BBB:   calf $0E6A
+________0BBA:   jr ________0BC2
+________0BBB:   calf CALF____0E6A
 ________0BBD:   oriw [$FF80], $10
-________0BC0:   calf $0BD1
+________0BC0:   calf CALF____0BD1
 ________0BC2:   pop de
 ________0BC4:   lxi hl, $3DA8
 ________0BC7:   calt $0096                                      ; "HL <== HL+DE"
@@ -1842,49 +1842,49 @@ ________0BCA:   ret
 ________0BCB:   lxi hl, $FFB8
 ________0BCE:   oriw [$FF80], $10
 ;--
-________0BD1:   mvi b, $07
-________0BD3:   ldaw [$FF9B]
+CALF____0BD1:   mvi b, $07
+CALF____0BD3:   ldaw [$FF9B]
 ________0BD5:   offi a, $80
-________0BD7:   jr $0BE2
+________0BD7:   jr ________0BE2
 ________0BD8:   lti a, $4B
-________0BDA:   jr $0BED
+________0BDA:   jr ________0BED
 ________0BDB:   push va
 ________0BDD:   ldax [hl+]
 ________0BDE:   stax [de+]
 ________0BDF:   pop va
-________0BE1:   jr $0BE9
+________0BE1:   jr ________0BE9
 ________0BE2:   oniw [$FF80], $10
-________0BE5:   jr $0BE8
+________0BE5:   jr ________0BE8
 ________0BE6:   inx hl
-________0BE7:   jr $0BE9
+________0BE7:   jr ________0BE9
 
 ________0BE8:   inx de
 ________0BE9:   inr a
 ________0BEA:   nop
 ________0BEB:   dcr b
-________0BEC:   jr $0BD5
+________0BEC:   jr ________0BD5
 ________0BED:   aniw [$FF80], $EF
 ________0BF0:   ret
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
 CALT_9D_0BF1:   lxi hl, $BFB5                                   ;Point before Sc. RAM
-________0BF4:   lxi hl, $C20D                                   ;Point before Sc.2 RAM
+CALF____0BF4:   lxi hl, $C20D                                   ;Point before Sc.2 RAM
 ________0BF7:   mvi e, $4B
 ________0BF9:   mov a, c
 ________0BFA:   mvi c, $00
 ________0BFC:   adi a, $08
 ________0BFE:   suinb a, $08
-________0C00:   jr $0C08
+________0C00:   jr ________0C08
 ________0C01:   push va
 ________0C03:   calt $009A                                      ; "HL <== HL+E"
 ________0C04:   pop va
 ________0C06:   inr c
-________0C07:   jr $0BFE
+________0C07:   jr ________0BFE
 ________0C08:   mov a, b
 ________0C09:   offi a, $80
 ________0C0B:   ret
 ________0C0C:   mov e, a
-________0C0D:   jr $0C18
+________0C0D:   jr CALT_8D_0C18
 ;------------------------------------------------------------
 ;[PC+1] HL +- byte
 CALT_8C_0C0E:   pop de
@@ -1910,14 +1910,14 @@ CALT_9E_0C24:   lxi hl, $C4B0
 ________0C27:   mvi e, $10
 ________0C29:   mov b, a
 ________0C2A:   dcr b
-________0C2B:   jr $0C2D
+________0C2B:   jr ________0C2D
 ________0C2C:   ret
 
 ________0C2D:   calt $009A                                      ; "HL <== HL+E"
-________0C2E:   jr $0C2A
+________0C2E:   jr ________0C2A
 ;------------------------------------------------------------
 CALF____0C2F:   mvi a, $07
-________0C31:   staw [$FF96]
+CALF____0C31:   staw [$FF96]
 
 ________0C33:   ldaw [$FF9C]
 ________0C35:   staw [$FF97]
@@ -1925,8 +1925,8 @@ ________0C37:   push bc
 ________0C39:   mvi c, $00
 ________0C3B:   ldax [hl+]
 ________0C3C:   dcrw [$FF97]
-________0C3E:   jr $0C40
-________0C3F:   jr $0C4D
+________0C3E:   jr ________0C40
+________0C3F:   jr ________0C4D
 
 ________0C40:   clc
 ________0C42:   ral
@@ -1935,28 +1935,28 @@ ________0C46:   mov a, c
 ________0C47:   ral
 ________0C49:   mov c, a
 ________0C4A:   pop va
-________0C4C:   jr $0C3C
+________0C4C:   jr ________0C3C
 
 ________0C4D:   oniw [$FF80], $08
-________0C50:   jr $0C54
+________0C50:   jr ________0C54
 ________0C51:   orax [de]
-________0C53:   jr $0C56
+________0C53:   jr ________0C56
 
 ________0C54:   anax [de]
 ________0C56:   stax [de]
 ________0C57:   mov a, c
 ________0C58:   pop bc
 ________0C5A:   oniw [$FF80], $08
-________0C5D:   jr $0C61
+________0C5D:   jr ________0C61
 ________0C5E:   orax [bc]
-________0C60:   jr $0C63
+________0C60:   jr ________0C63
 
 ________0C61:   anax [bc]
 ________0C63:   stax [bc]
 ________0C64:   inx bc
 ________0C65:   inx de
 ________0C66:   dcrw [$FF96]
-________0C68:   jre $0C33
+________0C68:   jre ________0C33
 ________0C6A:   aniw [$FF80], $F7
 ________0C6D:   ret
 ;------------------------------------------------------------
@@ -1971,20 +1971,20 @@ CALF____0C77:   mvi e, $3C                                      ; 60 decimal...
 ________0C79:   calt $009A                                      ; "HL <== HL+E"
 ________0C7A:   ret
 ;------------------------------------------------------------
-CALF____0C7B:   lxi hl, $054D                                   ;"PUZZLE"
+CALF____0C7B:   lxi hl, ________054D                            ;"PUZZLE"
 ________0C7E:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
 ________0C7F:   db $03, $00, $16
-________0C82:   calf $0E67                                      ;(C7F2 -> HL)
+CALF____0C82:   calf CALF____0E67                               ;(C7F2 -> HL)
 ________0C84:   mvi a, $01
 ________0C86:   staw [$FF83]
 ________0C88:   ldax [hl+]
 ________0C89:   push hl
 ________0C8B:   nei a, $FF                                      ;If it's a terminator, loop
-________0C8D:   jre $0CB6
+________0C8D:   jre ________0CB6
 ________0C8F:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0C90:   calt $00A8                                      ; "XCHG HL,DE"
 ________0C91:   ldaw [$FF83]
-________0C93:   calf $0CBF                                      ;(Scroll text)
+________0C93:   calf CALF____0CBF                               ;(Scroll text)
 ________0C95:   push de
 ________0C97:   mvi e, $51
 ________0C99:   calt $009A                                      ; "HL <== HL+E"
@@ -1994,45 +1994,45 @@ ________0C9E:   ldax [de+]
 ________0C9F:   ral
 ________0CA1:   stax [hl+]
 ________0CA2:   dcr b
-________0CA3:   jr $0C9E
+________0CA3:   jr ________0C9E
 ________0CA4:   inrw [$FF83]
 ________0CA6:   pop hl
 ________0CA8:   eqiw [$FF83], $0D
-________0CAB:   jre $0C88
+________0CAB:   jre ________0C88
 ________0CAD:   lxi hl, $C7FF
 ________0CB0:   ldax [hl]
-________0CB1:   calf $0E3B                                      ;Scroll text; XOR RAM
+________0CB1:   calf CALF____0E3B                               ;Scroll text; XOR RAM
 ________0CB3:   calt $00A0                                      ; "C258+ ==> C000+"
 ________0CB4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________0CB5:   ret
 ;------------------------------------------------------------
 ________0CB6:   mov a, [$FF83]                                  ;A "LDAW 83" would've been faster here...
 ________0CBA:   mov [$C7FF], a
-________0CBE:   jr $0CA4
+________0CBE:   jr ________0CA4
 ;------------------------------------------------------------
 CALF____0CBF:   lti a, $09
-________0CC1:   jr $0CD2
+________0CC1:   jr ________0CD2
 ________0CC2:   lti a, $05
-________0CC4:   jr $0CD8
+________0CC4:   jr ________0CD8
 ________0CC5:   lxi hl, $C2D8
 ________0CC8:   nei a, $04
 ________0CCA:   ret
 ________0CCB:   mvi b, $0F
 ________0CCD:   dcx hl
 ________0CCE:   dcr b
-________0CCF:   jr $0CCD
+________0CCF:   jr ________0CCD
 ________0CD0:   inr a
-________0CD1:   jr $0CC8
+________0CD1:   jr ________0CC8
 ________0CD2:   lxi hl, $C404
 ________0CD5:   sui a, $08
-________0CD7:   jr $0CC8
+________0CD7:   jr ________0CC8
 ;------------------------------------------------------------
 ________0CD8:   lxi hl, $C36E
 ________0CDB:   sui a, $04
-________0CDD:   jr $0CC8
+________0CDD:   jr ________0CC8
 ;------------------------------------------------------------
-________0CDE:   lxi hl, $04B8                                   ;Point to scroll text
-________0CE1:   jr $0CFA
+________0CDE:   lxi hl, ________04B8                            ;Point to scroll text
+________0CE1:   jr ________0CFA
 ;------------------------------------------------------------
     	;Slide the top line for the scroller.
 CALF____0CE2:   inrw [$FF82]
@@ -2042,14 +2042,14 @@ ________0CE8:   lxi de, $C258
 ________0CEB:   mvi b, $47
 ________0CED:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0CEE:   offiw [$FF82], $01
-________0CF1:   jr $0CF6
+________0CF1:   jr ________0CF6
 ________0CF2:   lxi hl, $FFA3
-________0CF5:   jr $0D0C
+________0CF5:   jr ________0D0C
 
 ________0CF6:   lhld [$FFD6]
 ________0CFA:   ldax [hl+]
 ________0CFB:   nei a, $FF                                      ;If terminator...
-________0CFD:   jr $0CDE                                        ;...reset scroll
+________0CFD:   jr ________0CDE                                        ;...reset scroll
 ________0CFE:   shld [$FFD6]
 ________0D02:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0D03:   mvi b, $04                                      ;(5 pixels wide)
@@ -2064,33 +2064,33 @@ ________0D0F:   mvi b, $02
 CALT_95_0D11:   ldax [hl+]
 ________0D12:   stax [de+]
 ________0D13:   dcr b
-________0D14:   jr $0D11
+________0D14:   jr CALT_95_0D11
 ________0D15:   ret
 ;------------------------------------------------------------
 ________0D16:   inrw [$FFDA]
 ________0D18:   lxi hl, $FFDA
 ________0D1B:   ldax [hl]
 ________0D1C:   staw [$FFD0]
-________0D1E:   jr $0D23
+________0D1E:   jr ________0D23
 
 ;Draw a spiral dot-by-dot
 CALF____0D1F:   neiw [$FFD0], $FF
-________0D22:   jr $0D16
+________0D22:   jr ________0D16
 ________0D23:   ldaw [$FFD1]                                    ;This stores the direction
 ________0D25:   nei a, $00                                      ;that the spiral draws in...
-________0D27:   jr $0D46
+________0D27:   jr ________0D46
 ________0D28:   lbcd [$FFD2]
 ________0D2C:   nei a, $01
-________0D2E:   jre $0D52
+________0D2E:   jre ________0D52
 ________0D30:   nei a, $02
-________0D32:   jre $0D57
+________0D32:   jre ________0D57
 ________0D34:   nei a, $03
-________0D36:   jre $0D5C
+________0D36:   jre ________0D5C
 
 ________0D38:   dcr b
 ________0D39:   mov a, b
 ________0D3A:   staw [$FFD3]
-________0D3C:   calf $09AD                                      ;Draw a dot on-screen
+________0D3C:   calf CALF____09AD                               ;Draw a dot on-screen
 ________0D3E:   dcrw [$FFD0]                                    ;Decrement length counter...
 ________0D40:   ret
 ________0D41:   mvi a, $01                                      ;If zero, turn corners
@@ -2099,23 +2099,23 @@ ________0D45:   ret
 ;------------------------------------------------------------
 ________0D46:   lxi bc, $2524
 ________0D49:   sbcd [$FFD2]
-________0D4D:   calf $09AD
+________0D4D:   calf CALF____09AD
 ________0D4F:   inrw [$FFD1]
 ________0D51:   ret
 ________0D52:   dcr c
 ________0D53:   mov a, c
 ________0D54:   staw [$FFD2]
-________0D56:   jr $0D60
+________0D56:   jr ________0D60
 ;------------------------------------------------------------
 ________0D57:   inr b
 ________0D58:   mov a, b
 ________0D59:   staw [$FFD3]
-________0D5B:   jr $0D60
+________0D5B:   jr ________0D60
 ;------------------------------------------------------------
 ________0D5C:   inr c
 ________0D5D:   mov a, c
 ________0D5E:   staw [$FFD2]
-________0D60:   calf $09AD
+________0D60:   calf CALF____09AD
 ________0D62:   dcrw [$FFD0]
 ________0D64:   ret
 ________0D65:   inrw [$FFD1]
@@ -2138,7 +2138,7 @@ ________0D7C:   calt $008A                                      ; "Clear A"
 ________0D7D:   mvi b, $3E
 ________0D7F:   calt $00BE                                      ; "A ==> (HL+)xB"
 ________0D80:   dcr c
-________0D81:   jr $0D77
+________0D81:   jr ________0D77
 ________0D82:   mvi a, $FF
 ________0D84:   mvi b, $0B
 ________0D86:   calt $00BE                                      ; "A ==> (HL+)xB"
@@ -2152,11 +2152,11 @@ ________0D91:   ret
 ;------------------------------------------------------------
 ;This draws the puzzle grid, I think...
 CALF____0D92:   neiw [$FFD5], $00
-________0D95:   jr $0DA2
+________0D95:   jr ________0DA2
 ________0D96:   neiw [$FFD5], $01
-________0D99:   jr $0DA5
+________0D99:   jr ________0DA5
 ________0D9A:   eqiw [$FFD5], $02
-________0D9D:   jre $0DC3
+________0D9D:   jre ________0DC3
 ________0D9F:   lxi hl, $C2D8
 ________0DA2:   lxi hl, $C2B8
 ________0DA5:   lxi hl, $C2C8
@@ -2170,13 +2170,13 @@ ________0DB2:   calt $00B2                                      ; "[PC+2] Draw H
 ________0DB3:   db $FF, $00
 ________0DB5:   pop bc
 ________0DB7:   dcr b
-________0DB8:   jr $0DAD
+________0DB8:   jr ________0DAD
 ________0DB9:   mvi e, $4A
 ________0DBB:   calt $009A                                      ; "HL <== HL+E"
 ________0DBC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DBD:   db $1F, $00
 ________0DBF:   inrw [$FFD5]
-________0DC1:   jre $0D92
+________0DC1:   jre CALF____0D92
 ________0DC3:   lxi hl, $C33E
 ________0DC6:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DC7:   db $10, $40
@@ -2187,12 +2187,12 @@ ________0DCF:   calt $008A                                      ; "Clear A"
 ________0DD0:   staw [$FFD5]
 ________0DD2:   ret
 ;------------------------------------------------------------
-________0DD3:   nei a, $01
-________0DD5:   jr $0DEE
+CALF____0DD3:   nei a, $01
+________0DD5:   jr ________0DEE
 ________0DD6:   nei a, $04
-________0DD8:   jre $0DFC
+________0DD8:   jre ________0DFC
 ________0DDA:   nei a, $02
-________0DDC:   jre $0E0A
+________0DDC:   jre ________0E0A
 
 ________0DDE:   mov a, [$C7FF]                                  ;More puzzle grid drawing, probably...
 ________0DE2:   ani a, $03
@@ -2201,7 +2201,7 @@ ________0DE6:   rets
 
 ________0DE7:   lxi bc, $12FF
 ________0DEA:   oriw [$FFA2], $FF
-________0DED:   jr $0DFB
+________0DED:   jr ________0DFB
 ;------------------------------------------------------------
 ________0DEE:   mov a, [$C7FF]
 ________0DF2:   lti a, $09
@@ -2209,14 +2209,14 @@ ________0DF4:   rets
 
 ________0DF5:   lxi bc, $0D04
 ________0DF8:   aniw [$FFA2], $00
-________0DFB:   jr $0E17
+________0DFB:   jr ________0E17
 ;------------------------------------------------------------
 ________0DFC:   mov a, [$C7FF]
 ________0E00:   gti a, $04
 ________0E02:   rets
 ________0E03:   lxi bc, $0FFC
 ________0E06:   aniw [$FFA2], $00
-________0E09:   jr $0E17
+________0E09:   jr ________0E17
 ;------------------------------------------------------------
 ________0E0A:   mov a, [$C7FF]
 ________0E0E:   oni a, $03
@@ -2233,22 +2233,22 @@ ________0E23:   mov [$C7FF], a
 ________0E27:   lxi hl, $C7F1
 ________0E2A:   mov a, d
 ________0E2B:   dcr a
-________0E2C:   jr $0E2E
-________0E2D:   jr $0E30
+________0E2C:   jr ________0E2E
+________0E2D:   jr ________0E30
 
 ________0E2E:   inx hl
-________0E2F:   jr $0E2B
+________0E2F:   jr ________0E2B
 
 ________0E30:   mov a, e
 ________0E31:   lxi de, $C7F1
 ________0E34:   dcr a
-________0E35:   jr $0E39
-________0E36:   jmp $08F8
+________0E35:   jr ________0E39
+________0E36:   jmp CALF____08F8
 
 ________0E39:   inx de
-________0E3A:   jr $0E34
+________0E3A:   jr ________0E34
 ;------------------------------------------------------------
-CALF____0E3B:   calf $0CBF
+CALF____0E3B:   calf CALF____0CBF
 ________0E3D:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0E3E:   db $F0, $10
 ________0E40:   mvi e, $3A
@@ -2275,7 +2275,7 @@ ________0E5D:   ret
 ; Loads (DE/)HL with various common addresses
 CALF____0E5E:   lxi de, $C000
 ________0E61:   lxi hl, $C258
-CALF____0E64:   lxi hl, $04EC
+CALF____0E64:   lxi hl, ________04EC
 CALF____0E67:   lxi hl, $C7F2
 CALF____0E6A:   lxi hl, $FFB0
 ________0E6D:   ret
@@ -2285,13 +2285,13 @@ ________0E6D:   ret
 CALT_A8_0E6E:   pop hl
 ________0E70:   ldax [hl+]
 ________0E71:   push hl
-________0E73:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
+CALF____0E73:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0E74:   calt $00A8                                      ; "XCHG HL,DE"
-________0E75:   call $0E78                                      ;This call means the next code runs twice
+________0E75:   call ________0E78                               ;This call means the next code runs twice
 
 ________0E78:   mvi b, $7
 ________0E7A:   mvi c, $7
-________0E7C:   calf $0E6A                                      ;(FFB0->HL)
+________0E7C:   calf CALF____0E6A                               ;(FFB0->HL)
 ________0E7E:   ldax [de]                                       ;In this loop, the byte at (FFB0)
 ________0E7F:   ral                                             ;Has its bits split up into 8 bytes
 ________0E81:   push va                                         ;And this loop runs 8 times...
@@ -2300,10 +2300,10 @@ ________0E84:   rar
 ________0E86:   stax [hl+]
 ________0E87:   pop va
 ________0E89:   dcr c
-________0E8A:   jr $0E7F
+________0E8A:   jr ________0E7F
 ________0E8B:   inx de
 ________0E8C:   dcr b
-________0E8D:   jr $0E7A
+________0E8D:   jr ________0E7A
 
 ________0E8E:   push de
 ________0E90:   dcx hl
@@ -2318,9 +2318,9 @@ CALT_A9_0E98:   pop hl
 ________0E9A:   ldax [hl+]
 ________0E9B:   push hl
 ________0E9D:   push va
-________0E9F:   calf $0E73
+________0E9F:   calf CALF____0E73
 ________0EA1:   pop va
-________0EA3:   jr $0EA9
+________0EA3:   jr ________0EA9
 ;-----------------------------------------------------------
 ;[PC+1] ?? (Roll 8 bits -> Byte?)
 CALT_AA_0EA4:   pop hl
@@ -2340,15 +2340,15 @@ ________0EBA:   rar
 ________0EBC:   stax [hl]
 ________0EBD:   pop va
 ________0EBF:   dcr b
-________0EC0:   jr $0EB5
+________0EC0:   jr ________0EB5
 ________0EC1:   dcx hl
 ________0EC2:   inx de
 ________0EC3:   dcr c
-________0EC4:   jr $0EB2
+________0EC4:   jr ________0EB2
 ________0EC5:   pop de
 ________0EC7:   lxi hl, $FFB8
-________0ECA:   calf $0ECE
-________0ECC:   calf $0E6A
+________0ECA:   calf CALF____0ECE
+________0ECC:   calf CALF____0E6A
 
 CALF____0ECE:   mvi b, $8-1
 ________0ED0:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
@@ -2368,7 +2368,7 @@ ________0EE0:   lti a, $0D
 ________0EE2:   ret
 ________0EE3:   staw [$FF97]
 ________0EE5:   dcrw [$FF97]
-________0EE7:   jr $0EF0                                        ;Based on 97, jump to cart (4007)!
+________0EE7:   jr ________0EF0                                 ;Based on 97, jump to cart (4007)!
 ________0EE8:   calt $00A2                                      ; "CALT A0, CALT A4"
 ________0EE9:   pop bc
 ________0EEB:   lbcd [$4007]                                    ;Read vector from $4007 on cart, however...
@@ -2379,41 +2379,41 @@ ________0EF3:   push hl
 ________0EF5:   staw [$FF98]
 ________0EF7:   ani a, $0F
 ________0EF9:   lti a, $0C
-________0EFB:   jr $0EE5
+________0EFB:   jr ________0EE5
 ________0EFC:   lxi hl, $C56E
 ________0EFF:   inx hl
 ________0F00:   inx hl
 ________0F01:   inx hl
 ________0F02:   dcr a
-________0F03:   jr $0EFF
+________0F03:   jr ________0EFF
 ________0F04:   lxi de, $FF96
 ________0F07:   oniw [$FF98], $80
-________0F0A:   jr $0F10
+________0F0A:   jr ________0F10
 ________0F0B:   ldax [hl]
 ________0F0C:   subx [de]
 ________0F0E:   stax [hl]
-________0F0F:   jr $0F18
+________0F0F:   jr ________0F18
 
 ________0F10:   oniw [$FF98], $40
-________0F13:   jr $0F18
+________0F13:   jr ________0F18
 ________0F14:   ldax [hl]
 ________0F15:   addx [de]
 ________0F17:   stax [hl]
 ________0F18:   dcx hl
 ________0F19:   oniw [$FF98], $10
-________0F1C:   jr $0F23
+________0F1C:   jr ________0F23
 
 ________0F1D:   ldax [hl]
 ________0F1E:   addx [de]
 ________0F20:   stax [hl]
-________0F21:   jre $0EE5
+________0F21:   jre ________0EE5
 
 ________0F23:   oniw [$FF98], $20
-________0F26:   jr $0F21
+________0F26:   jr ________0F21
 ________0F27:   ldax [hl]
 ________0F28:   subx [de]
 ________0F2A:   stax [hl]
-________0F2B:   jr $0F21
+________0F2B:   jr ________0F21
 ;------------------------------------------------------------
 ;Invert Screen RAM (C000~)
 CALT_A6_0F2C:   lxi hl, $C000
@@ -2422,9 +2422,9 @@ CALT_A7_0F2F:   lxi hl, $C258
 ________0F32:   mvi c, $02
 
 ________0F34:   mvi b, $C7
-________0F36:   calf $0F3B
+________0F36:   calf CALF____0F3B
 ________0F38:   dcr c
-________0F39:   jr $0F34
+________0F39:   jr ________0F34
 ________0F3A:   ret
 ;------------------------------------------------------------
 ;Invert bytes xB
@@ -2432,7 +2432,7 @@ CALF____0F3B:   ldax [hl]
 ________0F3C:   xri a, $FF
 ________0F3E:   stax [hl+]
 ________0F3F:   dcr b
-________0F40:   jr $0F3B
+________0F40:   jr CALF____0F3B
 ________0F41:   ret
 ;------------------------------------------------------------
 ;[PC+1] Invert 8 bytes at (C4B8+A*$10)
@@ -2446,7 +2446,7 @@ ________0F4A:   calt $00BC                                      ; "HL=C4B0+(A*$1
 ________0F4B:   mvi e, $08
 ________0F4D:   calt $009A                                      ; "HL <== HL+E"
 ________0F4E:   mvi b, $07
-________0F50:   jr $0F3B
+________0F50:   jr CALF____0F3B
 ;------------------------------------------------------------
 ;for the addition routine below...
 ________0F51:   mov a, h
@@ -2455,7 +2455,7 @@ ________0F54:   mov a, l
 ________0F55:   staw [$FFB1]
 ________0F57:   lxi hl, $FFB1
 ________0F5A:   ldaw [$FF96]
-________0F5C:   jr $0F6D
+________0F5C:   jr ________0F6D
 ;------------------------------------------------------------
 ;[PC+1] 8~32-bit Add/Subtract (dec/hex)
 ;Source pointed to by HL & DE.  Extra byte sets a few options:
@@ -2473,41 +2473,41 @@ ________0F63:   staw [$FF96]                                    ;Get extra byte,
 ________0F65:   offi a, $01                                     ;If set, load from $FFA2 instead
 ________0F67:   lxi de, $FFA2
 ________0F6A:   offi a, $02                                     ;If set, load from $FFB1
-________0F6C:   jr $0F51
+________0F6C:   jr ________0F51
 
-________0F6D:   calf $0C72                                      ;"RLR A" x2
+________0F6D:   calf CALF____0C72                               ;"RLR A" x2
 ________0F6F:   mov b, a                                        ;Get our length bits (8-32 bits)
 ________0F70:   ani a, $03
 ________0F72:   mov c, a
 ________0F73:   mov a, b
-________0F74:   calf $0C72                                      ;"RLR A" x2
+________0F74:   calf CALF____0C72                               ;"RLR A" x2
 ________0F76:   ani a, $03
 ________0F78:   mov b, a
 ________0F79:   oniw [$FF96], $40                               ;Do we subtract instead of add?
-________0F7C:   jr $0F83
+________0F7C:   jr ________0F83
 ________0F7D:   oniw [$FF96], $80                               ;Do we work in binary-coded decimal?
-________0F80:   jr $0F99
-________0F81:   jre $0FB0
+________0F80:   jr ________0F99
+________0F81:   jre ________0FB0
 
 ________0F83:   oniw [$FF96], $80
-________0F86:   jre $0FC1
+________0F86:   jre ________0FC1
 
 ________0F88:   clc
 ________0F8A:   ldax [de]
 ________0F8B:   adcx [hl]                                       ;Add HL-,DE-
 ________0F8D:   stax [de]
 ________0F8E:   dcr b
-________0F8F:   jr $0F91
+________0F8F:   jr ________0F91
 ________0F90:   ret
 
 ________0F91:   dcx de
 ________0F92:   dcr c
-________0F93:   jr $0F97
-________0F94:   calf $0FD3                                      ;Clear C,HL
-________0F96:   jr $0F8A
+________0F93:   jr ________0F97
+________0F94:   calf CALF____0FD3                               ;Clear C,HL
+________0F96:   jr ________0F8A
 
 ________0F97:   dcx hl
-________0F98:   jr $0F8A
+________0F98:   jr ________0F8A
 
 ________0F99:   stc
 ________0F9B:   mvi a, $99
@@ -2517,34 +2517,34 @@ ________0FA1:   addx [de]
 ________0FA3:   daa
 ________0FA4:   stax [de]
 ________0FA5:   dcr b
-________0FA6:   jr $0FA8
+________0FA6:   jr ________0FA8
 ________0FA7:   ret
 
 ________0FA8:   dcx de
 ________0FA9:   dcr c
-________0FAA:   jr $0FAE
-________0FAB:   calf $0FD3
-________0FAD:   jr $0F9B
+________0FAA:   jr ________0FAE
+________0FAB:   calf CALF____0FD3
+________0FAD:   jr ________0F9B
 
 ________0FAE:   dcx hl
-________0FAF:   jr $0F9B
+________0FAF:   jr ________0F9B
 ;-----
 ________0FB0:   clc
 ________0FB2:   ldax [de]
 ________0FB3:   sbbx [hl]
 ________0FB5:   stax [de]
 ________0FB6:   dcr b
-________0FB7:   jr $0FB9
+________0FB7:   jr ________0FB9
 ________0FB8:   ret
 
 ________0FB9:   dcx de
 ________0FBA:   dcr c
-________0FBB:   jr $0FBF
-________0FBC:   calf $0FD3
-________0FBE:   jr $0FB2
+________0FBB:   jr ________0FBF
+________0FBC:   calf CALF____0FD3
+________0FBE:   jr ________0FB2
 
 ________0FBF:   dcx hl
-________0FC0:   jr $0FB2
+________0FC0:   jr ________0FB2
 ;------
 ________0FC1:   clc
 ________0FC3:   ldax [de]
@@ -2552,17 +2552,17 @@ ________0FC4:   adcx [hl]
 ________0FC6:   daa
 ________0FC7:   stax [de]
 ________0FC8:   dcr b
-________0FC9:   jr $0FCB
+________0FC9:   jr ________0FCB
 ________0FCA:   ret
 
 ________0FCB:   dcx de
 ________0FCC:   dcr c
-________0FCD:   jr $0FD1
-________0FCE:   calf $0FD3
-________0FD0:   jr $0FC3
+________0FCD:   jr ________0FD1
+________0FCE:   calf CALF____0FD3
+________0FD0:   jr ________0FC3
 
 ________0FD1:   dcx hl
-________0FD2:   jr $0FC3
+________0FD2:   jr ________0FC3
 ;------------------------------------------------------------
 ;Clear C,HL (for the add/sub routine above)
 CALF____0FD3:   mvi c, $00
@@ -2577,7 +2577,7 @@ ________0FDC:   inx bc
 ________0FDD:   push bc
 ________0FDF:   mov b, a
 ________0FE0:   oni a, $80                                      ;do we Dec?
-________0FE2:   jr $0FF1
+________0FE2:   jr ________0FF1
 
 ________0FE3:   ani a, $7F                                      ;Counter can be 00-7F
 ________0FE5:   mov b, a
@@ -2585,22 +2585,22 @@ ________0FE6:   ldax [hl]                                       ;Load a byte
 ________0FE7:   sui a, $01                                      ;Decrement it
 ________0FE9:   stax [hl-]
 ________0FEA:   skn cy                                          ;Quit our function if any byte= -1!
-________0FEC:   jr $0FEE
+________0FEC:   jr ________0FEE
 ________0FED:   ret
 
 ________0FEE:   dcr b
-________0FEF:   jr $0FE6
+________0FEF:   jr ________0FE6
 ________0FF0:   ret
 
 ________0FF1:   ldax [hl]                                       ;or Load a byte
 ________0FF2:   adi a, $01
 ________0FF4:   stax [hl-]
 ________0FF5:   skn cy                                          ;Quit if any byte overflows!
-________0FF7:   jr $0FF9
+________0FF7:   jr ________0FF9
 ________0FF8:   ret
 
 ________0FF9:   dcr b
-________0FFA:   jr $0FF1
+________0FFA:   jr ________0FF1
 ________0FFB:   ret                                             ;What a weird way to end a BIOS...
 ;------------------------------------------------------------
 ________0FFC:   db $00, $00, $00, $00                           ;Unused bytes (and who could blame 'em?)
