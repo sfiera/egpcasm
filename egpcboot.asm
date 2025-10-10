@@ -206,6 +206,15 @@
     sbi     {reg: reg_vbcdehl}, {value: u8} => $647 @ 0b0 @ reg @ value
     eqi     {reg: reg_vbcdehl}, {value: u8} => $647 @ 0b1 @ reg @ value
 
+    aniw    [{addr: hi_addr}], {value: u8} => $05 @ addr @ value
+    oriw    [{addr: hi_addr}], {value: u8} => $15 @ addr @ value
+    gtiw    [{addr: hi_addr}], {value: u8} => $25 @ addr @ value
+    ltiw    [{addr: hi_addr}], {value: u8} => $35 @ addr @ value
+    oniw    [{addr: hi_addr}], {value: u8} => $45 @ addr @ value
+    offiw   [{addr: hi_addr}], {value: u8} => $55 @ addr @ value
+    neiw    [{addr: hi_addr}], {value: u8} => $65 @ addr @ value
+    eqiw    [{addr: hi_addr}], {value: u8} => $75 @ addr @ value
+
     push {reg: push_reg} => $48 @ reg @ $e
     pop {reg: push_reg} => $48 @ reg @ $f
 
@@ -440,7 +449,7 @@ _CALT_B6__00EC:   dw $402A
 _CALT_B7__00EE:   dw $402D
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
-INTT____00F0:   #d8 $45, $80, $01                               ; ONIW    80,01	;If 1, don't jump to cart.
+INTT____00F0:   oniw [$FF80], $01                               ;If 1, don't jump to cart.
 ________00F3:   jre $015B
 
 ________00F5:   dcrw [$FF9A]
@@ -460,14 +469,14 @@ ________010B:   mov tmm, a                                      ;Adjust timer
 ________010D:   mvi a, $53
 ________010F:   dcr a
 ________0110:   jr $010F
-________0111:   #d8 $45, $80, $02                               ; ONIW    80,02
+________0111:   oniw [$FF80], $02
 ________0114:   jr $011C
 
 ________0115:   #d8 $70, $3F, $84, $FF                          ; LHLD    FF84
 ________0119:   calf $08A9                                      ;Music-playing code...
 ________011B:   jr $0128
 
-________011C:   #d8 $05, $80, $FC                               ; ANIW    80,FC
+________011C:   aniw [$ff80], $fc
 ________011F:   mvi a, $07
 ________0121:   mov tmm, a
 ________0123:   mvi a, $74
@@ -498,7 +507,7 @@ ________0147:   ldaw [$FF86]
 ________0149:   adi a, $01
 ________014B:   daa
 ________014C:   staw [$FF86]
-________014E:   #d8 $45, $8A, $80                               ; ONIW    8A,80
+________014E:   oniw [$FF8A], $80
 ________0151:   inrw [$FF8A]
 ________0153:   inrw [$FF8B]
 ________0155:   nop
@@ -511,7 +520,7 @@ ________015B:   push va
 ________015D:   push bc
 ________015F:   push de
 ________0161:   push hl
-________0163:   #d8 $55, $80, $80                               ; OFFIW   80,80	;If 0, don't go to cart's INT routine
+________0163:   offiw [$FF80], $80                              ;If 0, don't go to cart's INT routine
 ________0166:   jmp $4009
 ;---------------------------------------
 ________0169:   adc a, b                                        ;Probably a simple random-number generator.
@@ -551,7 +560,7 @@ ________019B:   jr $01A3
 ;HL should already contain the address of the music data.
 ;Format of the data string is the same as "Play Sound", with $FF terminating the song.
 CALT_83_019C:   di
-________019E:   #d8 $15, $80, $02                               ; ORIW    80,02
+________019E:   oriw [$FF80], $02
 ________01A1:   calf $08A9                                      ;Read notes & set timers
 ________01A3:   ei                                              ;(sometimes skipped)
 ________01A5:   ret
@@ -570,11 +579,11 @@ ________01B0:   ldax [hl]
 ________01B1:   eqi a, $55
 ________01B3:   rets
 ;----------------------------------
-________01B4:   #d8 $75, $89, $03                               ; EQIW    89,03
+________01B4:   eqiw [$FF89], $03
 ________01B7:   jr $01B0
 
 ________01B8:   calf $0E4D                                      ;Sets a timer
-________01BA:   #d8 $15, $80, $80                               ; ORIW    80,80
+________01BA:   oriw [$FF80], $80
 ________01BD:   inx hl                                          ;->$4001
 ________01BE:   pop bc
 ________01C0:   ldax [bc]
@@ -681,7 +690,7 @@ ________0263:   calt $0096                                      ; "HL <== HL+DE"
 ________0264:   pop de
 ________0266:   calt $00A8                                      ; "XCHG HL,DE"
 ________0267:   inrw [$FF96]                                    ;Skip if a carry...
-________0269:   #d8 $55, $96, $01                               ; OFFIW   96,01       ;Do alternating lines
+________0269:   offiw [$FF96], $01                              ;Do alternating lines
 ________026C:   jr $0251
 
 ________026D:   mov a, b
@@ -786,23 +795,23 @@ ________05A7:   staw [$FF8A]
 ________05A9:   calt $0080                                      ;[PC+1] Check Cartridge
 ________05AA:   db $C1                                          ;Jump to ($4003) in cartridge
 
-________05AB:   #d8 $55, $80, $02                               ; OFFIW   80,02       ;If bit 1 is on, no music
+________05AB:   offiw [$FF80], $02                              ;If bit 1 is on, no music
 ________05AE:   jr $05B2
 ________05AF:   calf $0E64                                      ;Point HL to the music data
 ________05B1:   calt $0086                                      ;Setup/Play Music
 ________05B2:   calt $0088                                      ;Read Controller FF90-FF95
-________05B3:   #d8 $65, $93, $01                               ; NEIW    93,01       ;If Select is pressed...
+________05B3:   neiw [$FF93], $01                               ;If Select is pressed...
 ________05B6:   jmp $06EC                                       ;Setup puzzle
-________05B9:   #d8 $65, $D2, $0F                               ; NEIW    D2,0F
+________05B9:   neiw [$FFD2], $0F
 ________05BC:   jre $0591                                       ;(go to main loop setup)
 ________05BE:   calf $0D1F                                      ;Draw spiral dot-by-dot
 ________05C0:   calf $0D1F                                      ;Draw spiral dot-by-dot
 ________05C2:   calt $00A0                                      ; "C258+ ==> C000+"
 ________05C3:   calt $0082                                      ;Copy Screen RAM to LCD Driver
-________05C4:   #d8 $65, $93, $08                               ; NEIW    93,08       ;If Start is pressed...
+________05C4:   neiw [$FF93], $08                               ;If Start is pressed...
 ________05C7:   jr $05D1                                        ;Jump to graphic program
 
-________05C8:   #d8 $75, $8A, $80                               ; EQIW    8A,80       ;Delay for the scrolltext
+________05C8:   eqiw [$FF8A], $80                               ;Delay for the scrolltext
 ________05CB:   jre $05A9                                       ;JRE Main Loop
 ________05CD:   calf $0CE2                                      ;Scroll Text routine
 ________05CF:   jre $05A5                                       ;Reset scrolltext delay...
@@ -855,7 +864,7 @@ ________0617:   calt $00A2                                      ; "CALT A0, CALT
 ________0618:   calt $0080                                      ;[PC+1] Check Cartridge
 ________0619:   db $C1                                          ;Jump to ($4003) in cartridge
 
-________061A:   #d8 $45, $8A, $80                               ; ONIW    8A,80
+________061A:   oniw [$FF8A], $80
 ________061D:   jr $0618
 ________061E:   lxi hl, $C572
 ________0621:   ldax [hl]
@@ -870,7 +879,7 @@ ________062D:   offi a, $0F                                     ;Test U,D,L,R
 ________062F:   jre $0673
 ________0631:   jre $0605
 ;------------------------------------------------------------
-________0633:   #d8 $45, $95, $09                               ; ONIW    95,09
+________0633:   oniw [$FF95], $09
 ________0636:   jr $0647
 ________0637:   eqi a, $08                                      ;Start clears the screen
 ________0639:   jr $063F
@@ -1028,7 +1037,7 @@ ________070B:   calt $008C                                      ; "Clear Screen 
 ________070C:   calf $0D68                                      ;Draw Border
 ________070E:   calf $0D92                                      ;Draw the grid
 ________0710:   calf $0C7B                                      ;Write "PUZZLE"
-________0712:   #d8 $05, $89, $00                               ; ANIW    89,00
+________0712:   aniw [$FF89], $00
 ________0715:   mvi a, $60
 ________0717:   staw [$FF8A]
 ________0719:   calt $0080                                      ;[PC+1] Check Cartridge
@@ -1054,22 +1063,22 @@ ________0739:   calf $0E67                                      ;LXI H,$C7F2
 ________073B:   lxi de, $C752
 ________073E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________073F:   calt $0088                                      ;Read Controller FF90-FF95
-________0740:   #d8 $65, $93, $01                               ; NEIW    93,01       ;Select
-________0743:   #d8 $45, $95, $01                               ; ONIW    95,01	;Select trigger
+________0740:   neiw [$FF93], $01                               ;Select
+________0743:   oniw [$FF95], $01                               ;Select trigger
 ________0746:   jr $074D
 ________0747:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0748:   db $14, $03
 ________074A:   jmp $05D1                                       ;Go to Paint Program
-________074D:   #d8 $65, $93, $08                               ; NEIW    93,08	;Start
-________0750:   #d8 $45, $95, $08                               ; ONIW    95,08
+________074D:   neiw [$FF93], $08                               ;Start
+________0750:   oniw [$FF95], $08
 ________0753:   jr $0758
 ________0754:   calt $0084                                      ;[PC+2] Setup/Play Sound
 ________0755:   db $16, $03
 ________0757:   jr $0765
 ;------------------------------------------------------------
-________0758:   #d8 $75, $8A, $80                               ; EQIW    8A,80
+________0758:   eqiw [$FF8A], $80
 ________075B:   jre $0719                                       ;Draw Tiles
-________075D:   #d8 $75, $89, $3C                               ; EQIW    89,3C
+________075D:   eqiw [$FF89], $3C
 ________0760:   jre $0715                                       ;Reset timer?
 ________0762:   jmp $057F                                       ;Go back to startup screen(?)
 ;------------------------------------------------------------
@@ -1110,14 +1119,14 @@ ________07A0:   db $44, $00, $08
 ________07A3:   calt $00A0                                      ; "C258+ ==> C000+"
 ________07A4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
 ________07A5:   calt $0088                                      ;Read Controller FF90-FF95
-________07A6:   #d8 $65, $93, $01                               ; NEIW    93,01       ;Select
+________07A6:   neiw [$FF93], $01                               ;Select
 ________07A9:   jre $0747                                       ;To Paint Program
-________07AB:   #d8 $65, $93, $08                               ; NEIW    93,08	;Start
-________07AE:   #d8 $45, $95, $08                               ; ONIW    95,08	;Start trigger
+________07AB:   neiw [$FF93], $08                               ;Start
+________07AE:   oniw [$FF95], $08                               ;Start trigger
 ________07B1:   jr $07B4
 ________07B2:   jre $0754                                       ;Restart puzzle
 ;------------------------------------------------------------
-________07B4:   #d8 $75, $8A, $80                               ; EQIW    8A,80
+________07B4:   eqiw [$FF8A], $80
 ________07B7:   jre $0793
 ________07B9:   ldaw [$FF92]                                    ;Joypad
 ________07BB:   oni a, $0F
@@ -1144,7 +1153,7 @@ ________07DA:   jr $07DD
 ________07DB:   mov b, a
 ________07DC:   ldax [hl]
 ________07DD:   push bc
-________07DF:   #d8 $75, $A2, $00                               ; EQIW    A2,00
+________07DF:   eqiw [$FFA2], $00
 ________07E2:   jre $0823
 ________07E4:   calf $0CBF                                      ;Write Text(?)
 ________07E6:   inx hl
@@ -1260,7 +1269,7 @@ ________0891:   dcr b
 ________0892:   jr $088C
 ________0893:   calf $0E64                                      ;Point HL to music data
 ________0895:   calt $0086                                      ;Setup/Play Music
-________0896:   #d8 $45, $80, $03                               ; ONIW    80,03
+________0896:   oniw [$FF80], $03
 ________0899:   jmp $0712                                       ;Continue puzzle
 ________089C:   jr $0896
 ;End of Puzzle Code
@@ -1305,7 +1314,7 @@ ________08C8:   dcr b
 ________08C9:   mvi a, $00                                      ;Sound?
 ________08CB:   mvi a, $03                                      ;Silent
 ________08CD:   mov tmm, a
-________08CF:   #d8 $15, $80, $01                               ; ORIW    80,01
+________08CF:   oriw [$FF80], $01
 ________08D2:   stm
 ________08D3:   ret
 ;------------------------------------------------------------
@@ -1473,7 +1482,7 @@ ________09A9:   jr $09A6
 ________09AA:   orax [hl]
 ________09AC:   jr $09C5
 ;------------------------------------------------------------
-CALF____09AD:   #d8 $75, $D8, $00                               ; EQIW    D8,00       ;"Invert Dot", then...
+CALF____09AD:   eqiw [$FFD8], $00                               ;"Invert Dot", then...
 ________09B0:   jr $0999
 
 ;Clear Dot; B,C = X-,Y-position
@@ -1551,9 +1560,9 @@ ________09FC:   lxi de, $FFA8
 ________09FF:   #d8 $70, $2E, $C0, $FF                          ; SDED    FFC0
 ________0A03:   mov b, a
 ________0A04:   mvi c, $40
-________0A06:   #d8 $45, $9D, $40                               ; ONIW    9D,40
+________0A06:   oniw [$FF9D], $40
 ________0A09:   mvi c, $10
-________0A0B:   #d8 $45, $9D, $08                               ; ONIW    9D,08
+________0A0B:   oniw [$FF9D], $08
 ________0A0E:   jr $0A19
 ________0A0F:   dcr b
 ________0A10:   jr $0A12
@@ -1575,7 +1584,7 @@ ________0A21:   stax [de+]
 ________0A22:   jr $0A0F
 
 ________0A23:   pop bc
-________0A25:   #d8 $05, $9D, $BF                               ; ANIW    9D,BF
+________0A25:   aniw [$FF9D], $BF
 ________0A28:   jr $0A42
 ;-----------------------------------------------------------
 ;[PC+3] Print Text on-Screen
@@ -1621,7 +1630,7 @@ ________0A62:   dcrw [$FF98]                                    ;The loop starts
 ________0A64:   jr $0A66
 ________0A65:   ret
 
-________0A66:   #d8 $45, $C6, $FF                               ; ONIW    C6,FF
+________0A66:   oniw [$FFC6], $FF
 ________0A69:   jr $0A85
 ________0A6A:   #d8 $70, $3F, $C2, $FF                          ; LHLD    FFC2
 ________0A6E:   #d8 $70, $3E, $C7, $FF                          ; SHLD    FFC7
@@ -1678,21 +1687,21 @@ ________0AD0:   calt $00B8                                      ;Byte -> Point t
 ________0AD1:   lxi de, $FFB0
 ________0AD4:   lxi bc, $FFB5
 ________0AD7:   mvi a, $04
-________0AD9:   #d8 $15, $80, $08                               ; ORIW    80,08
+________0AD9:   oriw [$FF80], $08
 ________0ADC:   calf $0C31                                      ;Roll graphics a bit (shift up/dn)
-________0ADE:   #d8 $45, $C6, $FF                               ; ONIW    C6,FF
+________0ADE:   oniw [$FFC6], $FF
 ________0AE1:   jr $0AEF
 ________0AE2:   #d8 $70, $2F, $C7, $FF                          ; LDED    FFC7
 ________0AE6:   calf $0E6A                                      ;(FFB0 -> HL)
 ________0AE8:   mvi b, $04
-________0AEA:   #d8 $15, $80, $10                               ; ORIW    80,10
+________0AEA:   oriw [$FF80], $10
 ________0AED:   calf $0BD3                                      ;Copy B*A bytes?
-________0AEF:   #d8 $55, $C6, $08                               ; OFFIW   C6,08
+________0AEF:   offiw [$FFC6], $08
 ________0AF2:   jr $0B01
 ________0AF3:   #d8 $70, $2F, $C9, $FF                          ; LDED    FFC9
 ________0AF7:   lxi hl, $FFB5
 ________0AFA:   mvi b, $04
-________0AFC:   #d8 $15, $80, $10                               ; ORIW    80,10
+________0AFC:   oriw [$FF80], $10
 ________0AFF:   calf $0BD3                                      ;Copy B*A bytes?
 ________0B01:   ldaw [$FF9B]
 ________0B03:   adi a, $05
@@ -1793,7 +1802,7 @@ ________0BA3:   stax [hl+]
 ________0BA4:   dcr b
 ________0BA5:   jr $0BA0
 ________0BA6:   pop hl
-________0BA8:   #d8 $15, $80, $08                               ; ORIW    80,08
+________0BA8:   oriw [$FF80], $08
 ________0BAB:   lxi de, $FFB0
 ________0BAE:   lxi bc, $FFB8
 ________0BB1:   calf $0C2F
@@ -1802,7 +1811,7 @@ ________0BB7:   mov a, d
 ________0BB8:   oni a, $40
 ________0BBA:   jr $0BC2
 ________0BBB:   calf $0E6A
-________0BBD:   #d8 $15, $80, $10                               ; ORIW    80,10
+________0BBD:   oriw [$FF80], $10
 ________0BC0:   calf $0BD1
 ________0BC2:   pop de
 ________0BC4:   lxi hl, $3DA8
@@ -1810,7 +1819,7 @@ ________0BC7:   calt $0096                                      ; "HL <== HL+DE"
 ________0BC8:   skn cy
 ________0BCA:   ret
 ________0BCB:   lxi hl, $FFB8
-________0BCE:   #d8 $15, $80, $10                               ; ORIW    80,10
+________0BCE:   oriw [$FF80], $10
 ;--
 ________0BD1:   mvi b, $07
 ________0BD3:   ldaw [$FF9B]
@@ -1823,7 +1832,7 @@ ________0BDD:   ldax [hl+]
 ________0BDE:   stax [de+]
 ________0BDF:   pop va
 ________0BE1:   jr $0BE9
-________0BE2:   #d8 $45, $80, $10                               ; ONIW    80,10
+________0BE2:   oniw [$FF80], $10
 ________0BE5:   jr $0BE8
 ________0BE6:   inx hl
 ________0BE7:   jr $0BE9
@@ -1833,7 +1842,7 @@ ________0BE9:   inr a
 ________0BEA:   nop
 ________0BEB:   dcr b
 ________0BEC:   jr $0BD5
-________0BED:   #d8 $05, $80, $EF                               ; ANIW    80,EF
+________0BED:   aniw [$FF80], $EF
 ________0BF0:   ret
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
@@ -1907,7 +1916,7 @@ ________0C49:   mov c, a
 ________0C4A:   pop va
 ________0C4C:   jr $0C3C
 
-________0C4D:   #d8 $45, $80, $08                               ; ONIW    80,08
+________0C4D:   oniw [$FF80], $08
 ________0C50:   jr $0C54
 ________0C51:   orax [de]
 ________0C53:   jr $0C56
@@ -1916,7 +1925,7 @@ ________0C54:   anax [de]
 ________0C56:   stax [de]
 ________0C57:   mov a, c
 ________0C58:   pop bc
-________0C5A:   #d8 $45, $80, $08                               ; ONIW    80,08
+________0C5A:   oniw [$FF80], $08
 ________0C5D:   jr $0C61
 ________0C5E:   orax [bc]
 ________0C60:   jr $0C63
@@ -1927,7 +1936,7 @@ ________0C64:   inx bc
 ________0C65:   inx de
 ________0C66:   dcrw [$FF96]
 ________0C68:   jre $0C33
-________0C6A:   #d8 $05, $80, $F7                               ; ANIW    80,F7
+________0C6A:   aniw [$FF80], $F7
 ________0C6D:   ret
 ;------------------------------------------------------------
 ;(RLR A)x4	(Divides A by 16)
@@ -1967,7 +1976,7 @@ ________0CA2:   dcr b
 ________0CA3:   jr $0C9E
 ________0CA4:   inrw [$FF83]
 ________0CA6:   pop hl
-________0CA8:   #d8 $75, $83, $0D                               ; EQIW    83,0D
+________0CA8:   eqiw [$FF83], $0D
 ________0CAB:   jre $0C88
 ________0CAD:   lxi hl, $C7FF
 ________0CB0:   ldax [hl]
@@ -2011,7 +2020,7 @@ ________0CE5:   lxi hl, $C25B
 ________0CE8:   lxi de, $C258
 ________0CEB:   mvi b, $47
 ________0CED:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
-________0CEE:   #d8 $55, $82, $01                               ; OFFIW   82,01
+________0CEE:   offiw [$FF82], $01
 ________0CF1:   jr $0CF6
 ________0CF2:   lxi hl, $FFA3
 ________0CF5:   jr $0D0C
@@ -2044,7 +2053,7 @@ ________0D1C:   staw [$FFD0]
 ________0D1E:   jr $0D23
 
 ;Draw a spiral dot-by-dot
-CALF____0D1F:   #d8 $65, $D0, $FF                               ; NEIW    D0,FF
+CALF____0D1F:   neiw [$FFD0], $FF
 ________0D22:   jr $0D16
 ________0D23:   ldaw [$FFD1]                                    ;This stores the direction
 ________0D25:   nei a, $00                                      ;that the spiral draws in...
@@ -2121,11 +2130,11 @@ ________0D90:   calt $00BE                                      ; "A ==> (HL+)xB
 ________0D91:   ret
 ;------------------------------------------------------------
 ;This draws the puzzle grid, I think...
-CALF____0D92:   #d8 $65, $D5, $00                               ; NEIW    D5,00
+CALF____0D92:   neiw [$FFD5], $00
 ________0D95:   jr $0DA2
-________0D96:   #d8 $65, $D5, $01                               ; NEIW    D5,01
+________0D96:   neiw [$FFD5], $01
 ________0D99:   jr $0DA5
-________0D9A:   #d8 $75, $D5, $02                               ; EQIW    D5,02
+________0D9A:   eqiw [$FFD5], $02
 ________0D9D:   jre $0DC3
 ________0D9F:   lxi hl, $C2D8
 ________0DA2:   lxi hl, $C2B8
@@ -2170,7 +2179,7 @@ ________0DE4:   nei a, $01
 ________0DE6:   rets
 
 ________0DE7:   lxi bc, $12FF
-________0DEA:   #d8 $15, $A2, $FF                               ; ORIW    A2,FF
+________0DEA:   oriw [$FFA2], $FF
 ________0DED:   jr $0DFB
 ;------------------------------------------------------------
 ________0DEE:   mov a, [$C7FF]
@@ -2178,14 +2187,14 @@ ________0DF2:   lti a, $09
 ________0DF4:   rets
 
 ________0DF5:   lxi bc, $0D04
-________0DF8:   #d8 $05, $A2, $00                               ; ANIW    A2,00
+________0DF8:   aniw [$FFA2], $00
 ________0DFB:   jr $0E17
 ;------------------------------------------------------------
 ________0DFC:   mov a, [$C7FF]
 ________0E00:   gti a, $04
 ________0E02:   rets
 ________0E03:   lxi bc, $0FFC
-________0E06:   #d8 $05, $A2, $00                               ; ANIW    A2,00
+________0E06:   aniw [$FFA2], $00
 ________0E09:   jr $0E17
 ;------------------------------------------------------------
 ________0E0A:   mov a, [$C7FF]
@@ -2193,7 +2202,7 @@ ________0E0E:   oni a, $03
 ________0E10:   rets
 
 ________0E11:   lxi bc, $1101
-________0E14:   #d8 $15, $A2, $FF                               ; ORIW    A2,FF
+________0E14:   oriw [$FFA2], $FF
 ________0E17:   mov a, [$C7FF]
 ________0E1B:   mov e, a
 ________0E1C:   mov [$C7FE], a
@@ -2237,7 +2246,7 @@ ________0E4F:   mvi a, $07
 ________0E51:   mov tmm, a
 ________0E53:   mvi a, $74
 ________0E55:   mov tm0, a
-________0E57:   #d8 $05, $80, $FC                               ; ANIW    80,FC
+________0E57:   aniw [$FF80], $FC
 ________0E5A:   stm
 ________0E5B:   ei
 ________0E5D:   ret
@@ -2357,20 +2366,20 @@ ________0F01:   inx hl
 ________0F02:   dcr a
 ________0F03:   jr $0EFF
 ________0F04:   lxi de, $FF96
-________0F07:   #d8 $45, $98, $80                               ; ONIW    98,80
+________0F07:   oniw [$FF98], $80
 ________0F0A:   jr $0F10
 ________0F0B:   ldax [hl]
 ________0F0C:   subx [de]
 ________0F0E:   stax [hl]
 ________0F0F:   jr $0F18
 
-________0F10:   #d8 $45, $98, $40                               ; ONIW    98,40
+________0F10:   oniw [$FF98], $40
 ________0F13:   jr $0F18
 ________0F14:   ldax [hl]
 ________0F15:   addx [de]
 ________0F17:   stax [hl]
 ________0F18:   dcx hl
-________0F19:   #d8 $45, $98, $10                               ; ONIW    98,10
+________0F19:   oniw [$FF98], $10
 ________0F1C:   jr $0F23
 
 ________0F1D:   ldax [hl]
@@ -2378,7 +2387,7 @@ ________0F1E:   addx [de]
 ________0F20:   stax [hl]
 ________0F21:   jre $0EE5
 
-________0F23:   #d8 $45, $98, $20                               ; ONIW    98,20
+________0F23:   oniw [$FF98], $20
 ________0F26:   jr $0F21
 ________0F27:   ldax [hl]
 ________0F28:   subx [de]
@@ -2453,13 +2462,13 @@ ________0F73:   mov a, b
 ________0F74:   calf $0C72                                      ;"RLR A" x2
 ________0F76:   ani a, $03
 ________0F78:   mov b, a
-________0F79:   #d8 $45, $96, $40                               ; ONIW    96,40	;Do we subtract instead of add?
+________0F79:   oniw [$FF96], $40                               ;Do we subtract instead of add?
 ________0F7C:   jr $0F83
-________0F7D:   #d8 $45, $96, $80                               ; ONIW    96,80	;Do we work in binary-coded decimal?
+________0F7D:   oniw [$FF96], $80                               ;Do we work in binary-coded decimal?
 ________0F80:   jr $0F99
 ________0F81:   jre $0FB0
 
-________0F83:   #d8 $45, $96, $80                               ; ONIW    96,80
+________0F83:   oniw [$FF96], $80
 ________0F86:   jre $0FC1
 
 ________0F88:   clc
