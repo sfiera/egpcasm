@@ -231,6 +231,7 @@
     pop {reg: push_reg} => $48 @ reg @ $f
 
     jmp {addr: u16} => $54 @ le(addr)
+    call {addr: u16} => $44 @ le(addr)
 
     calf {addr: u16} => {
         assert(addr >= 0x0800)
@@ -2278,7 +2279,7 @@ ________0E70:   ldax [hl+]
 ________0E71:   push hl
 ________0E73:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0E74:   calt $00A8                                      ; "XCHG HL,DE"
-________0E75:   #d8 $44, $78, $0E                               ; CALL    0E78        ;This call means the next code runs twice
+________0E75:   call $0E78                                      ;This call means the next code runs twice
 
 ________0E78:   mvi b, $7
 ________0E7A:   mvi c, $7
