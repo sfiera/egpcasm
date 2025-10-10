@@ -118,6 +118,8 @@
 
     inr {reg: reg_inr} => $4 @ reg
     dcr {reg: reg_inr} => $5 @ reg
+    inrw [{addr: hi_addr}] => $20 @ addr
+    dcrw [{addr: hi_addr}] => $30 @ addr
 
     ana     {reg: reg_vbcdehl}, a => $600 @ 0b1 @ reg
     xra     {reg: reg_vbcdehl}, a => $601 @ 0b0 @ reg
@@ -408,13 +410,13 @@ _CALT_B7__00EE:   dw $402D
 INTT____00F0:   #d8 $45, $80, $01                               ; ONIW    80,01	;If 1, don't jump to cart.
 ________00F3:   jre $015B
 
-________00F5:   #d8 $30, $9A                                    ; DCRW    9A
+________00F5:   dcrw [$FF9A]
 ________00F7:   jre $0158
 
 ________00F9:   push va
 ________00FB:   ldaw [$FF8F]
 ________00FD:   staw [$FF9A]
-________00FF:   #d8 $30, $99                                    ; DCRW    99
+________00FF:   dcrw [$FF99]
 ________0101:   jre $012E
 
 ________0103:   push bc
@@ -449,7 +451,7 @@ ________0135:   #d8 $48, $1A                                    ; SKN     CY
 ________0137:   jr $0139
 ________0138:   jr $014E
 
-________0139:   #d8 $20, $89                                    ; INRW    89
+________0139:   inrw [$FF89]
 ________013B:   nop
 ________013C:   ldaw [$FF87]
 ________013E:   adi a, $01
@@ -464,8 +466,8 @@ ________0149:   adi a, $01
 ________014B:   daa
 ________014C:   staw [$FF86]
 ________014E:   #d8 $45, $8A, $80                               ; ONIW    8A,80
-________0151:   #d8 $20, $8A                                    ; INRW    8A
-________0153:   #d8 $20, $8B                                    ; INRW    8B
+________0151:   inrw [$FF8A]
+________0153:   inrw [$FF8B]
 ________0155:   nop
 ________0156:   pop va
 ;--------
@@ -645,7 +647,7 @@ ________0260:   lxi de, $0032
 ________0263:   calt $0096                                      ; "HL <== HL+DE"
 ________0264:   pop de
 ________0266:   calt $00A8                                      ; "XCHG HL,DE"
-________0267:   #d8 $20, $96                                    ; INRW    96          ;Skip if a carry...
+________0267:   inrw [$FF96]                                    ;Skip if a carry...
 ________0269:   #d8 $55, $96, $01                               ; OFFIW   96,01       ;Do alternating lines
 ________026C:   jr $0251
 
@@ -1582,7 +1584,7 @@ ________0A5D:   calt $00C0                                      ; "(RLR A)x4"
 ________0A5E:   ani a, $07                                      ;Get text spacing (0-7)
 ________0A60:   staw [$FF9D]                                    ;Save in 9D
 ;--
-________0A62:   #d8 $30, $98                                    ; DCRW    98		;The loop starts here
+________0A62:   dcrw [$FF98]                                    ;The loop starts here
 ________0A64:   jr $0A66
 ________0A65:   ret
 
@@ -1859,7 +1861,7 @@ ________0C35:   staw [$FF97]
 ________0C37:   push bc
 ________0C39:   mvi c, $00
 ________0C3B:   ldax [hl+]
-________0C3C:   #d8 $30, $97                                    ; DCRW    97
+________0C3C:   dcrw [$FF97]
 ________0C3E:   jr $0C40
 ________0C3F:   jr $0C4D
 
@@ -1890,7 +1892,7 @@ ________0C61:   #d8 $70, $89                                    ; ANAX    B
 ________0C63:   stax [bc]
 ________0C64:   inx bc
 ________0C65:   inx de
-________0C66:   #d8 $30, $96                                    ; DCRW    96
+________0C66:   dcrw [$FF96]
 ________0C68:   jre $0C33
 ________0C6A:   #d8 $05, $80, $F7                               ; ANIW    80,F7
 ________0C6D:   ret
@@ -1930,7 +1932,7 @@ ________0C9F:   ral
 ________0CA1:   stax [hl+]
 ________0CA2:   dcr b
 ________0CA3:   jr $0C9E
-________0CA4:   #d8 $20, $83                                    ; INRW    83
+________0CA4:   inrw [$FF83]
 ________0CA6:   pop hl
 ________0CA8:   #d8 $75, $83, $0D                               ; EQIW    83,0D
 ________0CAB:   jre $0C88
@@ -1970,7 +1972,7 @@ ________0CDE:   lxi hl, $04B8                                   ;Point to scroll
 ________0CE1:   jr $0CFA
 ;------------------------------------------------------------
     	;Slide the top line for the scroller.
-CALF____0CE2:   #d8 $20, $82                                    ; INRW    82
+CALF____0CE2:   inrw [$FF82]
 ________0CE4:   nop
 ________0CE5:   lxi hl, $C25B
 ________0CE8:   lxi de, $C258
@@ -2002,7 +2004,7 @@ ________0D13:   dcr b
 ________0D14:   jr $0D11
 ________0D15:   ret
 ;------------------------------------------------------------
-________0D16:   #d8 $20, $DA                                    ; INRW    DA
+________0D16:   inrw [$FFDA]
 ________0D18:   lxi hl, $FFDA
 ________0D1B:   ldax [hl]
 ________0D1C:   staw [$FFD0]
@@ -2026,7 +2028,7 @@ ________0D38:   dcr b
 ________0D39:   mov a, b
 ________0D3A:   staw [$FFD3]
 ________0D3C:   calf $09AD                                      ;Draw a dot on-screen
-________0D3E:   #d8 $30, $D0                                    ; DCRW    D0		;Decrement length counter...
+________0D3E:   dcrw [$FFD0]                                    ;Decrement length counter...
 ________0D40:   ret
 ________0D41:   mvi a, $01                                      ;If zero, turn corners
 ________0D43:   staw [$FFD1]
@@ -2035,7 +2037,7 @@ ________0D45:   ret
 ________0D46:   lxi bc, $2524
 ________0D49:   #d8 $70, $1E, $D2, $FF                          ; SBCD    FFD2
 ________0D4D:   calf $09AD
-________0D4F:   #d8 $20, $D1                                    ; INRW    D1
+________0D4F:   inrw [$FFD1]
 ________0D51:   ret
 ________0D52:   dcr c
 ________0D53:   mov a, c
@@ -2051,9 +2053,9 @@ ________0D5C:   inr c
 ________0D5D:   mov a, c
 ________0D5E:   staw [$FFD2]
 ________0D60:   calf $09AD
-________0D62:   #d8 $30, $D0                                    ; DCRW    D0
+________0D62:   dcrw [$FFD0]
 ________0D64:   ret
-________0D65:   #d8 $20, $D1                                    ; INRW    D1
+________0D65:   inrw [$FFD1]
 ________0D67:   ret
 
 ;------------------------------------------------------------
@@ -2110,7 +2112,7 @@ ________0DB9:   mvi e, $4A
 ________0DBB:   calt $009A                                      ; "HL <== HL+E"
 ________0DBC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
 ________0DBD:   #d8 $1F, $00                                    ; DB $1F,00
-________0DBF:   #d8 $20, $D5                                    ; INRW    D5
+________0DBF:   inrw [$FFD5]
 ________0DC1:   jre $0D92
 ________0DC3:   lxi hl, $C33E
 ________0DC6:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
@@ -2302,7 +2304,7 @@ ________0EDE:   ani a, $0F
 ________0EE0:   lti a, $0D
 ________0EE2:   ret
 ________0EE3:   staw [$FF97]
-________0EE5:   #d8 $30, $97                                    ; DCRW    97
+________0EE5:   dcrw [$FF97]
 ________0EE7:   jr $0EF0                                        ;Based on 97, jump to cart (4007)!
 ________0EE8:   calt $00A2                                      ; "CALT A0, CALT A4"
 ________0EE9:   pop bc
