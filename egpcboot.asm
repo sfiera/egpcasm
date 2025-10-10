@@ -7,6 +7,16 @@
     hl => 0x3
 }
 
+#subruledef ldax_reg {
+    bc  => 0x9
+    de  => 0xA
+    hl  => 0xB
+    de+ => 0xC
+    hl+ => 0xD
+    de- => 0xE
+    hl- => 0xF
+}
+
 #subruledef reg_bcdehl {
     b => 0b010
     c => 0b011
@@ -68,6 +78,9 @@
     mov {port: mov_a_port}, a => 0x4dc @ port
     mov {reg: reg_vabcdehl}, [{addr: u16}] => $706 @ 0b1 @ reg @ le(addr)
     mov [{addr: u16}], {reg: reg_vabcdehl} => $707 @ 0b1 @ reg @ le(addr)
+
+    ldax [{reg: ldax_reg}] => $2 @ reg
+    stax [{reg: ldax_reg}] => $3 @ reg
 
     ana     {reg: reg_vbcdehl}, a => $600 @ 0b1 @ reg
     xra     {reg: reg_vbcdehl}, a => $601 @ 0b0 @ reg
@@ -171,8 +184,8 @@ INTT____0008:   jre $00F0
 ;((HL-) ==> (DE-))xB
 ; Copies the data pointed to by HL "(HL)" to (DE).
 ; B holds a single byte for the copy loop count.
-CALT_96_000A:   #d8 $2F                                         ; LDAX    H-
-________000B:   #d8 $3E                                         ; STAX    D-
+CALT_96_000A:   ldax [hl-]
+________000B:   stax [de-]
 ________000C:   #d8 $52                                         ; DCR     B
 ________000D:   jr $000a
 ________000E:   ret
@@ -220,7 +233,7 @@ ________005C:   jmp $057F                                       ;Flow continues 
 ;------------------------------------------------------------
 ;(DE+)-(HL+) ==> A
 ; Loads A with (DE), increments DE, then subtracts (HL) from A and increments HL.
-CALT_A1_005F:   #d8 $2C                                         ; LDAX    D+
+CALT_A1_005F:   ldax [de+]
 ________0060:   #d8 $70, $E5                                    ; SUBX    H+
 ________0062:   ret
 ;------------------------------------------------------------
@@ -422,9 +435,9 @@ ________018C:   jre $0128
 ; Any pitch out of range could overrun the timers & sap the CPU.
 CALT_82_018E:   di
 ________0190:   pop hl
-________0192:   #d8 $2D                                         ; LDAX    H+		;(PC+1)
+________0192:   ldax [hl+]                                      ;(PC+1)
 ________0193:   mov b, a
-________0194:   #d8 $2D                                         ; LDAX    H+          ;(PC+1)
+________0194:   ldax [hl+]                                      ;(PC+1)
 ________0195:   push hl
 ________0197:   #d8 $38, $99                                    ; STAW    99
 ________0199:   calf $08B6                                      ;Set note timers
@@ -443,13 +456,13 @@ ________01A5:   ret
 ; Checks if the cart is present, and possibly jumps to ($4001) or ($4003)
 ; The parameter $C0 sends it to $4001, $C1 to $4003, etc...
 CALT_80_01A6:   #d8 $34, $00, $40                               ; LXI     H,4000
-________01A9:   #d8 $2B                                         ; LDAX    H
+________01A9:   ldax [hl]
 ________01AA:   #d8 $77, $55                                    ; EQI     A,55
 ________01AC:   rets
 
 ________01AD:   calt $008A                                      ; "Clear A"
 ________01AE:   #d8 $38, $89                                    ; STAW    89
-________01B0:   #d8 $2B                                         ; LDAX    H
+________01B0:   ldax [hl]
 ________01B1:   #d8 $77, $55                                    ; EQI     A,55
 ________01B3:   rets
 ;----------------------------------
@@ -460,7 +473,7 @@ ________01B8:   calf $0E4D                                      ;Sets a timer
 ________01BA:   #d8 $15, $80, $80                               ; ORIW    80,80
 ________01BD:   #d8 $32                                         ; INX     H           ;->$4001
 ________01BE:   pop bc
-________01C0:   #d8 $29                                         ; LDAX    B
+________01C0:   ldax [bc]
 ________01C1:   #d8 $67, $C0                                    ; NEI     A,C0        ;To cart if it's $C0
 ________01C3:   jr $01C8
 
@@ -469,9 +482,9 @@ ________01C5:   #d8 $32                                         ; INX     H
 ________01C6:   #d8 $51                                         ; DCR     A
 ________01C7:   jr $01C1
 
-________01C8:   #d8 $2D                                         ; LDAX    H+
+________01C8:   ldax [hl+]
 ________01C9:   mov c, a
-________01CA:   #d8 $2B                                         ; LDAX    H
+________01CA:   ldax [hl]
 ________01CB:   mov b, a
 ________01CC:   jb
 ;-----------------------------------------------------------
@@ -495,7 +508,7 @@ ________01E0:   #d8 $64, $98, $02                               ; ORI     PA,02 
 ________01E3:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
 ________01E6:   #d8 $6B, $31                                    ; MVI     C,31
 ________01E8:   #d8 $64, $98, $04                               ; ORI     PA,04       ;bit 2 on
-________01EB:   #d8 $2F                                         ; LDAX    H-          ;Screen data...
+________01EB:   ldax [hl-]                                      ;Screen data...
 ________01EC:   mov pb, a                                       ;...to Port B
 ________01EE:   #d8 $64, $98, $02                               ; ORI     PA,02       ;bit 1 on
 ________01F1:   #d8 $64, $88, $FD                               ; ANI     PA,FD       ;bit 1 off
@@ -520,7 +533,7 @@ ________0212:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0215:   #d8 $64, $88, $FD                               ; ANI     PA,FD
 ________0218:   #d8 $6B, $31                                    ; MVI     C,31
 ________021A:   #d8 $64, $98, $04                               ; ORI     PA,04
-________021D:   #d8 $2D                                         ; LDAX    H+
+________021D:   ldax [hl+]
 ________021E:   mov pb, a
 ________0220:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0223:   #d8 $64, $88, $FD                               ; ANI     PA,FD
@@ -551,7 +564,7 @@ ________024E:   #d8 $64, $98, $04                               ; ORI     PA,04
 
 ________0251:   #d8 $6B, $18                                    ; MVI     C,18
 
-________0253:   #d8 $2D                                         ; LDAX    H+
+________0253:   ldax [hl+]
 ________0254:   mov pb, a
 ________0256:   #d8 $64, $98, $02                               ; ORI     PA,02
 ________0259:   #d8 $64, $88, $FD                               ; ANI     PA,FD
@@ -699,27 +712,27 @@ ________05D8:   calt $00B6                                      ; "[PC+3] Print 
 ________05D9:   #d8 $02, $00, $1C                               ; DB $02,$00,$1C     ;Parameters for the text routine
 ________05DC:   #d8 $69, $05                                    ; MVI     A,05
 ________05DE:   #d8 $34, $B8, $C4                               ; LXI     H,C4B8
-________05E1:   #d8 $3D                                         ; STAX    H+
+________05E1:   stax [hl+]
 ________05E2:   #d8 $32                                         ; INX     H
-________05E3:   #d8 $3B                                         ; STAX    H
+________05E3:   stax [hl]
 ________05E4:   #d8 $41                                         ; INR     A
 ________05E5:   #d8 $34, $70, $C5                               ; LXI     H,C570
-________05E8:   #d8 $3D                                         ; STAX    H+
+________05E8:   stax [hl+]
 ________05E9:   #d8 $41                                         ; INR     A
 ________05EA:   #d8 $38, $A6                                    ; STAW    A6
 ________05EC:   #d8 $69, $39                                    ; MVI     A,39
-________05EE:   #d8 $3D                                         ; STAX    H+
+________05EE:   stax [hl+]
 ________05EF:   #d8 $41                                         ; INR     A
 ________05F0:   #d8 $38, $A7                                    ; STAW    A7
 ________05F2:   calt $008A                                      ; "Clear A"
-________05F3:   #d8 $3D                                         ; STAX    H+
+________05F3:   stax [hl+]
 ________05F4:   #d8 $38, $A0                                    ; STAW    A0          ;X,Y position for cursor
 ________05F6:   #d8 $38, $A1                                    ; STAW    A1
 ________05F8:   #d8 $69, $99                                    ; MVI     A,99        ;What does this do?
 ________05FA:   #d8 $6A, $0A                                    ; MVI     B,0A
 ________05FC:   #d8 $32                                         ; INX     H
 ________05FD:   #d8 $32                                         ; INX     H
-________05FE:   #d8 $3D                                         ; STAX    H+		;Just writes "99s" 3 bytes apart
+________05FE:   stax [hl+]                                      ;Just writes "99s" 3 bytes apart
 ________05FF:   #d8 $32                                         ; INX     H
 ________0600:   #d8 $32                                         ; INX     H
 ________0601:   #d8 $52                                         ; DCR     B
@@ -741,9 +754,9 @@ ________0619:   #d8 $C1                                         ; DB $C1		;Jump 
 ________061A:   #d8 $45, $8A, $80                               ; ONIW    8A,80
 ________061D:   jr $0618
 ________061E:   #d8 $34, $72, $C5                               ; LXI     H,C572
-________0621:   #d8 $2B                                         ; LDAX    H
+________0621:   ldax [hl]
 ________0622:   #d8 $16, $FF                                    ; XRI     A,FF
-________0624:   #d8 $3B                                         ; STAX    H
+________0624:   stax [hl]
 ________0625:   calt $0088                                      ;Read Controller FF90-FF95
 ________0626:   #d8 $28, $93                                    ; LDAW    93
 ________0628:   #d8 $57, $3F                                    ; OFFI    A,3F        ;Test Buttons 1,2,3,4
@@ -893,12 +906,12 @@ ________06EC:   calf $0E4D                                      ;Reset the timer
 ________06EE:   #d8 $69, $21                                    ; MVI     A,21
 ________06F0:   #d8 $6A, $0A                                    ; MVI     B,0A
 ________06F2:   calf $0E67                                      ;LXI H,$C7F2
-________06F4:   #d8 $3D                                         ; STAX    H+
+________06F4:   stax [hl+]
 ________06F5:   #d8 $41                                         ; INR     A           ;Set up the puzzle tiles in RAM
 ________06F6:   #d8 $52                                         ; DCR     B
 ________06F7:   jr $06F4
 ________06F8:   mov a, b                                        ;$FF
-________06F9:   #d8 $3D                                         ; STAX    H+
+________06F9:   stax [hl+]
 ________06FA:   calf $0E67
 ________06FC:   #d8 $6A, $0B                                    ; MVI     B,0B
 ________06FE:   #d8 $24, $5E, $C7                               ; LXI     D,C75E
@@ -923,7 +936,7 @@ ________0720:   #d8 $24, $F2, $C7                               ; LXI     D,C7F2
 ________0723:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
 ________0724:   #d8 $6A, $11                                    ; MVI     B,11
 ________0726:   #d8 $34, $5D, $05                               ; LXI     H,055D      ;Point to "grid" data
-________0729:   #d8 $2D                                         ; LDAX    H+
+________0729:   ldax [hl+]
 ________072A:   push bc
 ________072C:   push hl
 ________072E:   calf $0DD3                                      ;This probably draws the tiles
@@ -967,7 +980,7 @@ ________0773:   #d8 $28, $8C                                    ; LDAW    8C
 ________0775:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0777:   mov b, a
 ________0778:   #d8 $34, $6F, $05                               ; LXI     H,056F
-________077B:   #d8 $2D                                         ; LDAX    H+
+________077B:   ldax [hl+]
 ________077C:   push bc
 ________077E:   push hl
 ________0780:   calf $0DD3                                      ;Draw Tiles
@@ -1019,13 +1032,13 @@ ________07CC:   di
 ________07CE:   calf $08B6                                      ;Play Music (Snd)
 ________07D0:   ei
 ________07D2:   #d8 $34, $FE, $C7                               ; LXI     H,C7FE
-________07D5:   #d8 $2D                                         ; LDAX    H+
+________07D5:   ldax [hl+]
 ________07D6:   mov b, a
-________07D7:   #d8 $2F                                         ; LDAX    H-
+________07D7:   ldax [hl-]
 ________07D8:   lta a, b
 ________07DA:   jr $07DD
 ________07DB:   mov b, a
-________07DC:   #d8 $2B                                         ; LDAX    H
+________07DC:   ldax [hl]
 ________07DD:   push bc
 ________07DF:   #d8 $75, $A2, $00                               ; EQIW    A2,00
 ________07E2:   jre $0823
@@ -1062,9 +1075,9 @@ ________0814:   push hl
 ________0816:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0817:   pop de
 ________0819:   #d8 $6A, $04                                    ; MVI     B,04
-________081B:   #d8 $2D                                         ; LDAX    H+
+________081B:   ldax [hl+]
 ________081C:   ral
-________081E:   #d8 $3C                                         ; STAX    D+
+________081E:   stax [de+]
 ________081F:   #d8 $52                                         ; DCR     B
 ________0820:   jr $081B
 ________0821:   jre $0875
@@ -1120,9 +1133,9 @@ ________0868:   push de
 ________086A:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________086B:   pop de
 ________086D:   #d8 $6A, $04                                    ; MVI     B,04
-________086F:   #d8 $2D                                         ; LDAX    H+
+________086F:   ldax [hl+]
 ________0870:   ral 
-________0872:   #d8 $3C                                         ; STAX    D+
+________0872:   stax [de+]
 ________0873:   #d8 $52                                         ; DCR     B
 ________0874:   jr $086F
 ________0875:   #d8 $34, $88, $FF                               ; LXI     H,FF88
@@ -1136,7 +1149,7 @@ ________0882:   calf $0C82                                      ;Scroll text? Wr
 ________0884:   #d8 $6A, $0B                                    ; MVI     B,0B
 ________0886:   #d8 $34, $5E, $C7                               ; LXI     H,C75E
 ________0889:   #d8 $24, $F2, $C7                               ; LXI     D,C7F2
-________088C:   #d8 $2D                                         ; LDAX    H+
+________088C:   ldax [hl+]
 ________088D:   #d8 $70, $FC                                    ; EQAX    D+
 ________088F:   jre $07C5
 ________0891:   #d8 $52                                         ; DCR     B
@@ -1160,9 +1173,9 @@ ________08A6:   pop de
 ________08A8:   ret
 ;------------------------------------------------------------
 ;Music-playing code...
-CALF____08A9:   #d8 $2D                                         ; LDAX    H+
+CALF____08A9:   ldax [hl+]
 ________08AA:   mov b, a
-________08AB:   #d8 $2D                                         ; LDAX    H+
+________08AB:   ldax [hl+]
 ________08AC:   #d8 $38, $99                                    ; STAW    99
 ________08AE:   #d8 $70, $3E, $84, $FF                          ; SHLD    FF84
 ________08B2:   mov a, b
@@ -1179,9 +1192,9 @@ ________08BD:   #d8 $32                                         ; INX     H     
 ________08BE:   #d8 $32                                         ; INX     H
 ________08BF:   jr $08BA
 
-________08C0:   #d8 $2D                                         ; LDAX    H+
+________08C0:   ldax [hl+]
 ________08C1:   mov tm0, a
-________08C3:   #d8 $2B                                         ; LDAX    H
+________08C3:   ldax [hl]
 ________08C4:   #d8 $38, $9A                                    ; STAW    9A
 ________08C6:   #d8 $38, $8F                                    ; STAW    8F
 ________08C8:   #d8 $52                                         ; DCR     B
@@ -1194,9 +1207,9 @@ ________08D3:   ret
 ;------------------------------------------------------------
 ;Load a "multiplication table" for A,E from (HL) and do AxE
 ;Is this ever used?
-________08D4:   #d8 $2D                                         ; LDAX    H+
+________08D4:   ldax [hl+]
 ________08D5:   mov e, a
-________08D6:   #d8 $2B                                         ; LDAX    H
+________08D6:   ldax [hl]
 ;HL <== AxE
 CALT_93_08D7:   #d8 $34, $00, $00                               ; LXI     H,0000
 ________08DA:   #d8 $6C, $00                                    ; MVI     D,00
@@ -1224,12 +1237,12 @@ ________08F6:   jr $08F3
 ________08F7:   ret
 ;------------------------------------------------------------
 ;Swap (HL+)<->(DE+)
-CALF____08F8:   #d8 $2B                                         ; LDAX    H
+CALF____08F8:   ldax [hl]
 ________08F9:   mov c, a
-________08FA:   #d8 $2A                                         ; LDAX    D
-________08FB:   #d8 $3D                                         ; STAX    H+
+________08FA:   ldax [de]
+________08FB:   stax [hl+]
 ________08FC:   mov a, c
-________08FD:   #d8 $3C                                         ; STAX    D+
+________08FD:   stax [de+]
 ________08FE:   ret
 ;------------------------------------------------------------
 ;Clear Screen 2 RAM
@@ -1256,7 +1269,7 @@ ________0918:   #d8 $6A, $E3                                    ; MVI     B,E3	;
 ;Clear RAM (HL+)xB
 CALT_8A_091A:   calt $008A                                      ; "Clear A"
 ;A ==> (HL+)xB
-CALT_9F_091B:   #d8 $3D                                         ; STAX    H+
+CALT_9F_091B:   stax [hl+]
 ________091C:   #d8 $52                                         ; DCR     B
 ________091D:   jr $091B
 ________091E:   ret
@@ -1279,11 +1292,11 @@ ________0938:   eqa a, c                                        ;Check if both r
 ________093A:   jr $092F
 ________093B:   #d8 $64, $98, $40                               ; ORI     PA,40	;PA Bit 6 on
 ________093E:   #d8 $07, $03                                    ; ANI     A,03
-________0940:   #d8 $3C                                         ; STAX    D+		;Save controller read in 92
+________0940:   stax [de+]                                      ;Save controller read in 92
 ________0941:   mov a, c
 ________0942:   calf $0C72                                      ;RLR A x2
 ________0944:   #d8 $07, $07                                    ; ANI     A,07
-________0946:   #d8 $3E                                         ; STAX    D-		;Save cont in 93
+________0946:   stax [de-]                                      ;Save cont in 93
 ________0947:   #d8 $64, $88, $7F                               ; ANI     PA,7F	;PA bit 7 off
 ________094A:   mov a, pc                                       ;Get other controller bits
 ________094C:   #d8 $16, $FF                                    ; XRI     A,FF
@@ -1300,21 +1313,21 @@ ________095D:   ral
 ________095F:   ral
 ________0961:   #d8 $07, $0C                                    ; ANI     A,0C
 ________0963:   #d8 $70, $9A                                    ; ORAX    D		;Or with FF92
-________0965:   #d8 $3C                                         ; STAX    D+          ;...and save
+________0965:   stax [de+]                                      ;...and save
 ________0966:   mov a, c
 ________0967:   ral 
 ________0969:   #d8 $07, $38                                    ; ANI     A,38
 ________096B:   #d8 $70, $9A                                    ; ORAX    D           ;Or with FF93
-________096D:   #d8 $3E                                         ; STAX    D-		;...and save
+________096D:   stax [de-]                                      ;...and save
 ________096E:   #d8 $34, $90, $FF                               ; LXI     H,FF90      ;Get our new,old
 ________0971:   #d8 $14, $94, $FF                               ; LXI     B,FF94
-________0974:   #d8 $2D                                         ; LDAX    H+          ;And XOR to get controller strobe
+________0974:   ldax [hl+]                                      ;And XOR to get controller strobe
 ________0975:   #d8 $70, $94                                    ; XRAX    D+		;But this strobe function is stupid:
-________0977:   #d8 $39                                         ; STAX    B           ;Bits go to 1 whenever the button is
+________0977:   stax [bc]                                       ;Bits go to 1 whenever the button is
 ________0978:   #d8 $12                                         ; INX     B		;initially pressed AND released...
-________0979:   #d8 $2B                                         ; LDAX    H
+________0979:   ldax [hl]
 ________097A:   #d8 $70, $92                                    ; XRAX    D
-________097C:   #d8 $39                                         ; STAX    B
+________097C:   stax [bc]
 ________097D:   ret
 ;------------------------------------------------------------
 ;C258+ ==> C000+
@@ -1372,16 +1385,16 @@ ________09BF:   ral
 ________09C1:   #d8 $53                                         ; DCR     C
 ________09C2:   jr $09BF
 ________09C3:   #d8 $70, $8B                                    ; ANAX    H
-________09C5:   #d8 $3B                                         ; STAX    H
+________09C5:   stax [hl]
 ________09C6:   ret
 ;------------------------------------------------------------
 ;[PC+2] Draw Horizontal Line
 ; 1st byte is the bit-pattern (of the 8-dot vertical "char" of the LCD)
 ; 2nd byte is the length: 00-7F draws black lines; 80-FF draws white lines
 CALT_99_09C7:   pop de
-________09C9:   #d8 $2C                                         ; LDAX    D+  	;SP+1
+________09C9:   ldax [de+]                                      ;SP+1
 ________09CA:   mov c, a
-________09CB:   #d8 $2C                                         ; LDAX    D+		;SP+2
+________09CB:   ldax [de+]                                      ;SP+2
 ________09CC:   push de
 ________09CE:   mov d, a
 ________09CF:   #d8 $07, $7F                                    ; ANI     A,7F
@@ -1390,16 +1403,16 @@ ________09D2:   mov a, d
 ________09D3:   #d8 $47, $80                                    ; ONI     A,80
 ________09D5:   jr $09DD
 
-________09D6:   #d8 $2B                                         ; LDAX    H
+________09D6:   ldax [hl]
 ________09D7:   ana a, c
-________09D9:   #d8 $3D                                         ; STAX    H+
+________09D9:   stax [hl+]
 ________09DA:   #d8 $52                                         ; DCR     B
 ________09DB:   jr $09D6
 ________09DC:   ret
 
-________09DD:   #d8 $2B                                         ; LDAX    H
+________09DD:   ldax [hl]
 ________09DE:   ora a, c
-________09E0:   #d8 $3D                                         ; STAX    H+
+________09E0:   stax [hl+]
 ________09E1:   #d8 $52                                         ; DCR     B
 ________09E2:   jr $09DD
 ________09E3:   ret
@@ -1416,14 +1429,14 @@ ________09E3:   ret
 ;			      ### = 1..8 nybbles to write
 ;
 CALT_9A_09E4:   pop de
-________09E6:   #d8 $2C                                         ; LDAX    D+
+________09E6:   ldax [de+]
 ________09E7:   mov b, a
 ________09E8:   #d8 $38, $9B                                    ; STAW    9B
-________09EA:   #d8 $2C                                         ; LDAX    D+
+________09EA:   ldax [de+]
 ________09EB:   mov c, a
 ________09EC:   #d8 $07, $07                                    ; ANI     A,07
 ________09EE:   #d8 $38, $9C                                    ; STAW    9C
-________09F0:   #d8 $2C                                         ; LDAX    D+
+________09F0:   ldax [de+]
 ________09F1:   push de
 ________09F3:   #d8 $38, $9D                                    ; STAW    9D
 ________09F5:   #d8 $07, $07                                    ; ANI     A,07
@@ -1442,19 +1455,19 @@ ________0A0F:   #d8 $52                                         ; DCR     B
 ________0A10:   jr $0A12
 ________0A11:   jr $0A23
 
-________0A12:   #d8 $2B                                         ; LDAX    H
+________0A12:   ldax [hl]
 ________0A13:   calt $00C0                                      ; "(RLR A)x4"
 ________0A14:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0A16:   ora a, c
-________0A18:   #d8 $3C                                         ; STAX    D+
+________0A18:   stax [de+]
 ________0A19:   #d8 $52                                         ; DCR     B
 ________0A1A:   jr $0A1C
 ________0A1B:   jr $0A23
 
-________0A1C:   #d8 $2D                                         ; LDAX    H+
+________0A1C:   ldax [hl+]
 ________0A1D:   #d8 $07, $0F                                    ; ANI     A,0F
 ________0A1F:   ora a, c
-________0A21:   #d8 $3C                                         ; STAX    D+
+________0A21:   stax [de+]
 ________0A22:   jr $0A0F
 
 ________0A23:   pop bc
@@ -1470,14 +1483,14 @@ ________0A28:   jr $0A42
 ;			     #### = 1..F nybbles to write
 ;
 CALT_9B_0A29:   pop de
-________0A2B:   #d8 $2C                                         ; LDAX    D+
+________0A2B:   ldax [de+]
 ________0A2C:   mov b, a
 ________0A2D:   #d8 $38, $9B                                    ; STAW    9B
-________0A2F:   #d8 $2C                                         ; LDAX    D+
+________0A2F:   ldax [de+]
 ________0A30:   mov c, a                                        ;Save X,Y position in BC
 ________0A31:   #d8 $07, $07                                    ; ANI     A,07
 ________0A33:   #d8 $38, $9C                                    ; STAW    9C
-________0A35:   #d8 $2C                                         ; LDAX    D+
+________0A35:   ldax [de+]
 ________0A36:   push de
 ________0A38:   #d8 $38, $9D                                    ; STAW    9D
 ________0A3A:   #d8 $07, $0F                                    ; ANI     A,0F        ;Get # of characters to write
@@ -1540,22 +1553,22 @@ ________0AAD:   push va
 ________0AAF:   mov c, a
 ________0AB0:   calf $0E6A                                      ;(FFB0 -> HL)
 ________0AB2:   #d8 $6A, $04                                    ; MVI     B,04
-________0AB4:   #d8 $2B                                         ; LDAX    H
+________0AB4:   ldax [hl]
 ________0AB5:   ana a, c
-________0AB7:   #d8 $3D                                         ; STAX    H+
+________0AB7:   stax [hl+]
 ________0AB8:   #d8 $52                                         ; DCR     B
 ________0AB9:   jr $0AB4
 ________0ABA:   pop va
 ________0ABC:   #d8 $16, $FF                                    ; XRI     A,FF
 ________0ABE:   mov c, a
 ________0ABF:   #d8 $6A, $04                                    ; MVI     B,04
-________0AC1:   #d8 $2B                                         ; LDAX    H
+________0AC1:   ldax [hl]
 ________0AC2:   ana a, c
-________0AC4:   #d8 $3D                                         ; STAX    H+
+________0AC4:   stax [hl+]
 ________0AC5:   #d8 $52                                         ; DCR     B
 ________0AC6:   jr $0AC1
 ________0AC7:   #d8 $70, $3F, $C0, $FF                          ; LHLD    FFC0
-________0ACB:   #d8 $2D                                         ; LDAX    H+
+________0ACB:   ldax [hl+]
 ________0ACC:   #d8 $70, $3E, $C0, $FF                          ; SHLD    FFC0
 ________0AD0:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0AD1:   #d8 $24, $B0, $FF                               ; LXI     D,FFB0
@@ -1626,13 +1639,13 @@ ________0B49:   #d8 $52                                         ; DCR     B
 ________0B4A:   jr $0B3C
 ________0B4B:   ret
 ;------------------------------------------------------------
-CALF____0B4C:   #d8 $2D                                         ; LDAX    H+
+CALF____0B4C:   ldax [hl+]
 ________0B4D:   #d8 $38, $9B                                    ; STAW    9B
 ________0B4F:   mov b, a
 ________0B50:   #d8 $46, $07                                    ; ADI     A,07
 ________0B52:   #d8 $37, $53                                    ; LTI     A,53
 ________0B54:   ret
-________0B55:   #d8 $2D                                         ; LDAX    H+
+________0B55:   ldax [hl+]
 ________0B56:   mov c, a
 ________0B57:   #d8 $07, $07                                    ; ANI     A,07
 ________0B59:   #d8 $38, $9C                                    ; STAW    9C
@@ -1640,7 +1653,7 @@ ________0B5B:   mov a, c
 ________0B5C:   #d8 $46, $07                                    ; ADI     A,07
 ________0B5E:   #d8 $37, $47                                    ; LTI     A,47
 ________0B60:   ret
-________0B61:   #d8 $2B                                         ; LDAX    H
+________0B61:   ldax [hl]
 ________0B62:   #d8 $38, $9D                                    ; STAW    9D
 ________0B64:   #d8 $37, $0C                                    ; LTI     A,0C
 ________0B66:   ret
@@ -1670,9 +1683,9 @@ ________0B97:   push hl
 ________0B99:   calf $0E6A
 ________0B9B:   #d8 $24, $C0, $FF                               ; LXI     D,FFC0
 ________0B9E:   #d8 $6A, $0F                                    ; MVI     B,0F
-________0BA0:   #d8 $2B                                         ; LDAX    H
+________0BA0:   ldax [hl]
 ________0BA1:   #d8 $70, $94                                    ; XRAX    D+
-________0BA3:   #d8 $3D                                         ; STAX    H+
+________0BA3:   stax [hl+]
 ________0BA4:   #d8 $52                                         ; DCR     B
 ________0BA5:   jr $0BA0
 ________0BA6:   pop hl
@@ -1702,8 +1715,8 @@ ________0BD7:   jr $0BE2
 ________0BD8:   #d8 $37, $4B                                    ; LTI     A,4B
 ________0BDA:   jr $0BED
 ________0BDB:   push va
-________0BDD:   #d8 $2D                                         ; LDAX    H+
-________0BDE:   #d8 $3C                                         ; STAX    D+
+________0BDD:   ldax [hl+]
+________0BDE:   stax [de+]
 ________0BDF:   pop va
 ________0BE1:   jr $0BE9
 ________0BE2:   #d8 $45, $80, $10                               ; ONIW    80,10
@@ -1741,7 +1754,7 @@ ________0C0D:   jr $0C18
 ;------------------------------------------------------------
 ;[PC+1] HL +- byte
 CALT_8C_0C0E:   pop de
-________0C10:   #d8 $2C                                         ; LDAX    D+          ;Get byte after PC
+________0C10:   ldax [de+]                                      ;Get byte after PC
 ________0C11:   push de
 ________0C13:   mov e, a
 ________0C14:   #d8 $37, $80                                    ; LTI     A,80	;Add or subtract that byte
@@ -1776,7 +1789,7 @@ ________0C33:   #d8 $28, $9C                                    ; LDAW    9C
 ________0C35:   #d8 $38, $97                                    ; STAW    97
 ________0C37:   push bc
 ________0C39:   #d8 $6B, $00                                    ; MVI     C,00
-________0C3B:   #d8 $2D                                         ; LDAX    H+
+________0C3B:   ldax [hl+]
 ________0C3C:   #d8 $30, $97                                    ; DCRW    97
 ________0C3E:   jr $0C40
 ________0C3F:   jr $0C4D
@@ -1796,7 +1809,7 @@ ________0C51:   #d8 $70, $9A                                    ; ORAX    D
 ________0C53:   jr $0C56
 
 ________0C54:   #d8 $70, $8A                                    ; ANAX    D
-________0C56:   #d8 $3A                                         ; STAX    D
+________0C56:   stax [de]
 ________0C57:   mov a, c
 ________0C58:   pop bc
 ________0C5A:   #d8 $45, $80, $08                               ; ONIW    80,08
@@ -1805,7 +1818,7 @@ ________0C5E:   #d8 $70, $99                                    ; ORAX    B
 ________0C60:   jr $0C63
 
 ________0C61:   #d8 $70, $89                                    ; ANAX    B
-________0C63:   #d8 $39                                         ; STAX    B
+________0C63:   stax [bc]
 ________0C64:   #d8 $12                                         ; INX     B
 ________0C65:   #d8 $22                                         ; INX     D
 ________0C66:   #d8 $30, $96                                    ; DCRW    96
@@ -1830,7 +1843,7 @@ ________0C7F:   #d8 $03, $00, $16                               ; DB $03,$00,$16
 ________0C82:   calf $0E67                                      ;(C7F2 -> HL)
 ________0C84:   #d8 $69, $01                                    ; MVI     A,01
 ________0C86:   #d8 $38, $83                                    ; STAW    83
-________0C88:   #d8 $2D                                         ; LDAX    H+
+________0C88:   ldax [hl+]
 ________0C89:   push hl
 ________0C8B:   #d8 $67, $FF                                    ; NEI     A,FF	;If it's a terminator, loop
 ________0C8D:   jre $0CB6
@@ -1843,9 +1856,9 @@ ________0C97:   #d8 $6D, $51                                    ; MVI     E,51
 ________0C99:   calt $009A                                      ; "HL <== HL+E"
 ________0C9A:   pop de
 ________0C9C:   #d8 $6A, $04                                    ; MVI     B,04
-________0C9E:   #d8 $2C                                         ; LDAX    D+
+________0C9E:   ldax [de+]
 ________0C9F:   ral
-________0CA1:   #d8 $3D                                         ; STAX    H+
+________0CA1:   stax [hl+]
 ________0CA2:   #d8 $52                                         ; DCR     B
 ________0CA3:   jr $0C9E
 ________0CA4:   #d8 $20, $83                                    ; INRW    83
@@ -1853,7 +1866,7 @@ ________0CA6:   pop hl
 ________0CA8:   #d8 $75, $83, $0D                               ; EQIW    83,0D
 ________0CAB:   jre $0C88
 ________0CAD:   #d8 $34, $FF, $C7                               ; LXI     H,C7FF
-________0CB0:   #d8 $2B                                         ; LDAX    H
+________0CB0:   ldax [hl]
 ________0CB1:   calf $0E3B                                      ;Scroll text; XOR RAM
 ________0CB3:   calt $00A0                                      ; "C258+ ==> C000+"
 ________0CB4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
@@ -1900,7 +1913,7 @@ ________0CF2:   #d8 $34, $A3, $FF                               ; LXI     H,FFA3
 ________0CF5:   jr $0D0C
 
 ________0CF6:   #d8 $70, $3F, $D6, $FF                          ; LHLD    FFD6
-________0CFA:   #d8 $2D                                         ; LDAX    H+
+________0CFA:   ldax [hl+]
 ________0CFB:   #d8 $67, $FF                                    ; NEI     A,FF	;If terminator...
 ________0CFD:   jr $0CDE                                        ;...reset scroll
 ________0CFE:   #d8 $70, $3E, $D6, $FF                          ; SHLD    FFD6
@@ -1914,15 +1927,15 @@ ________0D0C:   #d8 $24, $A0, $C2                               ; LXI     D,C2A0
 ________0D0F:   #d8 $6A, $02                                    ; MVI     B,02
 
 ;((HL+) ==> (DE+))xB
-CALT_95_0D11:   #d8 $2D                                         ; LDAX    H+
-________0D12:   #d8 $3C                                         ; STAX    D+
+CALT_95_0D11:   ldax [hl+]
+________0D12:   stax [de+]
 ________0D13:   #d8 $52                                         ; DCR     B
 ________0D14:   jr $0D11
 ________0D15:   ret
 ;------------------------------------------------------------
 ________0D16:   #d8 $20, $DA                                    ; INRW    DA
 ________0D18:   #d8 $34, $DA, $FF                               ; LXI     H,FFDA
-________0D1B:   #d8 $2B                                         ; LDAX    H
+________0D1B:   ldax [hl]
 ________0D1C:   #d8 $38, $D0                                    ; STAW    D0
 ________0D1E:   jr $0D23
 
@@ -2136,7 +2149,7 @@ ________0E6D:   ret
 
 ;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
 CALT_A8_0E6E:   pop hl
-________0E70:   #d8 $2D                                         ; LDAX    H+
+________0E70:   ldax [hl+]
 ________0E71:   push hl
 ________0E73:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0E74:   calt $00A8                                      ; "XCHG HL,DE"
@@ -2145,12 +2158,12 @@ ________0E75:   #d8 $44, $78, $0E                               ; CALL    0E78  
 ________0E78:   #d8 $6A, $07                                    ; MVI     B,7
 ________0E7A:   #d8 $6B, $07                                    ; MVI     C,7
 ________0E7C:   calf $0E6A                                      ;(FFB0->HL)
-________0E7E:   #d8 $2A                                         ; LDAX    D  		;In this loop, the byte at (FFB0)
+________0E7E:   ldax [de]                                       ;In this loop, the byte at (FFB0)
 ________0E7F:   ral                                             ;Has its bits split up into 8 bytes
 ________0E81:   push va                                         ;And this loop runs 8 times...
-________0E83:   #d8 $2B                                         ; LDAX    H
+________0E83:   ldax [hl]
 ________0E84:   #d8 $48, $31                                    ; RLR
-________0E86:   #d8 $3D                                         ; STAX    H+
+________0E86:   stax [hl+]
 ________0E87:   pop va
 ________0E89:   #d8 $53                                         ; DCR     C
 ________0E8A:   jr $0E7F
@@ -2168,7 +2181,7 @@ ________0E97:   ret
 ;------------------------------------------------------------
 ;[PC+1] ?? (Unpack & Roll 8 bits)
 CALT_A9_0E98:   pop hl
-________0E9A:   #d8 $2D                                         ; LDAX    H+
+________0E9A:   ldax [hl+]
 ________0E9B:   push hl
 ________0E9D:   push va
 ________0E9F:   calf $0E73
@@ -2177,7 +2190,7 @@ ________0EA3:   jr $0EA9
 ;-----------------------------------------------------------
 ;[PC+1] ?? (Roll 8 bits -> Byte?)
 CALT_AA_0EA4:   pop hl
-________0EA6:   #d8 $2D                                         ; LDAX    H+
+________0EA6:   ldax [hl+]
 ________0EA7:   push hl
 ________0EA9:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
 ________0EAA:   #d8 $24, $BF, $FF                               ; LXI     D,FFBF
@@ -2185,12 +2198,12 @@ ________0EAD:   calt $00A8                                      ; "XCHG HL,DE"
 ________0EAE:   push de
 ________0EB0:   #d8 $6B, $0F                                    ; MVI     C,0F
 ________0EB2:   #d8 $6A, $07                                    ; MVI     B,8-1
-________0EB4:   #d8 $2A                                         ; LDAX    D
+________0EB4:   ldax [de]
 ________0EB5:   ral 
 ________0EB7:   push va
-________0EB9:   #d8 $2B                                         ; LDAX    H
+________0EB9:   ldax [hl]
 ________0EBA:   #d8 $48, $31                                    ; RLR
-________0EBC:   #d8 $3B                                         ; STAX    H
+________0EBC:   stax [hl]
 ________0EBD:   pop va
 ________0EBF:   #d8 $52                                         ; DCR     B
 ________0EC0:   jr $0EB5
@@ -2209,7 +2222,7 @@ ________0ED1:   ret
 ;------------------------------------------------------------
 ;[PC+x] ?? (Add/Sub multiple bytes)
 CALT_AB_0ED2:   pop hl
-________0ED4:   #d8 $2D                                         ; LDAX    H+
+________0ED4:   ldax [hl+]
 ________0ED5:   push hl
 ________0ED7:   mov b, a
 ________0ED8:   #d8 $07, $0F                                    ; ANI     A,0F
@@ -2227,7 +2240,7 @@ ________0EE9:   pop bc
 ________0EEB:   #d8 $70, $1F, $07, $40                          ; LBCD    4007        ;Read vector from $4007 on cart, however...
 ________0EEF:   jb                                              ;...all 5 Pokekon games have "0000" there!
 ________0EF0:   pop hl
-________0EF2:   #d8 $2D                                         ; LDAX    H+
+________0EF2:   ldax [hl+]
 ________0EF3:   push hl
 ________0EF5:   #d8 $38, $98                                    ; STAW    98
 ________0EF7:   #d8 $07, $0F                                    ; ANI     A,0F
@@ -2242,30 +2255,30 @@ ________0F03:   jr $0EFF
 ________0F04:   #d8 $24, $96, $FF                               ; LXI     D,FF96
 ________0F07:   #d8 $45, $98, $80                               ; ONIW    98,80
 ________0F0A:   jr $0F10
-________0F0B:   #d8 $2B                                         ; LDAX    H
+________0F0B:   ldax [hl]
 ________0F0C:   #d8 $70, $E2                                    ; SUBX    D
-________0F0E:   #d8 $3B                                         ; STAX    H
+________0F0E:   stax [hl]
 ________0F0F:   jr $0F18
 
 ________0F10:   #d8 $45, $98, $40                               ; ONIW    98,40
 ________0F13:   jr $0F18
-________0F14:   #d8 $2B                                         ; LDAX    H
+________0F14:   ldax [hl]
 ________0F15:   #d8 $70, $C2                                    ; ADDX    D
-________0F17:   #d8 $3B                                         ; STAX    H
+________0F17:   stax [hl]
 ________0F18:   #d8 $33                                         ; DCX     H
 ________0F19:   #d8 $45, $98, $10                               ; ONIW    98,10
 ________0F1C:   jr $0F23
 
-________0F1D:   #d8 $2B                                         ; LDAX    H
+________0F1D:   ldax [hl]
 ________0F1E:   #d8 $70, $C2                                    ; ADDX    D
-________0F20:   #d8 $3B                                         ; STAX    H
+________0F20:   stax [hl]
 ________0F21:   jre $0EE5
 
 ________0F23:   #d8 $45, $98, $20                               ; ONIW    98,20
 ________0F26:   jr $0F21
-________0F27:   #d8 $2B                                         ; LDAX    H
+________0F27:   ldax [hl]
 ________0F28:   #d8 $70, $E2                                    ; SUBX    D
-________0F2A:   #d8 $3B                                         ; STAX    H
+________0F2A:   stax [hl]
 ________0F2B:   jr $0F21
 ;------------------------------------------------------------
 ;Invert Screen RAM (C000~)
@@ -2281,16 +2294,16 @@ ________0F39:   jr $0F34
 ________0F3A:   ret
 ;------------------------------------------------------------
 ;Invert bytes xB
-CALF____0F3B:   #d8 $2B                                         ; LDAX    H
+CALF____0F3B:   ldax [hl]
 ________0F3C:   #d8 $16, $FF                                    ; XRI     A,FF
-________0F3E:   #d8 $3D                                         ; STAX    H+
+________0F3E:   stax [hl+]
 ________0F3F:   #d8 $52                                         ; DCR     B
 ________0F40:   jr $0F3B
 ________0F41:   ret
 ;------------------------------------------------------------
 ;[PC+1] Invert 8 bytes at (C4B8+A*$10)
 CALT_A5_0F42:   pop hl
-________0F44:   #d8 $2D                                         ; LDAX    H+
+________0F44:   ldax [hl+]
 ________0F45:   push hl
 ________0F47:   #d8 $37, $0C                                    ; LTI     A,0C
 ________0F49:   ret
@@ -2319,7 +2332,7 @@ ________0F5C:   jr $0F6D
 ;				H = 1: HL gets bytes from $FFB1
 ;				D = 1: DE gets bytes from $FFA2
 CALT_A4_0F5D:   pop bc
-________0F5F:   #d8 $29                                         ; LDAX    B
+________0F5F:   ldax [bc]
 ________0F60:   #d8 $12                                         ; INX     B
 ________0F61:   push bc
 ________0F63:   #d8 $38, $96                                    ; STAW    96		;Get extra byte, keep in 96
@@ -2346,9 +2359,9 @@ ________0F83:   #d8 $45, $96, $80                               ; ONIW    96,80
 ________0F86:   jre $0FC1
 
 ________0F88:   clc
-________0F8A:   #d8 $2A                                         ; LDAX    D
+________0F8A:   ldax [de]
 ________0F8B:   #d8 $70, $D3                                    ; ADCX    H   	;Add HL-,DE-
-________0F8D:   #d8 $3A                                         ; STAX    D
+________0F8D:   stax [de]
 ________0F8E:   #d8 $52                                         ; DCR     B
 ________0F8F:   jr $0F91
 ________0F90:   ret
@@ -2368,7 +2381,7 @@ ________0F9D:   #d8 $56, $00                                    ; ACI     A,00
 ________0F9F:   #d8 $70, $E3                                    ; SUBX    H
 ________0FA1:   #d8 $70, $C2                                    ; ADDX    D
 ________0FA3:   daa
-________0FA4:   #d8 $3A                                         ; STAX    D
+________0FA4:   stax [de]
 ________0FA5:   #d8 $52                                         ; DCR     B
 ________0FA6:   jr $0FA8
 ________0FA7:   ret
@@ -2383,9 +2396,9 @@ ________0FAE:   #d8 $33                                         ; DCX     H
 ________0FAF:   jr $0F9B
 ;-----
 ________0FB0:   clc
-________0FB2:   #d8 $2A                                         ; LDAX    D
+________0FB2:   ldax [de]
 ________0FB3:   #d8 $70, $F3                                    ; SBBX    H
-________0FB5:   #d8 $3A                                         ; STAX    D
+________0FB5:   stax [de]
 ________0FB6:   #d8 $52                                         ; DCR     B
 ________0FB7:   jr $0FB9
 ________0FB8:   ret
@@ -2400,10 +2413,10 @@ ________0FBF:   #d8 $33                                         ; DCX     H
 ________0FC0:   jr $0FB2
 ;------
 ________0FC1:   clc
-________0FC3:   #d8 $2A                                         ; LDAX    D
+________0FC3:   ldax [de]
 ________0FC4:   #d8 $70, $D3                                    ; ADCX    H
 ________0FC6:   daa
-________0FC7:   #d8 $3A                                         ; STAX    D
+________0FC7:   stax [de]
 ________0FC8:   #d8 $52                                         ; DCR     B
 ________0FC9:   jr $0FCB
 ________0FCA:   ret
@@ -2425,7 +2438,7 @@ ________0FD8:   ret
 ;[PC+1] INC/DEC Range of bytes from (HL)
 ;Extra byte's high bit sets Inc/Dec; rest is the byte counter.
 CALT_AC_0FD9:   pop bc
-________0FDB:   #d8 $29                                         ; LDAX    B
+________0FDB:   ldax [bc]
 ________0FDC:   #d8 $12                                         ; INX     B
 ________0FDD:   push bc
 ________0FDF:   mov b, a
@@ -2434,9 +2447,9 @@ ________0FE2:   jr $0FF1
 
 ________0FE3:   #d8 $07, $7F                                    ; ANI     A,7F	;Counter can be 00-7F
 ________0FE5:   mov b, a
-________0FE6:   #d8 $2B                                         ; LDAX    H		;Load a byte
+________0FE6:   ldax [hl]                                       ;Load a byte
 ________0FE7:   #d8 $66, $01                                    ; SUI     A,01	;Decrement it
-________0FE9:   #d8 $3F                                         ; STAX    H-
+________0FE9:   stax [hl-]
 ________0FEA:   #d8 $48, $1A                                    ; SKN     CY		;Quit our function if any byte= -1!
 ________0FEC:   jr $0FEE
 ________0FED:   ret
@@ -2445,9 +2458,9 @@ ________0FEE:   #d8 $52                                         ; DCR     B
 ________0FEF:   jr $0FE6
 ________0FF0:   ret
 
-________0FF1:   #d8 $2B                                         ; LDAX    H		;or Load a byte
+________0FF1:   ldax [hl]                                       ;or Load a byte
 ________0FF2:   #d8 $46, $01                                    ; ADI     A,01	;Add 1
-________0FF4:   #d8 $3F                                         ; STAX    H-
+________0FF4:   stax [hl-]
 ________0FF5:   #d8 $48, $1A                                    ; SKN     CY		;Quit if any byte overflows!
 ________0FF7:   jr $0FF9
 ________0FF8:   ret
