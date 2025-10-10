@@ -40,10 +40,11 @@ INTT____0008:   jre INTT____00F0
 ;((HL-) ==> (DE-))xB
 ; Copies the data pointed to by HL "(HL)" to (DE).
 ; B holds a single byte for the copy loop count.
-CALT_96_000A:   ldax [hl-]
+memrcpy:
+                ldax [hl-]
 ________000B:   stax [de-]
 ________000C:   dcr b
-________000D:   jr CALT_96_000A
+________000D:   jr memrcpy
 ________000E:   ret
 ________000F:   nop
 ;------------------------------------------------------------
@@ -55,7 +56,7 @@ ________0018:   mvi a, $C1
 ________001A:   mov pa, a
 ________001C:   ani pa, $FE
 ________001F:   ori pa, $01
-________0022:   calt $008A                                      ; "Clear A"
+________0022:   calt ACCCLR                                     ; "Clear A"
 ________0023:   mov mb, a                                       ;Mode B = All outputs
 ________0025:   ori pa, $38
 
@@ -73,45 +74,48 @@ ________0042:   mvi a, $07
 ________0044:   mov tmm, a                                      ;Timer register = #$7
 ________0046:   mvi a, $74
 ________0048:   mov tm0, a                                      ;Timer option reg = #$74
-________004A:   calt $008E                                      ; "Clear Screen RAM"
-________004B:   calt $0090                                      ; "Clear C4B0~C593"
-________004C:   calt $0092                                      ; "Clear C594~C86F?"
+________004A:   calt SCR1CLR                                    ; "Clear Screen RAM"
+________004B:   calt TILECLR                                    ; "Clear C4B0~C593"
+________004C:   calt CALT92                                     ; "Clear C594~C86F?"
 ________004D:   lxi hl, $FF80
 ________0050:   mvi b, $49
-________0052:   calt $0094                                      ; "Clear RAM (HL+)xB"
-________0053:   calt $0082                                      ; Copy Screen RAM to LCD Driver
+________0052:   calt MEMCLR                                     ; "Clear RAM (HL+)xB"
+________0053:   calt SCRN2LCD                                   ; Copy Screen RAM to LCD Driver
 ________0054:   mvi a, $05
 ________0056:   mov mk, a                                       ;Mask = IntT,1 ON
 ________0058:   ei
-________005A:   calt $0080                                      ; [PC+1] Check Cartridge
+________005A:   calt CARTCHK                                    ; [PC+1] Check Cartridge
 ________005B:   db $C0                                          ;Jump to ($4001) in cartridge
 ________005C:   jmp ________057F                                ;Flow continues if no cartridge is present.
 ;------------------------------------------------------------
 ;(DE+)-(HL+) ==> A
 ; Loads A with (DE), increments DE, then subtracts (HL) from A and increments HL.
-CALT_A1_005F:   ldax [de+]
+memsub:
+                ldax [de+]
 ________0060:   subx [hl+]
 ________0062:   ret
 ;------------------------------------------------------------
 ;?? (Find 1st diff. byte in (HL),(DE)xB)  (Matching byte perhaps?)
 ; I don't know how useful this is, but I guess it's for advancing pointers to
 ; the first difference between 2 buffers, etc.
-CALT_A2_0063:   calt $00C2                                      ; "(DE+)-(HL+) ==> A"
+memcmp:
+                calt MEMSUB                                     ; "(DE+)-(HL+) ==> A"
 ________0064:   skn z
 ________0066:   jr ________0068
 ________0067:   ret
 
 ________0068:   dcr b
-________0069:   jr CALT_A2_0063
+________0069:   jr memcmp
 ________006A:   xra a, a
 ________006C:   ret
 ;------------------------------------------------------------
 ;?? (Find diff. & Copy bytes)
 ; I have no idea what purpose this serves...
-CALT_A3_006D:   push hl
+memccpy:
+                push hl
 ________006F:   push de
 ________0071:   push bc
-________0073:   calt $00C4                                      ; "?? (Find 1st diff. byte in (HL),(DE)xB)"
+________0073:   calt MEMCMP                                     ; "?? (Find 1st diff. byte in (HL),(DE)xB)"
 ________0074:   pop bc
 ________0076:   pop de
 ________0078:   pop hl
@@ -119,7 +123,7 @@ ________007A:   skn cy
 ________007C:   jr ________007E
 ________007D:   ret
 
-________007E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________007E:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________007F:   ret
 ;------------------------------------------------------------
 ;This is the call table provided by the CALT instruction in the uPD78xx CPU.
@@ -133,63 +137,63 @@ ________007F:   ret
 ; "[PC+X]" means the subroutine uses the bytes after its call as parameters.
 ; the subroutine then usually advances the return address by X bytes before returning.
 
-_CALT_80__0080:   dw CALT_80_01A6	;[PC+1] Check Cartridge
-_CALT_81__0082:   dw CALT_81_01CF	;Copy Screen RAM to LCD Driver
-_CALT_82__0084:   dw CALT_82_018E	;[PC+2] Setup/Play Sound
-_CALT_83__0086:   dw CALT_83_019C	;Setup/Play Music
-_CALT_84__0088:   dw CALT_84_091F	;Read Controller FF90-FF95
-_CALT_85__008A:   dw CALT_85_089D	;Clear A
-_CALT_86__008C:   dw CALT_86_08FF	;Clear Screen 2 RAM
-_CALT_87__008E:   dw CALT_87_0902	;Clear Screen RAM
-_CALT_88__0090:   dw CALT_88_0915	;Clear C4B0~C593
-_CALT_89__0092:   dw CALT_89_090D	;Clear C594~C7FF
-_CALT_8A__0094:   dw CALT_8A_091A	;Clear RAM (HL+)xB
-_CALT_8B__0096:   dw CALT_8B_0C1B	;HL <== HL+DE
-_CALT_8C__0098:   dw CALT_8C_0C0E	;[PC+1] HL +- byte
-_CALT_8D__009A:   dw CALT_8D_0C18	;HL <== HL+E
-_CALT_8E__009C:   dw CALT_8E_098C	;Swap C258+ <==> C000+
-_CALT_8F__009E:   dw CALT_8F_0981	;C000+ ==> C258+
-_CALT_90__00A0:   dw CALT_90_097E	;C258+ ==> C000+
-_CALT_91__00A2:   dw CALT_91_01CD	;CALT 00A0, CALT 00A4
-_CALT_92__00A4:   dw CALT_92_0B37	;?? (Move some RAM around...)
-_CALT_93__00A6:   dw CALT_93_08D7	;HL <== AxE
-_CALT_94__00A8:   dw CALT_94_08A0	;XCHG HL,DE
-_CALT_95__00AA:   dw CALT_95_0D11	;((HL+) ==> (DE+))xB
-_CALT_96__00AC:   dw CALT_96_000A	;((HL-) ==> (DE-))xB
-_CALT_97__00AE:   dw CALT_97_08F3	;((HL+) <==> (DE+))xB
-_CALT_98__00B0:   dw CALT_98_0999	;Set Dot; B,C = X-,Y-position
-_CALT_99__00B2:   dw CALT_99_09C7	;[PC+2] Draw Horizontal Line
-_CALT_9A__00B4:   dw CALT_9A_09E4	;[PC+3] Print Bytes on-Screen
-_CALT_9B__00B6:   dw CALT_9B_0A29	;[PC+3] Print Text on-Screen
-_CALT_9C__00B8:   dw CALT_9C_0B0E	;Byte -> Point to Font Graphic
-_CALT_9D__00BA:   dw CALT_9D_0BF1	;Set HL to screen (B,C)
-_CALT_9E__00BC:   dw CALT_9E_0C24	;HL=C4B0+(A*$10)
-_CALT_9F__00BE:   dw CALT_9F_091B	;A ==> (HL+)xB
-_CALT_A0__00C0:   dw CALT_A0_0C6E	;(RLR A)x4
-_CALT_A1__00C2:   dw CALT_A1_005F	;(DE+)-(HL+) ==> A
-_CALT_A2__00C4:   dw CALT_A2_0063	;?? (Find 1st diff. byte in (HL),(DE)xB)
-_CALT_A3__00C6:   dw CALT_A3_006D	;?? (Find diff. & Copy bytes)
-_CALT_A4__00C8:   dw CALT_A4_0F5D	;[PC+1] 8~32-bit Add/Subtract (dec/hex)
-_CALT_A5__00CA:   dw CALT_A5_0F42	;[PC+1] Invert 8 bytes at (C4B8+A*$10)
-_CALT_A6__00CC:   dw CALT_A6_0F2C	;Invert Screen RAM (C000~)
-_CALT_A7__00CE:   dw CALT_A7_0F2F	;Invert Screen 2 RAM (C258~)
-_CALT_A8__00D0:   dw CALT_A8_0E6E	;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
-_CALT_A9__00D2:   dw CALT_A9_0E98	;[PC+1] ?? (Unpack & Roll 8 bits)
-_CALT_AA__00D4:   dw CALT_AA_0EA4	;[PC+1] ?? (Roll 8 bits -> Byte?)
-_CALT_AB__00D6:   dw CALT_AB_0ED2	;[PC+x] ?? (Add/Sub multiple bytes)
-_CALT_AC__00D8:   dw CALT_AC_0FD9	;[PC+1] INC/DEC Range of bytes from (HL)
-_CALT_AD__00DA:   dw CALT_AD_09B1	;Clear Dot; B,C = X-,Y-position
+    dw cartchk   ;[PC+1] Check Cartridge
+    dw scrn2lcd  ;Copy Screen RAM to LCD Driver
+    dw sndplay   ;[PC+2] Setup/Play Sound
+    dw musplay   ;Setup/Play Music
+    dw joyread   ;Read Controller FF90-FF95
+    dw accclr    ;Clear A
+    dw scr2clr   ;Clear Screen 2 RAM
+    dw scr1clr   ;Clear Screen RAM
+    dw tileclr   ;Clear C4B0~C593
+    dw calt92    ;Clear C594~C7FF
+    dw memclr    ;Clear RAM (HL+)xB
+    dw addrhlde  ;HL <== HL+DE
+    dw addrhli   ;[PC+1] HL +- byte
+    dw addrhle   ;HL <== HL+E
+    dw scrnswap  ;Swap C258+ <==> C000+
+    dw scr1copy  ;C000+ ==> C258+
+    dw scr2copy  ;C258+ ==> C000+
+    dw calta2    ;CALT 00A0, CALT 00A4
+    dw calta4    ;?? (Move some RAM around...)
+    dw multiply  ;HL <== AxE
+    dw bytexchg  ;XCHG HL,DE
+    dw memcopy   ;((HL+) ==> (DE+))xB
+    dw memrcpy   ;((HL-) ==> (DE-))xB
+    dw memswap   ;((HL+) <==> (DE+))xB
+    dw drawdot   ;Set Dot; B,C = X-,Y-position
+    dw drawline  ;[PC+2] Draw Horizontal Line
+    dw drawhex   ;[PC+3] Print Bytes on-Screen
+    dw drawtext  ;[PC+3] Print Text on-Screen
+    dw fontget   ;Byte -> Point to Font Graphic
+    dw scrnloc   ;Set HL to screen (B,C)
+    dw tileloc   ;HL=C4B0+(A*$10)
+    dw memset    ;A ==> (HL+)xB
+    dw niblswap  ;(RLR A)x4
+    dw memsub    ;(DE+)-(HL+) ==> A
+    dw memcmp    ;?? (Find 1st diff. byte in (HL),(DE)xB)
+    dw memccpy   ;?? (Find diff. & Copy bytes)
+    dw arithmtc  ;[PC+1] 8~32-bit Add/Subtract (dec/hex)
+    dw tileinv   ;[PC+1] Invert 8 bytes at (C4B0+A*$10)
+    dw scr1inv   ;Invert Screen RAM (C000~)
+    dw scr2inv   ;Invert Screen 2 RAM (C258~)
+    dw caltd0    ;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
+    dw caltd2    ;[PC+1] ?? (Unpack & Roll 8 bits)
+    dw caltd4    ;[PC+1] ?? (Roll 8 bits -> Byte?)
+    dw caltd6    ;[PC+x] ?? (Add/Sub multiple bytes)
+    dw membump   ;[PC+1] INC/DEC Range of bytes from (HL)
+    dw erasdot   ;Clear Dot; B,C = X-,Y-position
 
-_CALT_AE__00DC:   dw $4012      ;Jump table for cartridge routines
-_CALT_AF__00DE:   dw $4015
-_CALT_B0__00E0:   dw $4018
-_CALT_B1__00E2:   dw $401B
-_CALT_B2__00E4:   dw $401E
-_CALT_B3__00E6:   dw $4021
-_CALT_B4__00E8:   dw $4024
-_CALT_B5__00EA:   dw $4027
-_CALT_B6__00EC:   dw $402A
-_CALT_B7__00EE:   dw $402D
+    dw $4012      ;Jump table for cartridge routines
+    dw $4015
+    dw $4018
+    dw $401B
+    dw $401E
+    dw $4021
+    dw $4024
+    dw $4027
+    dw $402A
+    dw $402D
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT____00F0:   oniw [$FF80], $01                               ;If 1, don't jump to cart.
@@ -289,7 +293,8 @@ ________018C:   jre ________0128
 ;[PC+2] Setup/Play Sound
 ; 1st byte is sound pitch (00[silence] to $25); 2nd byte is length.
 ; Any pitch out of range could overrun the timers & sap the CPU.
-CALT_82_018E:   di
+sndplay:
+                di
 ________0190:   pop hl
 ________0192:   ldax [hl+]                                      ;(PC+1)
 ________0193:   mov b, a
@@ -302,7 +307,8 @@ ________019B:   jr ________01A3
 ;Setup/Play Music
 ;HL should already contain the address of the music data.
 ;Format of the data string is the same as "Play Sound", with $FF terminating the song.
-CALT_83_019C:   di
+musplay:
+                di
 ________019E:   oriw [$FF80], $02
 ________01A1:   calf CALF____08A9                               ;Read notes & set timers
 ________01A3:   ei                                              ;(sometimes skipped)
@@ -311,12 +317,13 @@ ________01A5:   ret
 ;[PC+1] Check Cartridge
 ; Checks if the cart is present, and possibly jumps to ($4001) or ($4003)
 ; The parameter $C0 sends it to $4001, $C1 to $4003, etc...
-CALT_80_01A6:   lxi hl, $4000
+cartchk:
+                lxi hl, $4000
 ________01A9:   ldax [hl]
 ________01AA:   eqi a, $55
 ________01AC:   rets
 
-________01AD:   calt $008A                                      ; "Clear A"
+________01AD:   calt ACCCLR                                     ; "Clear A"
 ________01AE:   staw [$FF89]
 ________01B0:   ldax [hl]
 ________01B1:   eqi a, $55
@@ -347,13 +354,15 @@ ________01CC:   jb
 ;CALT 00A0, CALT 00A4
 ; Copies the 2nd screen to the screen buffer & moves some text around
 ; And updates the LCD...
-CALT_91_01CD:   calt $00A0                                      ; "C258+ ==> C000+"
-________01CE:   calt $00A4                                      ; "?? (Move some RAM around...)"
+calta2:
+                calt SCR2COPY                                   ; "C258+ ==> C000+"
+________01CE:   calt CALTA4                                     ; "?? (Move some RAM around...)"
 ;-----------------------------------------------------------
 ;Copy Screen RAM to LCD Driver
 ; A very important and often-used function.  The LCD won't show anything without it...
 								;Set up writing for LCD controller #1
-CALT_81_01CF:   ori pa, $08                                     ;(Port A, bit 3 on)
+scrn2lcd:
+                ori pa, $08                                     ;(Port A, bit 3 on)
 ________01D2:   lxi hl, $C031
 ________01D5:   lxi de, $007D
 ________01D8:   mvi b, $00
@@ -370,7 +379,7 @@ ________01EE:   ori pa, $02                                     ;bit 1 on
 ________01F1:   ani pa, $FD                                     ;bit 1 off
 ________01F4:   dcr c
 ________01F5:   jr ________01EB
-________01F6:   calt $0096                                      ; "HL <== HL+DE"
+________01F6:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________01F7:   mov a, b
 ________01F8:   adinc a, $40
 ________01FA:   jr ________01FE
@@ -395,14 +404,14 @@ ________0220:   ori pa, $02
 ________0223:   ani pa, $FD
 ________0226:   dcr c
 ________0227:   jr ________021D
-________0228:   calt $0096                                      ; "HL <== HL+DE"
+________0228:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0229:   mov a, b
 ________022A:   adinc a, $40
 ________022C:   jr ________0230
 ________022D:   mov b, a
 ________022E:   jre ________020C
 
-________0230:   calt $008A                                      ; "Clear A"
+________0230:   calt ACCCLR                                     ; "Clear A"
 ________0231:   staw [$FF96]
         						;Set up writing for LCD controller #3
 ________0233:   ani pa, $EF                                     ;bit 4 off
@@ -429,9 +438,9 @@ ________025D:   jr ________0253
 
 ________025E:   push de
 ________0260:   lxi de, $0032
-________0263:   calt $0096                                      ; "HL <== HL+DE"
+________0263:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0264:   pop de
-________0266:   calt $00A8                                      ; "XCHG HL,DE"
+________0266:   calt BYTEXCHG                                   ; "XCHG HL,DE"
 ________0267:   inrw [$FF96]                                    ;Skip if a carry...
 ________0269:   offiw [$FF96], $01                              ;Do alternating lines
 ________026C:   jr ________0251
@@ -512,16 +521,16 @@ ________056F:   #d8 $08, $04, $02, $04, $08, $08, $08, $01, $02, $01, $08, $04, 
 ;-----------------------------------------------------------
 ;from 005C -
 
-________057F:   calt $008C                                      ;Clear Screen 2 RAM
+________057F:   calt SCR2CLR                                    ;Clear Screen 2 RAM
 ________0580:   staw [$FFD8]                                    ;Set mem locations to 0
 ________0582:   staw [$FF82]
 ________0584:   staw [$FFA5]
 ________0586:   lxi hl, ________04B8                            ;Start of scrolltext
 ________0589:   shld [$FFD6]                                    ;Save pointer
 ________058D:   calf CALF____0D68                               ;Setup RAM vars
-________058F:   calt $00A0                                      ; "C258+ ==> C000+"
-________0590:   calt $0082                                      ;Copy Screen RAM to LCD Driver
-________0591:   calt $008A                                      ; "Clear A"
+________058F:   calt SCR2COPY                                   ; "C258+ ==> C000+"
+________0590:   calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
+________0591:   calt ACCCLR                                     ; "Clear A"
 ________0592:   staw [$FFDA]
 ________0594:   staw [$FFD1]
 ________0596:   staw [$FFD2]
@@ -535,22 +544,22 @@ ________05A5:   mvi a, $60                                      ;A delay value f
 ________05A7:   staw [$FF8A]
 
 ;Main Loop starts here!
-________05A9:   calt $0080                                      ;[PC+1] Check Cartridge
+________05A9:   calt CARTCHK                                    ;[PC+1] Check Cartridge
 ________05AA:   db $C1                                          ;Jump to ($4003) in cartridge
 
 ________05AB:   offiw [$FF80], $02                              ;If bit 1 is on, no music
 ________05AE:   jr ________05B2
 ________05AF:   calf CALF____0E64                               ;Point HL to the music data
-________05B1:   calt $0086                                      ;Setup/Play Music
-________05B2:   calt $0088                                      ;Read Controller FF90-FF95
+________05B1:   calt MUSPLAY                                    ;Setup/Play Music
+________05B2:   calt JOYREAD                                    ;Read Controller FF90-FF95
 ________05B3:   neiw [$FF93], $01                               ;If Select is pressed...
 ________05B6:   jmp ________06EC                                ;Setup puzzle
 ________05B9:   neiw [$FFD2], $0F
 ________05BC:   jre ________0591                                ;(go to main loop setup)
 ________05BE:   calf CALF____0D1F                               ;Draw spiral dot-by-dot
 ________05C0:   calf CALF____0D1F                               ;Draw spiral dot-by-dot
-________05C2:   calt $00A0                                      ; "C258+ ==> C000+"
-________05C3:   calt $0082                                      ;Copy Screen RAM to LCD Driver
+________05C2:   calt SCR2COPY                                   ; "C258+ ==> C000+"
+________05C3:   calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
 ________05C4:   neiw [$FF93], $08                               ;If Start is pressed...
 ________05C7:   jr ________05D1                                 ;Jump to graphic program
 
@@ -561,10 +570,10 @@ ________05CF:   jre ________05A5                                ;Reset scrolltex
 ;-----------------------------------------------------------
 ;"Paint" program setup routines
 ________05D1:   calf CALF____0E4D                               ;Turn timer on
-________05D3:   calt $008C                                      ; "Clear Screen 2 RAM"
-________05D4:   calt $0090                                      ; "Clear C4B0~C593"
+________05D3:   calt SCR2CLR                                    ; "Clear Screen 2 RAM"
+________05D4:   calt TILECLR                                    ; "Clear C4B0~C593"
 ________05D5:   lxi hl, ________0541                            ;"GRA"
-________05D8:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
+________05D8:   calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
 ________05D9:   db $02, $00, $1C                                ;Parameters for the text routine
 ________05DC:   mvi a, $05
 ________05DE:   lxi hl, $C4B8
@@ -580,7 +589,7 @@ ________05EC:   mvi a, $39
 ________05EE:   stax [hl+]
 ________05EF:   inr a
 ________05F0:   staw [$FFA7]
-________05F2:   calt $008A                                      ; "Clear A"
+________05F2:   calt ACCCLR                                     ; "Clear A"
 ________05F3:   stax [hl+]
 ________05F4:   staw [$FFA0]                                    ;X,Y position for cursor
 ________05F6:   staw [$FFA1]
@@ -598,13 +607,13 @@ ________0603:   calf CALF____0D68                               ;Draw Border
 ________0605:   mvi a, $70
 ________0607:   staw [$FF8A]
 ________0609:   lxi hl, $FFA0                                   ;Print the X-, Y- position
-________060C:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
+________060C:   calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
 ________060D:   db $26, $00, $19                                ;Parameters for the print routine
 ________0610:   lxi hl, $FFA1
-________0613:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
+________0613:   calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
 ________0614:   db $3E, $00, $19                                ;Parameters for the print routine
-________0617:   calt $00A2                                      ; "CALT A0, CALT A4"
-________0618:   calt $0080                                      ;[PC+1] Check Cartridge
+________0617:   calt CALTA2                                     ; "CALT A0, CALT A4"
+________0618:   calt CARTCHK                                    ;[PC+1] Check Cartridge
 ________0619:   db $C1                                          ;Jump to ($4003) in cartridge
 
 ________061A:   oniw [$FF8A], $80
@@ -613,7 +622,7 @@ ________061E:   lxi hl, $C572
 ________0621:   ldax [hl]
 ________0622:   xri a, $FF
 ________0624:   stax [hl]
-________0625:   calt $0088                                      ;Read Controller FF90-FF95
+________0625:   calt JOYREAD                                    ;Read Controller FF90-FF95
 ________0626:   ldaw [$FF93]
 ________0628:   offi a, $3F                                     ;Test Buttons 1,2,3,4
 ________062A:   jr ________0633
@@ -627,38 +636,38 @@ ________0636:   jr ________0647
 ________0637:   eqi a, $08                                      ;Start clears the screen
 ________0639:   jr ________063F
 
-________063A:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________063A:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________063B:   db $22, $03
 ________063D:   jre ________05DC                                ;Clear screen
 
 ________063F:   eqi a, $01                                      ;Select goes to the Puzzle
 ________0641:   jr ________0647
 
-________0642:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0642:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0643:   db $23, $03
 ________0645:   jre ________06EE                                ;To Puzzle Setup
 
 ________0647:   eqi a, $02                                      ;Button 1
 ________0649:   jr ________064E
-________064A:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________064A:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________064B:   db $19, $03
 ________064D:   jr ________0664                                 ;Clear a dot
 
 ________064E:   eqi a, $10                                      ;Button 2
 ________0650:   jr ________0655
-________0651:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0651:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0652:   db $1B, $03
 ________0654:   jr ________0664                                 ;Clear a dot
 
 ________0655:   eqi a, $04                                      ;Button 3
 ________0657:   jr ________065C
-________0658:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0658:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0659:   db $1D, $03
 ________065B:   jr ________066C                                 ;Set a dot
 
 ________065C:   eqi a, $20                                      ;Button 4
 ________065E:   jre ________0680
-________0660:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0660:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0661:   db $1E, $03
 ________0663:   jr ________066C                                 ;Set a dot
 
@@ -666,14 +675,14 @@ ________0664:   ldaw [$FFA6]
 ________0666:   mov b, a
 ________0667:   ldaw [$FFA7]
 ________0669:   mov c, a
-________066A:   calt $00DA                                      ; "Clear Dot; B,C = X-,Y-position"
+________066A:   calt ERASDOT                                    ; "Clear Dot; B,C = X-,Y-position"
 ________066B:   jr ________0673
 
 ________066C:   ldaw [$FFA6]
 ________066E:   mov b, a
 ________066F:   ldaw [$FFA7]
 ________0671:   mov c, a
-________0672:   calt $00B0                                      ; "Set Dot; B,C = X-,Y-position"
+________0672:   calt DRAWDOT                                    ; "Set Dot; B,C = X-,Y-position"
 
 ________0673:   ldaw [$FF92]
 ________0675:   nei a, $0F                                      ;Check if U,D,L,R pressed at once??
@@ -693,7 +702,7 @@ ________0689:   ldaw [$FFA1]
 ________068B:   adi a, $01
 ________068D:   daa
 ________068E:   staw [$FFA1]
-________0690:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0690:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0691:   db $12, $03
 ________0693:   jr ________06AE
 
@@ -712,7 +721,7 @@ ________06A4:   ldaw [$FFA1]
 ________06A6:   adi a, $99
 ________06A8:   daa
 ________06A9:   staw [$FFA1]
-________06AB:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________06AB:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________06AC:   db $14, $03
 
 ________06AE:   ldaw [$FF92]
@@ -731,7 +740,7 @@ ________06C0:   ldaw [$FFA0]
 ________06C2:   adi a, $01
 ________06C4:   daa
 ________06C5:   staw [$FFA0]
-________06C7:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________06C7:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________06C8:   db $17, $03
 ________06CA:   jre ________0605
 
@@ -749,11 +758,11 @@ ________06DD:   ldaw [$FFA0]
 ________06DF:   adi a, $99
 ________06E1:   daa
 ________06E2:   staw [$FFA0]
-________06E4:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________06E4:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________06E5:   db $16, $03
 ________06E7:   jr ________06CA
 ;------------------------------------------------------------
-________06E8:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________06E8:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________06E9:   db $01, $03
 ________06EB:   jr ________06E7
 ;------------------------------------------------------------
@@ -771,25 +780,25 @@ ________06F9:   stax [hl+]
 ________06FA:   calf CALF____0E67
 ________06FC:   mvi b, $0B
 ________06FE:   lxi de, $C75E
-________0701:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0701:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0702:   mvi b, $0B
 ________0704:   lxi hl, $C75E
 ________0707:   lxi de, $C752
-________070A:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
-________070B:   calt $008C                                      ; "Clear Screen 2 RAM"
+________070A:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
+________070B:   calt SCR2CLR                                    ; "Clear Screen 2 RAM"
 ________070C:   calf CALF____0D68                               ;Draw Border
 ________070E:   calf CALF____0D92                               ;Draw the grid
 ________0710:   calf CALF____0C7B                               ;Write "PUZZLE"
 ________0712:   aniw [$FF89], $00
 ________0715:   mvi a, $60
 ________0717:   staw [$FF8A]
-________0719:   calt $0080                                      ;[PC+1] Check Cartridge
+________0719:   calt CARTCHK                                    ;[PC+1] Check Cartridge
 ________071A:   db $C1                                          ;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
 ________071B:   mvi b, $0B
 ________071D:   lxi hl, $C752
 ________0720:   lxi de, $C7F2
-________0723:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0723:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0724:   mvi b, $11
 ________0726:   lxi hl, ________055D                            ;Point to "grid" data
 ________0729:   ldax [hl+]
@@ -804,18 +813,18 @@ ________0736:   jr ________0729
 ________0737:   mvi b, $0B        
 ________0739:   calf CALF____0E67                               ;LXI H,$C7F2
 ________073B:   lxi de, $C752
-________073E:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
-________073F:   calt $0088                                      ;Read Controller FF90-FF95
+________073E:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
+________073F:   calt JOYREAD                                    ;Read Controller FF90-FF95
 ________0740:   neiw [$FF93], $01                               ;Select
 ________0743:   oniw [$FF95], $01                               ;Select trigger
 ________0746:   jr ________074D
-________0747:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0747:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0748:   db $14, $03
 ________074A:   jmp ________05D1                                ;Go to Paint Program
 ________074D:   neiw [$FF93], $08                               ;Start
 ________0750:   oniw [$FF95], $08
 ________0753:   jr ________0758
-________0754:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________0754:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________0755:   db $16, $03
 ________0757:   jr ________0765
 ;------------------------------------------------------------
@@ -825,13 +834,13 @@ ________075D:   eqiw [$FF89], $3C
 ________0760:   jre ________0715                                ;Reset timer?
 ________0762:   jmp ________057F                                ;Go back to startup screen(?)
 ;------------------------------------------------------------
-________0765:   calt $008C                                      ; "Clear Screen 2 RAM"
+________0765:   calt SCR2CLR                                    ; "Clear Screen 2 RAM"
 ________0766:   lxi hl, ________0553                            ;"TIME"
-________0769:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
+________0769:   calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
 ________076A:   db $0E, $00, $1A
 ________076D:   lxi hl, $FF86
 ________0770:   mvi b, $02
-________0772:   calt $0094                                      ; "Clear RAM (HL+)xB"
+________0772:   calt MEMCLR                                     ; "Clear RAM (HL+)xB"
 ________0773:   ldaw [$FF8C]
 ________0775:   ani a, $0F
 ________0777:   mov b, a
@@ -850,18 +859,18 @@ ________078B:   calf CALF____0D92                               ;Draw the grid (
 ________078D:   calf CALF____0C82                               ;Scroll text? Write time in decimal?
 ________078F:   mvi a, $60
 ________0791:   staw [$FF8A]
-________0793:   calt $0080                                      ;[PC+1] Check Cartridge
+________0793:   calt CARTCHK                                    ;[PC+1] Check Cartridge
 ________0794:   db $C1                                          ;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
 ________0795:   lxi hl, $FF86
-________0798:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
+________0798:   calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
 ________0799:   db $2C, $00, $12
 ________079C:   lxi hl, $FF88
-________079F:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
+________079F:   calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
 ________07A0:   db $44, $00, $08
-________07A3:   calt $00A0                                      ; "C258+ ==> C000+"
-________07A4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
-________07A5:   calt $0088                                      ;Read Controller FF90-FF95
+________07A3:   calt SCR2COPY                                   ; "C258+ ==> C000+"
+________07A4:   calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
+________07A5:   calt JOYREAD                                    ;Read Controller FF90-FF95
 ________07A6:   neiw [$FF93], $01                               ;Select
 ________07A9:   jre ________0747                                ;To Paint Program
 ________07AB:   neiw [$FF93], $08                               ;Start
@@ -877,7 +886,7 @@ ________07BD:   jre ________078F                                ;Keep looping
 ________07BF:   calf CALF____0DD3                               ;Draw Tiles
 ________07C1:   jr ________07C6
 ;------------------------------------------------------------
-________07C2:   calt $0084                                      ;[PC+2] Setup/Play Sound
+________07C2:   calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
 ________07C3:   db $01, $03
 ________07C5:   jr ________07BD
 ;------------------------------------------------------------
@@ -900,35 +909,35 @@ ________07DF:   eqiw [$FFA2], $00
 ________07E2:   jre ________0823
 ________07E4:   calf CALF____0CBF                               ;Write Text(?)
 ________07E6:   inx hl
-________07E7:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________07E7:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________07E8:   db $00, $8E
 ________07EA:   calf CALF____0C77                               ;HL + $3C
 ________07EC:   push hl
-________07EE:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________07EE:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________07EF:   db $F0, $0E
 ________07F1:   pop hl
-________07F3:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________07F3:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________07F4:   db $F0, $8E
 ________07F6:   calf CALF____0C77                               ;HL + $3C
-________07F8:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________07F8:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________07F9:   db $1F, $0F
 ________07FB:   pop bc
 ________07FD:   mov a, b
 ________07FE:   calf CALF____0CBF                               ;Write Text(?)
-________0800:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0800:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0801:   db $F0, $0F
 ________0803:   calf CALF____0C77                               ;HL + $3C
 ________0805:   push hl
-________0807:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0807:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0808:   db $0F, $0E
 ________080A:   pop hl
-________080C:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________080C:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________080D:   db $0F, $8E
 ________080F:   mvi e, $41
-________0811:   calt $009A                                      ; "HL <== HL+E"
+________0811:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0812:   pop va
 ________0814:   push hl
-________0816:   calt $00B8                                      ;Byte -> Point to Font Graphic
+________0816:   calt FONTGET                                    ;Byte -> Point to Font Graphic
 ________0817:   pop de
 ________0819:   mvi b, $04
 ________081B:   ldax [hl+]
@@ -945,15 +954,15 @@ ________0828:   dcr b
 ________0829:   jr ________0827
 ________082A:   mvi a, $01
 ________082C:   staw [$FFA5]
-________082E:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________082E:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________082F:   db $E0, $08
 ________0831:   mvi e, $42
-________0833:   calt $009A                                      ; "HL <== HL+E"
-________0834:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0833:   calt ADDRHLE                                    ; "HL <== HL+E"
+________0834:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0835:   db $FF, $08
 ________0837:   mvi e, $42
-________0839:   calt $009A                                      ; "HL <== HL+E"
-________083A:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0839:   calt ADDRHLE                                    ; "HL <== HL+E"
+________083A:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________083B:   db $1F, $08
 ________083D:   ldaw [$FFA5]
 ________083F:   dcr a
@@ -970,23 +979,23 @@ ________084B:   jr ________082E
 ________084C:   ldaw [$FFA2]
 ________084E:   calf CALF____0CBF                               ;Write Text(?)
 ________0850:   mvi e, $09
-________0852:   calt $009A                                      ; "HL <== HL+E"
-________0853:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0852:   calt ADDRHLE                                    ; "HL <== HL+E"
+________0853:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0854:   db $1F, $8E
 ________0856:   calf CALF____0C77                               ;HL + $3C
-________0858:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0858:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0859:   db $00, $8E
 ________085B:   calf CALF____0C77                               ;HL + $3C
-________085D:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________085D:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________085E:   db $F0, $8E
 ________0860:   mvi b, $54                                      ;Decrement HL 55 times!
 ________0862:   dcx hl                                          ;Is this a delay or something?
 ________0863:   dcr b                                           ;There's already a CALT that subs HL...
 ________0864:   jr ________0862
-________0865:   calt $00A8                                      ; "XCHG HL,DE"
+________0865:   calt BYTEXCHG                                   ; "XCHG HL,DE"
 ________0866:   pop va
 ________0868:   push de
-________086A:   calt $00B8                                      ;Byte -> Point to Font Graphic
+________086A:   calt FONTGET                                    ;Byte -> Point to Font Graphic
 ________086B:   pop de
 ________086D:   mvi b, $04
 ________086F:   ldax [hl+]
@@ -995,10 +1004,10 @@ ________0872:   stax [de+]
 ________0873:   dcr b
 ________0874:   jr ________086F
 ________0875:   lxi hl, $FF88
-________0878:   calt $00B4                                      ; "[PC+3] Print Bytes on-Screen"
+________0878:   calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
 ________0879:   db $44, $00, $08
-________087C:   calt $00A0                                      ; "C258+ ==> C000+"
-________087D:   calt $0082                                      ;Copy Screen RAM to LCD Driver
+________087C:   calt SCR2COPY                                   ; "C258+ ==> C000+"
+________087D:   calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
 ________087E:   calf CALF____0D68                               ;Draw Border
 ________0880:   calf CALF____0D92                               ;Draw Puzzle Grid
 ________0882:   calf CALF____0C82                               ;Scroll text? Write time in decimal?
@@ -1011,18 +1020,20 @@ ________088F:   jre ________07C5
 ________0891:   dcr b
 ________0892:   jr ________088C
 ________0893:   calf CALF____0E64                               ;Point HL to music data
-________0895:   calt $0086                                      ;Setup/Play Music
+________0895:   calt MUSPLAY                                    ;Setup/Play Music
 ________0896:   oniw [$FF80], $03
 ________0899:   jmp ________0712                                ;Continue puzzle
 ________089C:   jr ________0896
 ;End of Puzzle Code
 ;------------------------------------------------------------
 ;Clear A
-CALT_85_089D:   mvi a, $00
+accclr:
+                mvi a, $00
 ________089F:   ret
 ;------------------------------------------------------------
 ;XCHG HL,DE
-CALT_94_08A0:   push hl
+bytexchg:
+                push hl
 ________08A2:   push de
 ________08A4:   pop hl
 ________08A6:   pop de
@@ -1067,7 +1078,8 @@ ________08D4:   ldax [hl+]
 ________08D5:   mov e, a
 ________08D6:   ldax [hl]
 ;HL <== AxE
-CALT_93_08D7:   lxi hl, $0000
+multiply:
+                lxi hl, $0000
 ________08DA:   mvi d, $00
 ________08DC:   gti a, $00
 ________08DE:   ret
@@ -1075,7 +1087,7 @@ ________08DF:   clc
 ________08E1:   rar
 ________08E3:   push va
 ________08E5:   skn cy
-________08E7:   calt $0096                                      ; "HL <== HL+DE"
+________08E7:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________08E8:   mov a, e
 ________08E9:   add a, a
 ________08EB:   mov e, a
@@ -1087,9 +1099,10 @@ ________08F2:   jr ________08DC
 ;-----------------------------
 ;((HL+) <==> (DE+))xB
 ;This function swaps the contents of (HL)<->(DE) B times
-CALT_97_08F3:   calf CALF____08F8                               ;Swap (HL+)<->(DE+)
+memswap:
+                calf CALF____08F8                               ;Swap (HL+)<->(DE+)
 ________08F5:   dcr b
-________08F6:   jr CALT_97_08F3
+________08F6:   jr memswap
 ________08F7:   ret
 ;------------------------------------------------------------
 ;Swap (HL+)<->(DE+)
@@ -1102,39 +1115,46 @@ ________08FD:   stax [de+]
 ________08FE:   ret
 ;------------------------------------------------------------
 ;Clear Screen 2 RAM
-CALT_86_08FF:   lxi hl, $C258                                   ;RAM for screen 2
+scr2clr:
+                lxi hl, $C258                                   ;RAM for screen 2
 ;Clear Screen RAM
-CALT_87_0902:   lxi hl, $C000                                   ;RAM for screen 1
+scr1clr:
+                lxi hl, $C000                                   ;RAM for screen 1
 CALF____0905:   mvi c, $02
 ________0907:   mvi b, $C7                                      ;$C8 bytes * 3 loops
-________0909:   calt $0094                                      ; "Clear RAM (HL+)xB"
+________0909:   calt MEMCLR                                     ; "Clear RAM (HL+)xB"
 ________090A:   dcr c
 ________090B:   jr ________0907
 ________090C:   ret
 ;------------------------------------------------------------
 ;Clear C594~C7FF
-CALT_89_090D:   lxi hl, $C594                                   ;Set HL
+calt92:
+                lxi hl, $C594                                   ;Set HL
 ________0910:   calf CALF____0905                               ;And jump to above routine
 ________0912:   mvi b, $13                                      ;Then clear $14 more bytes
-________0914:   jr CALT_8A_091A                                 ;Clear RAM (HL+)xB
+________0914:   jr memclr                                       ;Clear RAM (HL+)xB
 
 ;Clear C4B0~C593
-CALT_88_0915:   lxi hl, $C4B0                                   ;Set RAM pointer
+tileclr:
+                lxi hl, $C4B0                                   ;Set RAM pointer
 ________0918:   mvi b, $E3                                      ;and just drop into the func.
 
 ;Clear RAM (HL+)xB
-CALT_8A_091A:   calt $008A                                      ; "Clear A"
+memclr:
+                calt ACCCLR                                           ; "Clear A"
 ;A ==> (HL+)xB
-CALT_9F_091B:   stax [hl+]
+memset:
+                stax [hl+]
 ________091C:   dcr b
-________091D:   jr CALT_9F_091B
+________091D:   jr memset
 ________091E:   ret
 ;------------------------------------------------------------
 ;Read Controller FF90-FF95
-CALT_84_091F:   lxi hl, $FF92                                   ;Current joy storage
+joyread:
+                lxi hl, $FF92                                   ;Current joy storage
 ________0922:   lxi de, $FF90                                   ;Old joy storage
 ________0925:   mvi b, $01                                      ;Copy 2 bytes from curr->old
-________0927:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0927:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0928:   ani pa, $BF                                     ;PA Bit 6 off
 ________092B:   mov a, pc                                       ;Get port C
 ________092D:   xri a, $FF
@@ -1187,23 +1207,26 @@ ________097C:   stax [bc]
 ________097D:   ret
 ;------------------------------------------------------------
 ;C258+ ==> C000+
-CALT_90_097E:   calf CALF____0E5E
+scr2copy:
+                calf CALF____0E5E
 ________0980:   jr ________0984
 ;C000+ ==> C258+
-CALT_8F_0981:   calf CALF____0E5E
-________0983:   calt $00A8                                      ; "XCHG HL,DE"
+scr1copy:
+                calf CALF____0E5E
+________0983:   calt BYTEXCHG                                   ; "XCHG HL,DE"
 ________0984:   mvi c, $02
 ________0986:   mvi b, $C7
-________0988:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0988:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0989:   dcr c
 ________098A:   jr ________0986
 ________098B:   ret
 ;------------------------------------------------------------
 ;Swap C258+ <==> C000+
-CALT_8E_098C:   calf CALF____0E5E
+scrnswap:
+                calf CALF____0E5E
 ________098E:   lxi bc, $C702
 ________0991:   push bc
-________0993:   calt $00AE                                      ; "((HL+) <==> (DE+))xB"
+________0993:   calt MEMSWAP                                    ; "((HL+) <==> (DE+))xB"
 ________0994:   pop bc
 ________0996:   dcr c
 ________0997:   jr ________0991
@@ -1211,13 +1234,14 @@ ________0998:   ret
 ;------------------------------------------------------------
 ;Set Dot; B,C = X-,Y-position
 ;(Oddly enough, this writes dots to the 2nd screen RAM area!)
-CALT_98_0999:   push bc
+drawdot:
+                push bc
 ________099B:   calf CALF____0BF4                               ;Point to 2nd screen
 ________099D:   pop bc
 ________099F:   mov a, c
 ________09A0:   ani a, $07
 ________09A2:   mov c, a
-________09A3:   calt $008A                                      ; "Clear A"
+________09A3:   calt ACCCLR                                     ; "Clear A"
 ________09A4:   stc
 ________09A6:   ral
 ________09A8:   dcr c
@@ -1226,10 +1250,11 @@ ________09AA:   orax [hl]
 ________09AC:   jr ________09C5
 ;------------------------------------------------------------
 CALF____09AD:   eqiw [$FFD8], $00                               ;"Invert Dot", then...
-________09B0:   jr CALT_98_0999
+________09B0:   jr drawdot
 
 ;Clear Dot; B,C = X-,Y-position
-CALT_AD_09B1:   push bc
+erasdot:
+                push bc
 ________09B3:   calf CALF____0BF4                               ;Point to 2nd screen
 ________09B5:   pop bc
 ________09B7:   mov a, c
@@ -1247,7 +1272,8 @@ ________09C6:   ret
 ;[PC+2] Draw Horizontal Line
 ; 1st byte is the bit-pattern (of the 8-dot vertical "char" of the LCD)
 ; 2nd byte is the length: 00-7F draws black lines; 80-FF draws white lines
-CALT_99_09C7:   pop de
+drawline:
+                pop de
 ________09C9:   ldax [de+]                                      ;SP+1
 ________09CA:   mov c, a
 ________09CB:   ldax [de+]                                      ;SP+2
@@ -1284,7 +1310,8 @@ ________09E3:   ret
 ;				    start at left nybble (MSB) (more desirable)
 ;			      ### = 1..8 nybbles to write
 ;
-CALT_9A_09E4:   pop de
+drawhex:
+                pop de
 ________09E6:   ldax [de+]
 ________09E7:   mov b, a
 ________09E8:   staw [$FF9B]
@@ -1312,7 +1339,7 @@ ________0A10:   jr ________0A12
 ________0A11:   jr ________0A23
 
 ________0A12:   ldax [hl]
-________0A13:   calt $00C0                                      ; "(RLR A)x4"
+________0A13:   calt NIBLSWAP                                   ; "(RLR A)x4"
 ________0A14:   ani a, $0F
 ________0A16:   ora a, c
 ________0A18:   stax [de+]
@@ -1338,7 +1365,8 @@ ________0A28:   jr ________0A42
 ;      Sbbb####		      bbb = blank space between digits (0..7)
 ;			     #### = 1..F nybbles to write
 ;
-CALT_9B_0A29:   pop de
+drawtext:
+                pop de
 ________0A2B:   ldax [de+]
 ________0A2C:   mov b, a
 ________0A2D:   staw [$FF9B]
@@ -1355,17 +1383,17 @@ ________0A40:   staw [$FF98]                                    ;# saved in 98
 ________0A42:   ldaw [$FF9D]
 ________0A44:   oni a, $80                                      ;Check if 0 (2nd screen) or 1 (1st screen)
 ________0A46:   jr ________0A49
-________0A47:   calt $00BA                                      ; "Set HL to screen (B,C)"
+________0A47:   calt SCRNLOC                                    ; "Set HL to screen (B,C)"
 ________0A48:   jr ________0A4B
 
 ________0A49:   calf CALF____0BF4                               ;This points to Sc 1
 ________0A4B:   mov [$FFC6], c
 ________0A4F:   shld [$FFC2]
 ________0A53:   lxi de, $004B
-________0A56:   calt $0096                                      ; "HL <== HL+DE"
+________0A56:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0A57:   shld [$FFC4]
 ________0A5B:   ldaw [$FF9D]
-________0A5D:   calt $00C0                                      ; "(RLR A)x4"
+________0A5D:   calt NIBLSWAP                                   ; "(RLR A)x4"
 ________0A5E:   ani a, $07                                      ;Get text spacing (0-7)
 ________0A60:   staw [$FF9D]                                    ;Save in 9D
 ;--
@@ -1383,7 +1411,7 @@ ________0A77:   calf CALF____0BD3
 ________0A79:   offi a, $80
 ________0A7B:   jr ________0A85
 ________0A7C:   lded [$FF9D]
-________0A80:   calt $009A                                      ; "HL <== HL+E"
+________0A80:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0A81:   shld [$FFC2]
 ________0A85:   lhld [$FFC4]
 ________0A89:   shld [$FFC9]
@@ -1393,10 +1421,10 @@ ________0A92:   calf CALF____0BD3                               ;Copy B*A bytes?
 ________0A94:   offi a, $80
 ________0A96:   jr ________0AA0
 ________0A97:   lded [$FF9D]
-________0A9B:   calt $009A                                      ; "HL <== HL+E"
+________0A9B:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0A9C:   shld [$FFC4]
 ________0AA0:   mov b, [$FF9C]
-________0AA4:   calt $008A                                      ; "Clear A"
+________0AA4:   calt ACCCLR                                     ; "Clear A"
 ________0AA5:   dcr b
 ________0AA6:   jr ________0AA8
 ________0AA7:   jr ________0AAD
@@ -1426,7 +1454,7 @@ ________0AC6:   jr ________0AC1
 ________0AC7:   lhld [$FFC0]
 ________0ACB:   ldax [hl+]
 ________0ACC:   shld [$FFC0]
-________0AD0:   calt $00B8                                      ;Byte -> Point to Font Graphic
+________0AD0:   calt FONTGET                                    ;Byte -> Point to Font Graphic
 ________0AD1:   lxi de, $FFB0
 ________0AD4:   lxi bc, $FFB5
 ________0AD7:   mvi a, $04
@@ -1455,7 +1483,8 @@ ________0B0A:   staw [$FF9B]
 ________0B0C:   jre ________0A62
 ;------------------------------------------------------------
 ;Byte -> Point to Font Graphic
-CALT_9C_0B0E:   lti a, $64                                      ;If it's greater than 64, use cart font
+fontget:
+                lti a, $64                                      ;If it's greater than 64, use cart font
 ________0B10:   jr ________0B15                                 ;or...
 ________0B11:   lxi de, ________02C4                            ;Point to built-in font
 ________0B14:   jr ________0B1B
@@ -1466,21 +1495,22 @@ ________0B1B:   sded [$FF96]
 ________0B1F:   mov c, a
 ________0B20:   ani a, $0F
 ________0B22:   mvi e, $05
-________0B24:   calt $00A6                                      ; "Add A to "Pointer""
+________0B24:   calt MULTIPLY                                   ; "Add A to "Pointer""
 ________0B25:   push hl
 ________0B27:   mov a, c
-________0B28:   calt $00C0                                      ; "(RLR A)x4"
+________0B28:   calt NIBLSWAP                                   ; "(RLR A)x4"
 ________0B29:   ani a, $0F
 ________0B2B:   mvi e, $50
-________0B2D:   calt $00A6                                      ; "Add A to "Pointer""
+________0B2D:   calt MULTIPLY                                   ; "Add A to "Pointer""
 ________0B2E:   pop de
-________0B30:   calt $0096                                      ; "HL <== HL+DE"
+________0B30:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0B31:   lded [$FF96]
-________0B35:   calt $0096                                      ; "HL <== HL+DE"
+________0B35:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0B36:   ret
 ;------------------------------------------------------------
 ;?? (Move some RAM around...)
-CALT_92_0B37:   lxi hl, $C591
+calta4:
+                lxi hl, $C591
 ________0B3A:   mvi b, $0B
 
 ________0B3C:   push hl
@@ -1513,7 +1543,7 @@ ________0B61:   ldax [hl]
 ________0B62:   staw [$FF9D]
 ________0B64:   lti a, $0C
 ________0B66:   ret
-________0B67:   calt $00BA                                      ; "Set HL to screen (B,C)"
+________0B67:   calt SCRNLOC                                    ; "Set HL to screen (B,C)"
 ________0B68:   shld [$FF9E]
 ________0B6C:   mov a, h
 ________0B6D:   oni a, $40
@@ -1522,16 +1552,16 @@ ________0B70:   lxi de, $FFB0
 ________0B73:   calf CALF____0BD1
 ________0B75:   lhld [$FF9E]
 ________0B79:   lxi de, $004B
-________0B7C:   calt $0096                                      ; "HL <== HL+DE"
+________0B7C:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0B7D:   push hl
 ________0B7F:   lxi de, $FFB8
 ________0B82:   calf CALF____0BD1
 ________0B84:   calf CALF____0E6A
 ________0B86:   lxi de, $FFC0
 ________0B89:   mvi b, $0F
-________0B8B:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0B8B:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0B8C:   ldaw [$FF9D]
-________0B8E:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
+________0B8E:   calt TILELOC                                    ; "HL=C4B0+(A*$10)"
 ________0B8F:   lxi de, $FFB0
 ________0B92:   lxi bc, $FFB8
 ________0B95:   calf CALF____0C2F
@@ -1558,7 +1588,7 @@ ________0BBD:   oriw [$FF80], $10
 ________0BC0:   calf CALF____0BD1
 ________0BC2:   pop de
 ________0BC4:   lxi hl, $3DA8
-________0BC7:   calt $0096                                      ; "HL <== HL+DE"
+________0BC7:   calt ADDRHLDE                                   ; "HL <== HL+DE"
 ________0BC8:   skn cy
 ________0BCA:   ret
 ________0BCB:   lxi hl, $FFB8
@@ -1589,7 +1619,8 @@ ________0BED:   aniw [$FF80], $EF
 ________0BF0:   ret
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
-CALT_9D_0BF1:   lxi hl, $BFB5                                   ;Point before Sc. RAM
+scrnloc:
+                lxi hl, $BFB5                                   ;Point before Sc. RAM
 CALF____0BF4:   lxi hl, $C20D                                   ;Point before Sc.2 RAM
 ________0BF7:   mvi e, $4B
 ________0BF9:   mov a, c
@@ -1598,7 +1629,7 @@ ________0BFC:   adi a, $08
 ________0BFE:   suinb a, $08
 ________0C00:   jr ________0C08
 ________0C01:   push va
-________0C03:   calt $009A                                      ; "HL <== HL+E"
+________0C03:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0C04:   pop va
 ________0C06:   inr c
 ________0C07:   jr ________0BFE
@@ -1606,20 +1637,23 @@ ________0C08:   mov a, b
 ________0C09:   offi a, $80
 ________0C0B:   ret
 ________0C0C:   mov e, a
-________0C0D:   jr CALT_8D_0C18
+________0C0D:   jr addrhle
 ;------------------------------------------------------------
 ;[PC+1] HL +- byte
-CALT_8C_0C0E:   pop de
+addrhli:
+                pop de
 ________0C10:   ldax [de+]                                      ;Get byte after PC
 ________0C11:   push de
 ________0C13:   mov e, a
 ________0C14:   lti a, $80                                      ;Add or subtract that byte
 ________0C16:   mvi a, $FF
 ;HL <== HL+E
-CALT_8D_0C18:   mvi a, $00
+addrhle:
+                mvi a, $00
 ________0C1A:   mov d, a
 ;HL <== HL+DE
-CALT_8B_0C1B:   mov a, e
+addrhlde:
+                mov a, e
 ________0C1C:   add a, l
 ________0C1E:   mov l, a
 ________0C1F:   mov a, d
@@ -1628,14 +1662,15 @@ ________0C22:   mov h, a
 ________0C23:   ret
 ;------------------------------------------------------------
 ;HL=C4B0+(A*$10)
-CALT_9E_0C24:   lxi hl, $C4B0
+tileloc:
+                lxi hl, $C4B0
 ________0C27:   mvi e, $10
 ________0C29:   mov b, a
 ________0C2A:   dcr b
 ________0C2B:   jr ________0C2D
 ________0C2C:   ret
 
-________0C2D:   calt $009A                                      ; "HL <== HL+E"
+________0C2D:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0C2E:   jr ________0C2A
 ;------------------------------------------------------------
 CALF____0C2F:   mvi a, $07
@@ -1683,18 +1718,19 @@ ________0C6A:   aniw [$FF80], $F7
 ________0C6D:   ret
 ;------------------------------------------------------------
 ;(RLR A)x4	(Divides A by 16)
-CALT_A0_0C6E:   rar
+niblswap:
+                rar
 ________0C70:   rar
 CALF____0C72:   rar
 ________0C74:   rar
 ________0C76:   ret
 ;------------------------------------------------------------
 CALF____0C77:   mvi e, $3C                                      ; 60 decimal...
-________0C79:   calt $009A                                      ; "HL <== HL+E"
+________0C79:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0C7A:   ret
 ;------------------------------------------------------------
 CALF____0C7B:   lxi hl, ________054D                            ;"PUZZLE"
-________0C7E:   calt $00B6                                      ; "[PC+3] Print Text on-Screen"
+________0C7E:   calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
 ________0C7F:   db $03, $00, $16
 CALF____0C82:   calf CALF____0E67                               ;(C7F2 -> HL)
 ________0C84:   mvi a, $01
@@ -1703,13 +1739,13 @@ ________0C88:   ldax [hl+]
 ________0C89:   push hl
 ________0C8B:   nei a, $FF                                      ;If it's a terminator, loop
 ________0C8D:   jre ________0CB6
-________0C8F:   calt $00B8                                      ;Byte -> Point to Font Graphic
-________0C90:   calt $00A8                                      ; "XCHG HL,DE"
+________0C8F:   calt FONTGET                                    ;Byte -> Point to Font Graphic
+________0C90:   calt BYTEXCHG                                   ; "XCHG HL,DE"
 ________0C91:   ldaw [$FF83]
 ________0C93:   calf CALF____0CBF                               ;(Scroll text)
 ________0C95:   push de
 ________0C97:   mvi e, $51
-________0C99:   calt $009A                                      ; "HL <== HL+E"
+________0C99:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0C9A:   pop de
 ________0C9C:   mvi b, $04
 ________0C9E:   ldax [de+]
@@ -1724,8 +1760,8 @@ ________0CAB:   jre ________0C88
 ________0CAD:   lxi hl, $C7FF
 ________0CB0:   ldax [hl]
 ________0CB1:   calf CALF____0E3B                               ;Scroll text; XOR RAM
-________0CB3:   calt $00A0                                      ; "C258+ ==> C000+"
-________0CB4:   calt $0082                                      ;Copy Screen RAM to LCD Driver
+________0CB3:   calt SCR2COPY                                   ; "C258+ ==> C000+"
+________0CB4:   calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
 ________0CB5:   ret
 ;------------------------------------------------------------
 ________0CB6:   mov a, [$FF83]                                  ;A "LDAW 83" would've been faster here...
@@ -1762,7 +1798,7 @@ ________0CE4:   nop
 ________0CE5:   lxi hl, $C25B
 ________0CE8:   lxi de, $C258
 ________0CEB:   mvi b, $47
-________0CED:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0CED:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0CEE:   offiw [$FF82], $01
 ________0CF1:   jr ________0CF6
 ________0CF2:   lxi hl, $FFA3
@@ -1773,20 +1809,21 @@ ________0CFA:   ldax [hl+]
 ________0CFB:   nei a, $FF                                      ;If terminator...
 ________0CFD:   jr ________0CDE                                        ;...reset scroll
 ________0CFE:   shld [$FFD6]
-________0D02:   calt $00B8                                      ;Byte -> Point to Font Graphic
+________0D02:   calt FONTGET                                    ;Byte -> Point to Font Graphic
 ________0D03:   mvi b, $04                                      ;(5 pixels wide)
 ________0D05:   lxi de, $FFA0
-________0D08:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0D08:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0D09:   lxi hl, $FFA0                                   ;First copy it to RAM...
 
 ________0D0C:   lxi de, $C2A0                                   ;Then put it on screen, 3 pixels at a time.
 ________0D0F:   mvi b, $02
 
 ;((HL+) ==> (DE+))xB
-CALT_95_0D11:   ldax [hl+]
+memcopy:
+                ldax [hl+]
 ________0D12:   stax [de+]
 ________0D13:   dcr b
-________0D14:   jr CALT_95_0D11
+________0D14:   jr memcopy
 ________0D15:   ret
 ;------------------------------------------------------------
 ________0D16:   inrw [$FFDA]
@@ -1848,28 +1885,28 @@ ________0D67:   ret
 CALF____0D68:   lxi hl, $C2A3                                   ;Point to 2nd screen
 ________0D6B:   mvi a, $FF                                      ;Black character
 ________0D6D:   mvi b, $05                                      ;Write 6 characters
-________0D6F:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D6F:   calt MEMSET                                     ; "A ==> (HL+)xB"
 ________0D70:   mvi a, $1F                                      ;Then a char with 5 upper dots filled
 ________0D72:   mvi b, $3E                                      ;Times 63
-________0D74:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D74:   calt MEMSET                                     ; "A ==> (HL+)xB"
 ________0D75:   mvi c, $04
 ________0D77:   mvi b, $0B
 ________0D79:   mvi a, $FF
-________0D7B:   calt $00BE                                      ; "A ==> (HL+)xB"
-________0D7C:   calt $008A                                      ; "Clear A"
+________0D7B:   calt MEMSET                                     ; "A ==> (HL+)xB"
+________0D7C:   calt ACCCLR                                     ; "Clear A"
 ________0D7D:   mvi b, $3E
-________0D7F:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D7F:   calt MEMSET                                     ; "A ==> (HL+)xB"
 ________0D80:   dcr c
 ________0D81:   jr ________0D77
 ________0D82:   mvi a, $FF
 ________0D84:   mvi b, $0B
-________0D86:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D86:   calt MEMSET                                     ; "A ==> (HL+)xB"
 ________0D87:   mvi a, $F0
 ________0D89:   mvi b, $3E
-________0D8B:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D8B:   calt MEMSET                                     ; "A ==> (HL+)xB"
 ________0D8C:   mvi a, $FF
 ________0D8E:   mvi b, $05
-________0D90:   calt $00BE                                      ; "A ==> (HL+)xB"
+________0D90:   calt MEMSET                                     ; "A ==> (HL+)xB"
 ________0D91:   ret
 ;------------------------------------------------------------
 ;This draws the puzzle grid, I think...
@@ -1882,30 +1919,30 @@ ________0D9D:   jre ________0DC3
 ________0D9F:   lxi hl, $C2D8
 ________0DA2:   lxi hl, $C2B8
 ________0DA5:   lxi hl, $C2C8
-________0DA8:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0DA8:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0DA9:   db $F0, $00
 ________0DAB:   mvi b, $04
 ________0DAD:   push bc
 ________0DAF:   mvi e, $4A
-________0DB1:   calt $009A                                      ; "HL <== HL+E"
-________0DB2:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0DB1:   calt ADDRHLE                                    ; "HL <== HL+E"
+________0DB2:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0DB3:   db $FF, $00
 ________0DB5:   pop bc
 ________0DB7:   dcr b
 ________0DB8:   jr ________0DAD
 ________0DB9:   mvi e, $4A
-________0DBB:   calt $009A                                      ; "HL <== HL+E"
-________0DBC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0DBB:   calt ADDRHLE                                    ; "HL <== HL+E"
+________0DBC:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0DBD:   db $1F, $00
 ________0DBF:   inrw [$FFD5]
 ________0DC1:   jre CALF____0D92
 ________0DC3:   lxi hl, $C33E
-________0DC6:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0DC6:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0DC7:   db $10, $40
 ________0DC9:   lxi hl, $C3D4
-________0DCC:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0DCC:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0DCD:   db $10, $40
-________0DCF:   calt $008A                                      ; "Clear A"
+________0DCF:   calt ACCCLR                                     ; "Clear A"
 ________0DD0:   staw [$FFD5]
 ________0DD2:   ret
 ;------------------------------------------------------------
@@ -1971,15 +2008,15 @@ ________0E39:   inx de
 ________0E3A:   jr ________0E34
 ;------------------------------------------------------------
 CALF____0E3B:   calf CALF____0CBF
-________0E3D:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0E3D:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0E3E:   db $F0, $10
 ________0E40:   mvi e, $3A
-________0E42:   calt $009A                                      ; "HL <== HL+E"
-________0E43:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0E42:   calt ADDRHLE                                    ; "HL <== HL+E"
+________0E43:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0E44:   db $FF, $10
 ________0E46:   mvi e, $3A
-________0E48:   calt $009A                                      ; "HL <== HL+E"
-________0E49:   calt $00B2                                      ; "[PC+2] Draw Horizontal Line"
+________0E48:   calt ADDRHLE                                    ; "HL <== HL+E"
+________0E49:   calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
 ________0E4A:   db $1F, $10
 ________0E4C:   ret
 ;------------------------------------------------------------
@@ -2004,11 +2041,12 @@ ________0E6D:   ret
 ;------------------------------------------------------------
 
 ;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
-CALT_A8_0E6E:   pop hl
+caltd0:
+                pop hl
 ________0E70:   ldax [hl+]
 ________0E71:   push hl
-CALF____0E73:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
-________0E74:   calt $00A8                                      ; "XCHG HL,DE"
+CALF____0E73:   calt TILELOC                                    ; "HL=C4B0+(A*$10)"
+________0E74:   calt BYTEXCHG                                   ; "XCHG HL,DE"
 ________0E75:   call ________0E78                               ;This call means the next code runs twice
 
 ________0E78:   mvi b, $7
@@ -2031,12 +2069,13 @@ ________0E8E:   push de
 ________0E90:   dcx hl
 ________0E91:   dcx de
 ________0E92:   mvi b, $7
-________0E94:   calt $00AC                                      ; "((HL-) ==> (DE-))xB"
+________0E94:   calt MEMRCPY                                    ; "((HL-) ==> (DE-))xB"
 ________0E95:   pop de
 ________0E97:   ret
 ;------------------------------------------------------------
 ;[PC+1] ?? (Unpack & Roll 8 bits)
-CALT_A9_0E98:   pop hl
+caltd2:
+                pop hl
 ________0E9A:   ldax [hl+]
 ________0E9B:   push hl
 ________0E9D:   push va
@@ -2045,12 +2084,13 @@ ________0EA1:   pop va
 ________0EA3:   jr ________0EA9
 ;-----------------------------------------------------------
 ;[PC+1] ?? (Roll 8 bits -> Byte?)
-CALT_AA_0EA4:   pop hl
+caltd4:
+                pop hl
 ________0EA6:   ldax [hl+]
 ________0EA7:   push hl
-________0EA9:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
+________0EA9:   calt TILELOC                                    ; "HL=C4B0+(A*$10)"
 ________0EAA:   lxi de, $FFBF
-________0EAD:   calt $00A8                                      ; "XCHG HL,DE"
+________0EAD:   calt BYTEXCHG                                   ; "XCHG HL,DE"
 ________0EAE:   push de
 ________0EB0:   mvi c, $0F
 ________0EB2:   mvi b, $8-1
@@ -2073,25 +2113,26 @@ ________0ECA:   calf CALF____0ECE
 ________0ECC:   calf CALF____0E6A
 
 CALF____0ECE:   mvi b, $8-1
-________0ED0:   calt $00AA                                      ; "((HL+) ==> (DE+))xB"
+________0ED0:   calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
 ________0ED1:   ret
 ;------------------------------------------------------------
 ;[PC+x] ?? (Add/Sub multiple bytes)
-CALT_AB_0ED2:   pop hl
+caltd6:
+                pop hl
 ________0ED4:   ldax [hl+]
 ________0ED5:   push hl
 ________0ED7:   mov b, a
 ________0ED8:   ani a, $0F
 ________0EDA:   staw [$FF96]
 ________0EDC:   mov a, b
-________0EDD:   calt $00C0                                      ; "(RLR A)x4"
+________0EDD:   calt NIBLSWAP                                   ; "(RLR A)x4"
 ________0EDE:   ani a, $0F
 ________0EE0:   lti a, $0D
 ________0EE2:   ret
 ________0EE3:   staw [$FF97]
 ________0EE5:   dcrw [$FF97]
 ________0EE7:   jr ________0EF0                                 ;Based on 97, jump to cart (4007)!
-________0EE8:   calt $00A2                                      ; "CALT A0, CALT A4"
+________0EE8:   calt CALTA2                                     ; "CALT A0, CALT A4"
 ________0EE9:   pop bc
 ________0EEB:   lbcd [$4007]                                    ;Read vector from $4007 on cart, however...
 ________0EEF:   jb                                              ;...all 5 Pokekon games have "0000" there!
@@ -2138,9 +2179,11 @@ ________0F2A:   stax [hl]
 ________0F2B:   jr ________0F21
 ;------------------------------------------------------------
 ;Invert Screen RAM (C000~)
-CALT_A6_0F2C:   lxi hl, $C000
+scr1inv:
+                lxi hl, $C000
 ;Invert Screen 2 RAM (C258~)
-CALT_A7_0F2F:   lxi hl, $C258
+scr2inv:
+                lxi hl, $C258
 ________0F32:   mvi c, $02
 
 ________0F34:   mvi b, $C7
@@ -2157,16 +2200,17 @@ ________0F3F:   dcr b
 ________0F40:   jr CALF____0F3B
 ________0F41:   ret
 ;------------------------------------------------------------
-;[PC+1] Invert 8 bytes at (C4B8+A*$10)
-CALT_A5_0F42:   pop hl
+;[PC+1] Invert 8 bytes at (C4B0+A*$10)
+tileinv:
+                pop hl
 ________0F44:   ldax [hl+]
 ________0F45:   push hl
 ________0F47:   lti a, $0C
 ________0F49:   ret
 
-________0F4A:   calt $00BC                                      ; "HL=C4B0+(A*$10)"
+________0F4A:   calt TILELOC                                    ; "HL=C4B0+(A*$10)"
 ________0F4B:   mvi e, $08
-________0F4D:   calt $009A                                      ; "HL <== HL+E"
+________0F4D:   calt ADDRHLE                                    ; "HL <== HL+E"
 ________0F4E:   mvi b, $07
 ________0F50:   jr CALF____0F3B
 ;------------------------------------------------------------
@@ -2187,7 +2231,8 @@ ________0F5C:   jr ________0F6D
 ;				11 = byte length of (DE)
 ;				H = 1: HL gets bytes from $FFB1
 ;				D = 1: DE gets bytes from $FFA2
-CALT_A4_0F5D:   pop bc
+arithmtc:
+                pop bc
 ________0F5F:   ldax [bc]
 ________0F60:   inx bc
 ________0F61:   push bc
@@ -2293,7 +2338,8 @@ ________0FD8:   ret
 ;------------------------------------------------------------
 ;[PC+1] INC/DEC Range of bytes from (HL)
 ;Extra byte's high bit sets Inc/Dec; rest is the byte counter.
-CALT_AC_0FD9:   pop bc
+membump:
+                pop bc
 ________0FDB:   ldax [bc]
 ________0FDC:   inx bc
 ________0FDD:   push bc
