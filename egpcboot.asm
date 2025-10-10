@@ -227,6 +227,14 @@
     oni  {port: ani_port}, {value: u8} => $64c @ 0b10 @ port @ value
     offi {port: ani_port}, {value: u8} => $64d @ 0b10 @ port @ value
 
+    sspd [{addr: u16}] => $700E @ le(addr)
+    lspd [{addr: u16}] => $700F @ le(addr)
+    sbcd [{addr: u16}] => $701E @ le(addr)
+    lbcd [{addr: u16}] => $701F @ le(addr)
+    sded [{addr: u16}] => $702E @ le(addr)
+    lded [{addr: u16}] => $702F @ le(addr)
+    shld [{addr: u16}] => $703E @ le(addr)
+    lhld [{addr: u16}] => $703F @ le(addr)
     push {reg: push_reg} => $48 @ reg @ $e
     pop {reg: push_reg} => $48 @ reg @ $f
 
@@ -485,7 +493,7 @@ ________0110:   jr $010F
 ________0111:   oniw [$FF80], $02
 ________0114:   jr $011C
 
-________0115:   #d8 $70, $3F, $84, $FF                          ; LHLD    FF84
+________0115:   lhld [$FF84]
 ________0119:   calf $08A9                                      ;Music-playing code...
 ________011B:   jr $0128
 
@@ -787,7 +795,7 @@ ________0580:   staw [$FFD8]                                    ;Set mem locatio
 ________0582:   staw [$FF82]
 ________0584:   staw [$FFA5]
 ________0586:   lxi hl, $04B8                                   ;Start of scrolltext
-________0589:   #d8 $70, $3E, $D6, $FF                          ; SHLD    FFD6	;Save pointer
+________0589:   shld [$FFD6]                                    ;Save pointer
 ________058D:   calf $0D68                                      ;Setup RAM vars
 ________058F:   calt $00A0                                      ; "C258+ ==> C000+"
 ________0590:   calt $0082                                      ;Copy Screen RAM to LCD Driver
@@ -1303,7 +1311,7 @@ CALF____08A9:   ldax [hl+]
 ________08AA:   mov b, a
 ________08AB:   ldax [hl+]
 ________08AC:   staw [$FF99]
-________08AE:   #d8 $70, $3E, $84, $FF                          ; SHLD    FF84
+________08AE:   shld [$FF84]
 ________08B2:   mov a, b
 ________08B3:   inr a
 ________08B4:   jr $08B6
@@ -1570,7 +1578,7 @@ ________09F7:   inr a
 ________09F8:   push bc
 ________09FA:   staw [$FF98]
 ________09FC:   lxi de, $FFA8
-________09FF:   #d8 $70, $2E, $C0, $FF                          ; SDED    FFC0
+________09FF:   sded [$FFC0]
 ________0A03:   mov b, a
 ________0A04:   mvi c, $40
 ________0A06:   oniw [$FF9D], $40
@@ -1620,7 +1628,7 @@ ________0A35:   ldax [de+]
 ________0A36:   push de
 ________0A38:   staw [$FF9D]
 ________0A3A:   ani a, $0F                                      ;Get # of characters to write
-________0A3C:   #d8 $70, $3E, $C0, $FF                          ; SHLD    FFC0
+________0A3C:   shld [$FFC0]
 ________0A40:   staw [$FF98]                                    ;# saved in 98
 ________0A42:   ldaw [$FF9D]
 ________0A44:   oni a, $80                                      ;Check if 0 (2nd screen) or 1 (1st screen)
@@ -1630,10 +1638,10 @@ ________0A48:   jr $0A4B
 
 ________0A49:   calf $0BF4                                      ;This points to Sc 1
 ________0A4B:   mov [$FFC6], c
-________0A4F:   #d8 $70, $3E, $C2, $FF                          ; SHLD    FFC2
+________0A4F:   shld [$FFC2]
 ________0A53:   lxi de, $004B
 ________0A56:   calt $0096                                      ; "HL <== HL+DE"
-________0A57:   #d8 $70, $3E, $C4, $FF                          ; SHLD    FFC4
+________0A57:   shld [$FFC4]
 ________0A5B:   ldaw [$FF9D]
 ________0A5D:   calt $00C0                                      ; "(RLR A)x4"
 ________0A5E:   ani a, $07                                      ;Get text spacing (0-7)
@@ -1645,26 +1653,26 @@ ________0A65:   ret
 
 ________0A66:   oniw [$FFC6], $FF
 ________0A69:   jr $0A85
-________0A6A:   #d8 $70, $3F, $C2, $FF                          ; LHLD    FFC2
-________0A6E:   #d8 $70, $3E, $C7, $FF                          ; SHLD    FFC7
+________0A6A:   lhld [$FFC2]
+________0A6E:   shld [$FFC7]
 ________0A72:   lxi de, $FFB0
 ________0A75:   mvi b, $04
 ________0A77:   calf $0BD3
 ________0A79:   offi a, $80
 ________0A7B:   jr $0A85
-________0A7C:   #d8 $70, $2F, $9D, $FF                          ; LDED    FF9D
+________0A7C:   lded [$FF9D]
 ________0A80:   calt $009A                                      ; "HL <== HL+E"
-________0A81:   #d8 $70, $3E, $C2, $FF                          ; SHLD    FFC2
-________0A85:   #d8 $70, $3F, $C4, $FF                          ; LHLD    FFC4
-________0A89:   #d8 $70, $3E, $C9, $FF                          ; SHLD    FFC9
+________0A81:   shld [$FFC2]
+________0A85:   lhld [$FFC4]
+________0A89:   shld [$FFC9]
 ________0A8D:   lxi de, $FFB5
 ________0A90:   mvi b, $04
 ________0A92:   calf $0BD3                                      ;Copy B*A bytes?
 ________0A94:   offi a, $80
 ________0A96:   jr $0AA0
-________0A97:   #d8 $70, $2F, $9D, $FF                          ; LDED    FF9D
+________0A97:   lded [$FF9D]
 ________0A9B:   calt $009A                                      ; "HL <== HL+E"
-________0A9C:   #d8 $70, $3E, $C4, $FF                          ; SHLD    FFC4
+________0A9C:   shld [$FFC4]
 ________0AA0:   mov b, [$FF9C]
 ________0AA4:   calt $008A                                      ; "Clear A"
 ________0AA5:   dcr b
@@ -1693,9 +1701,9 @@ ________0AC2:   ana a, c
 ________0AC4:   stax [hl+]
 ________0AC5:   dcr b
 ________0AC6:   jr $0AC1
-________0AC7:   #d8 $70, $3F, $C0, $FF                          ; LHLD    FFC0
+________0AC7:   lhld [$FFC0]
 ________0ACB:   ldax [hl+]
-________0ACC:   #d8 $70, $3E, $C0, $FF                          ; SHLD    FFC0
+________0ACC:   shld [$FFC0]
 ________0AD0:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0AD1:   lxi de, $FFB0
 ________0AD4:   lxi bc, $FFB5
@@ -1704,14 +1712,14 @@ ________0AD9:   oriw [$FF80], $08
 ________0ADC:   calf $0C31                                      ;Roll graphics a bit (shift up/dn)
 ________0ADE:   oniw [$FFC6], $FF
 ________0AE1:   jr $0AEF
-________0AE2:   #d8 $70, $2F, $C7, $FF                          ; LDED    FFC7
+________0AE2:   lded [$FFC7]
 ________0AE6:   calf $0E6A                                      ;(FFB0 -> HL)
 ________0AE8:   mvi b, $04
 ________0AEA:   oriw [$FF80], $10
 ________0AED:   calf $0BD3                                      ;Copy B*A bytes?
 ________0AEF:   offiw [$FFC6], $08
 ________0AF2:   jr $0B01
-________0AF3:   #d8 $70, $2F, $C9, $FF                          ; LDED    FFC9
+________0AF3:   lded [$FFC9]
 ________0AF7:   lxi hl, $FFB5
 ________0AFA:   mvi b, $04
 ________0AFC:   oriw [$FF80], $10
@@ -1730,9 +1738,9 @@ ________0B10:   jr $0B15                                        ;or...
 ________0B11:   lxi de, $02C4                                   ;Point to built-in font
 ________0B14:   jr $0B1B
 
-________0B15:   #d8 $70, $2F, $05, $40                          ; LDED    4005       ;4005-6 on cart is the font pointer
+________0B15:   lded [$4005]                                    ;4005-6 on cart is the font pointer
 ________0B19:   sui a, $64
-________0B1B:   #d8 $70, $2E, $96, $FF                          ; SDED    FF96
+________0B1B:   sded [$FF96]
 ________0B1F:   mov c, a
 ________0B20:   ani a, $0F
 ________0B22:   mvi e, $05
@@ -1745,7 +1753,7 @@ ________0B2B:   mvi e, $50
 ________0B2D:   calt $00A6                                      ; "Add A to "Pointer""
 ________0B2E:   pop de
 ________0B30:   calt $0096                                      ; "HL <== HL+DE"
-________0B31:   #d8 $70, $2F, $96, $FF                          ; LDED    FF96
+________0B31:   lded [$FF96]
 ________0B35:   calt $0096                                      ; "HL <== HL+DE"
 ________0B36:   ret
 ;------------------------------------------------------------
@@ -1784,13 +1792,13 @@ ________0B62:   staw [$FF9D]
 ________0B64:   lti a, $0C
 ________0B66:   ret
 ________0B67:   calt $00BA                                      ; "Set HL to screen (B,C)"
-________0B68:   #d8 $70, $3E, $9E, $FF                          ; SHLD    FF9E
+________0B68:   shld [$FF9E]
 ________0B6C:   mov a, h
 ________0B6D:   oni a, $40
 ________0B6F:   jr $0B75
 ________0B70:   lxi de, $FFB0
 ________0B73:   calf $0BD1
-________0B75:   #d8 $70, $3F, $9E, $FF                          ; LHLD    FF9E
+________0B75:   lhld [$FF9E]
 ________0B79:   lxi de, $004B
 ________0B7C:   calt $0096                                      ; "HL <== HL+DE"
 ________0B7D:   push hl
@@ -1819,7 +1827,7 @@ ________0BA8:   oriw [$FF80], $08
 ________0BAB:   lxi de, $FFB0
 ________0BAE:   lxi bc, $FFB8
 ________0BB1:   calf $0C2F
-________0BB3:   #d8 $70, $2F, $9E, $FF                          ; LDED    FF9E
+________0BB3:   lded [$FF9E]
 ________0BB7:   mov a, d
 ________0BB8:   oni a, $40
 ________0BBA:   jr $0BC2
@@ -2038,11 +2046,11 @@ ________0CF1:   jr $0CF6
 ________0CF2:   lxi hl, $FFA3
 ________0CF5:   jr $0D0C
 
-________0CF6:   #d8 $70, $3F, $D6, $FF                          ; LHLD    FFD6
+________0CF6:   lhld [$FFD6]
 ________0CFA:   ldax [hl+]
 ________0CFB:   nei a, $FF                                      ;If terminator...
 ________0CFD:   jr $0CDE                                        ;...reset scroll
-________0CFE:   #d8 $70, $3E, $D6, $FF                          ; SHLD    FFD6
+________0CFE:   shld [$FFD6]
 ________0D02:   calt $00B8                                      ;Byte -> Point to Font Graphic
 ________0D03:   mvi b, $04                                      ;(5 pixels wide)
 ________0D05:   lxi de, $FFA0
@@ -2071,7 +2079,7 @@ ________0D22:   jr $0D16
 ________0D23:   ldaw [$FFD1]                                    ;This stores the direction
 ________0D25:   nei a, $00                                      ;that the spiral draws in...
 ________0D27:   jr $0D46
-________0D28:   #d8 $70, $1F, $D2, $FF                          ; LBCD    FFD2
+________0D28:   lbcd [$FFD2]
 ________0D2C:   nei a, $01
 ________0D2E:   jre $0D52
 ________0D30:   nei a, $02
@@ -2090,7 +2098,7 @@ ________0D43:   staw [$FFD1]
 ________0D45:   ret
 ;------------------------------------------------------------
 ________0D46:   lxi bc, $2524
-________0D49:   #d8 $70, $1E, $D2, $FF                          ; SBCD    FFD2
+________0D49:   sbcd [$FFD2]
 ________0D4D:   calf $09AD
 ________0D4F:   inrw [$FFD1]
 ________0D51:   ret
@@ -2363,7 +2371,7 @@ ________0EE5:   dcrw [$FF97]
 ________0EE7:   jr $0EF0                                        ;Based on 97, jump to cart (4007)!
 ________0EE8:   calt $00A2                                      ; "CALT A0, CALT A4"
 ________0EE9:   pop bc
-________0EEB:   #d8 $70, $1F, $07, $40                          ; LBCD    4007        ;Read vector from $4007 on cart, however...
+________0EEB:   lbcd [$4007]                                    ;Read vector from $4007 on cart, however...
 ________0EEF:   jb                                              ;...all 5 Pokekon games have "0000" there!
 ________0EF0:   pop hl
 ________0EF2:   ldax [hl+]
