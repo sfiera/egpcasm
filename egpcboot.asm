@@ -15,13 +15,13 @@
 }
 
 #subruledef ldax_reg {
-    bc  => 0x9
-    de  => 0xA
-    hl  => 0xB
-    de+ => 0xC
-    hl+ => 0xD
-    de- => 0xE
-    hl- => 0xF
+    bc  => 0b001
+    de  => 0b010
+    hl  => 0b011
+    de+ => 0b100
+    hl+ => 0b101
+    de- => 0b110
+    hl- => 0b111
 }
 
 #subruledef reg_inr {
@@ -110,8 +110,8 @@
     lxi {reg: inx_reg}, {value: u16} => reg @ $4 @ le(value)
     inx {reg: inx_reg} => reg @ $2
     dcx {reg: inx_reg} => reg @ $3
-    ldax [{reg: ldax_reg}] => $2 @ reg
-    stax [{reg: ldax_reg}] => $3 @ reg
+    ldax [{reg: ldax_reg}] => $2 @ 0b1 @ reg
+    stax [{reg: ldax_reg}] => $3 @ 0b1 @ reg
 
     ldaw [{addr: hi_addr}] => $28 @ addr
     staw [{addr: hi_addr}] => $38 @ addr
@@ -148,6 +148,20 @@
     nea     a, {reg: reg_vabcdehl} => $60E @ 0b1 @ reg
     sbb     a, {reg: reg_vabcdehl} => $60F @ 0b0 @ reg
     eqa     a, {reg: reg_vabcdehl} => $60F @ 0b1 @ reg
+
+    anax    [{reg: ldax_reg}] => $708 @ 0b1 @ reg
+    xrax    [{reg: ldax_reg}] => $709 @ 0b0 @ reg
+    orax    [{reg: ldax_reg}] => $709 @ 0b1 @ reg
+    addncx  [{reg: ldax_reg}] => $70A @ 0b0 @ reg
+    gtax    [{reg: ldax_reg}] => $70A @ 0b1 @ reg
+    subnbx  [{reg: ldax_reg}] => $70B @ 0b0 @ reg
+    ltax    [{reg: ldax_reg}] => $70B @ 0b1 @ reg
+    addx    [{reg: ldax_reg}] => $70C @ 0b0 @ reg
+    adcx    [{reg: ldax_reg}] => $70D @ 0b0 @ reg
+    subx    [{reg: ldax_reg}] => $70E @ 0b0 @ reg
+    neax    [{reg: ldax_reg}] => $70E @ 0b1 @ reg
+    sbbx    [{reg: ldax_reg}] => $70F @ 0b0 @ reg
+    eqax    [{reg: ldax_reg}] => $70F @ 0b1 @ reg
 
     ani a, {value: u8} => $07 @ value
     xri a, {value: u8} => $16 @ value
@@ -305,7 +319,7 @@ ________005C:   jmp $057F                                       ;Flow continues 
 ;(DE+)-(HL+) ==> A
 ; Loads A with (DE), increments DE, then subtracts (HL) from A and increments HL.
 CALT_A1_005F:   ldax [de+]
-________0060:   #d8 $70, $E5                                    ; SUBX    H+
+________0060:   subx [hl+]
 ________0062:   ret
 ;------------------------------------------------------------
 ;?? (Find 1st diff. byte in (HL),(DE)xB)  (Matching byte perhaps?)
@@ -744,7 +758,7 @@ ________0598:   staw [$FFD5]
 ________059A:   mvi a, $FF
 ________059C:   staw [$FFD0]
 ________059E:   lxi hl, $FFD8
-________05A1:   #d8 $70, $93                                    ; XRAX    H		;A=$FF XOR ($FFD8)
+________05A1:   xrax [hl]                                       ;A=$FF XOR ($FFD8)
 ________05A3:   staw [$FFD8]
 ________05A5:   mvi a, $60                                      ;A delay value for the scrolltext
 ________05A7:   staw [$FF8A]
@@ -1221,7 +1235,7 @@ ________0884:   mvi b, $0B
 ________0886:   lxi hl, $C75E
 ________0889:   lxi de, $C7F2
 ________088C:   ldax [hl+]
-________088D:   #d8 $70, $FC                                    ; EQAX    D+
+________088D:   eqax [de+]
 ________088F:   jre $07C5
 ________0891:   dcr b
 ________0892:   jr $088C
@@ -1383,21 +1397,21 @@ ________095A:   #d8 $64, $98, $80                               ; ORI     PA,80 
 ________095D:   ral
 ________095F:   ral
 ________0961:   ani a, $0C
-________0963:   #d8 $70, $9A                                    ; ORAX    D		;Or with FF92
+________0963:   orax [de]                                       ;Or with FF92
 ________0965:   stax [de+]                                      ;...and save
 ________0966:   mov a, c
 ________0967:   ral 
 ________0969:   ani a, $38
-________096B:   #d8 $70, $9A                                    ; ORAX    D           ;Or with FF93
+________096B:   orax [de]                                       ;Or with FF93
 ________096D:   stax [de-]                                      ;...and save
 ________096E:   lxi hl, $FF90                                   ;Get our new,old
 ________0971:   lxi bc, $FF94
 ________0974:   ldax [hl+]                                      ;And XOR to get controller strobe
-________0975:   #d8 $70, $94                                    ; XRAX    D+		;But this strobe function is stupid:
+________0975:   xrax [de+]                                      ;But this strobe function is stupid:
 ________0977:   stax [bc]                                       ;Bits go to 1 whenever the button is
 ________0978:   inx bc                                          ;initially pressed AND released...
 ________0979:   ldax [hl]
-________097A:   #d8 $70, $92                                    ; XRAX    D
+________097A:   xrax [de]
 ________097C:   stax [bc]
 ________097D:   ret
 ;------------------------------------------------------------
@@ -1437,7 +1451,7 @@ ________09A4:   stc
 ________09A6:   ral
 ________09A8:   dcr c
 ________09A9:   jr $09A6
-________09AA:   #d8 $70, $9B                                    ; ORAX    H
+________09AA:   orax [hl]
 ________09AC:   jr $09C5
 ;------------------------------------------------------------
 CALF____09AD:   #d8 $75, $D8, $00                               ; EQIW    D8,00       ;"Invert Dot", then...
@@ -1455,7 +1469,7 @@ ________09BD:   clc
 ________09BF:   ral
 ________09C1:   dcr c
 ________09C2:   jr $09BF
-________09C3:   #d8 $70, $8B                                    ; ANAX    H
+________09C3:   anax [hl]
 ________09C5:   stax [hl]
 ________09C6:   ret
 ;------------------------------------------------------------
@@ -1755,7 +1769,7 @@ ________0B99:   calf $0E6A
 ________0B9B:   lxi de, $FFC0
 ________0B9E:   mvi b, $0F
 ________0BA0:   ldax [hl]
-________0BA1:   #d8 $70, $94                                    ; XRAX    D+
+________0BA1:   xrax [de+]
 ________0BA3:   stax [hl+]
 ________0BA4:   dcr b
 ________0BA5:   jr $0BA0
@@ -1876,19 +1890,19 @@ ________0C4C:   jr $0C3C
 
 ________0C4D:   #d8 $45, $80, $08                               ; ONIW    80,08
 ________0C50:   jr $0C54
-________0C51:   #d8 $70, $9A                                    ; ORAX    D
+________0C51:   orax [de]
 ________0C53:   jr $0C56
 
-________0C54:   #d8 $70, $8A                                    ; ANAX    D
+________0C54:   anax [de]
 ________0C56:   stax [de]
 ________0C57:   mov a, c
 ________0C58:   pop bc
 ________0C5A:   #d8 $45, $80, $08                               ; ONIW    80,08
 ________0C5D:   jr $0C61
-________0C5E:   #d8 $70, $99                                    ; ORAX    B
+________0C5E:   orax [bc]
 ________0C60:   jr $0C63
 
-________0C61:   #d8 $70, $89                                    ; ANAX    B
+________0C61:   anax [bc]
 ________0C63:   stax [bc]
 ________0C64:   inx bc
 ________0C65:   inx de
@@ -2327,28 +2341,28 @@ ________0F04:   lxi de, $FF96
 ________0F07:   #d8 $45, $98, $80                               ; ONIW    98,80
 ________0F0A:   jr $0F10
 ________0F0B:   ldax [hl]
-________0F0C:   #d8 $70, $E2                                    ; SUBX    D
+________0F0C:   subx [de]
 ________0F0E:   stax [hl]
 ________0F0F:   jr $0F18
 
 ________0F10:   #d8 $45, $98, $40                               ; ONIW    98,40
 ________0F13:   jr $0F18
 ________0F14:   ldax [hl]
-________0F15:   #d8 $70, $C2                                    ; ADDX    D
+________0F15:   addx [de]
 ________0F17:   stax [hl]
 ________0F18:   dcx hl
 ________0F19:   #d8 $45, $98, $10                               ; ONIW    98,10
 ________0F1C:   jr $0F23
 
 ________0F1D:   ldax [hl]
-________0F1E:   #d8 $70, $C2                                    ; ADDX    D
+________0F1E:   addx [de]
 ________0F20:   stax [hl]
 ________0F21:   jre $0EE5
 
 ________0F23:   #d8 $45, $98, $20                               ; ONIW    98,20
 ________0F26:   jr $0F21
 ________0F27:   ldax [hl]
-________0F28:   #d8 $70, $E2                                    ; SUBX    D
+________0F28:   subx [de]
 ________0F2A:   stax [hl]
 ________0F2B:   jr $0F21
 ;------------------------------------------------------------
@@ -2431,7 +2445,7 @@ ________0F86:   jre $0FC1
 
 ________0F88:   clc
 ________0F8A:   ldax [de]
-________0F8B:   #d8 $70, $D3                                    ; ADCX    H   	;Add HL-,DE-
+________0F8B:   adcx [hl]                                       ;Add HL-,DE-
 ________0F8D:   stax [de]
 ________0F8E:   dcr b
 ________0F8F:   jr $0F91
@@ -2449,8 +2463,8 @@ ________0F98:   jr $0F8A
 ________0F99:   stc
 ________0F9B:   mvi a, $99
 ________0F9D:   aci a, $00
-________0F9F:   #d8 $70, $E3                                    ; SUBX    H
-________0FA1:   #d8 $70, $C2                                    ; ADDX    D
+________0F9F:   subx [hl]
+________0FA1:   addx [de]
 ________0FA3:   daa
 ________0FA4:   stax [de]
 ________0FA5:   dcr b
@@ -2468,7 +2482,7 @@ ________0FAF:   jr $0F9B
 ;-----
 ________0FB0:   clc
 ________0FB2:   ldax [de]
-________0FB3:   #d8 $70, $F3                                    ; SBBX    H
+________0FB3:   sbbx [hl]
 ________0FB5:   stax [de]
 ________0FB6:   dcr b
 ________0FB7:   jr $0FB9
@@ -2485,7 +2499,7 @@ ________0FC0:   jr $0FB2
 ;------
 ________0FC1:   clc
 ________0FC3:   ldax [de]
-________0FC4:   #d8 $70, $D3                                    ; ADCX    H
+________0FC4:   adcx [hl]
 ________0FC6:   daa
 ________0FC7:   stax [de]
 ________0FC8:   dcr b
