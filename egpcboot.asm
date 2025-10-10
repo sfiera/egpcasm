@@ -229,6 +229,14 @@
         : 0x4F @ reladdr`8
         )
     }
+
+    sknit f0 => $4810
+    sknit ft => $4811
+    sknit f1 => $4812
+    sknit f2 => $4813
+    sknit fs => $4814
+    skn cy   => $481A
+    skn z    => $481C
 }
 
 ; This is a disassembly of the Epoch Game Pocket Computer's BIOS ROM.
@@ -326,7 +334,7 @@ ________0062:   ret
 ; I don't know how useful this is, but I guess it's for advancing pointers to
 ; the first difference between 2 buffers, etc.
 CALT_A2_0063:   calt $00C2                                      ; "(DE+)-(HL+) ==> A"
-________0064:   #d8 $48, $1C                                    ; SKN     Z
+________0064:   skn z
 ________0066:   jr $0068
 ________0067:   ret
 
@@ -344,7 +352,7 @@ ________0073:   calt $00C4                                      ; "?? (Find 1st 
 ________0074:   pop bc
 ________0076:   pop de
 ________0078:   pop hl
-________007A:   #d8 $48, $1A                                    ; SKN     CY
+________007A:   skn cy
 ________007C:   jr $007E
 ________007D:   ret
 
@@ -461,7 +469,7 @@ ________012E:   ldaw [$FF88]
 ________0130:   adi a, $01
 ________0132:   daa
 ________0133:   staw [$FF88]
-________0135:   #d8 $48, $1A                                    ; SKN     CY
+________0135:   skn cy
 ________0137:   jr $0139
 ________0138:   jr $014E
 
@@ -471,7 +479,7 @@ ________013C:   ldaw [$FF87]
 ________013E:   adi a, $01
 ________0140:   daa
 ________0141:   staw [$FF87]
-________0143:   #d8 $48, $1A                                    ; SKN     CY
+________0143:   skn cy
 ________0145:   jr $0147
 ________0146:   jr $014E
 
@@ -1303,7 +1311,7 @@ ________08DE:   ret
 ________08DF:   clc
 ________08E1:   rar
 ________08E3:   push va
-________08E5:   #d8 $48, $1A                                    ; SKN     CY
+________08E5:   skn cy
 ________08E7:   calt $0096                                      ; "HL <== HL+DE"
 ________08E8:   mov a, e
 ________08E9:   add a, a
@@ -1788,7 +1796,7 @@ ________0BC0:   calf $0BD1
 ________0BC2:   pop de
 ________0BC4:   lxi hl, $3DA8
 ________0BC7:   calt $0096                                      ; "HL <== HL+DE"
-________0BC8:   #d8 $48, $1A                                    ; SKN     CY
+________0BC8:   skn cy
 ________0BCA:   ret
 ________0BCB:   lxi hl, $FFB8
 ________0BCE:   #d8 $15, $80, $10                               ; ORIW    80,10
@@ -2535,7 +2543,7 @@ ________0FE5:   mov b, a
 ________0FE6:   ldax [hl]                                       ;Load a byte
 ________0FE7:   sui a, $01                                      ;Decrement it
 ________0FE9:   stax [hl-]
-________0FEA:   #d8 $48, $1A                                    ; SKN     CY		;Quit our function if any byte= -1!
+________0FEA:   skn cy                                          ;Quit our function if any byte= -1!
 ________0FEC:   jr $0FEE
 ________0FED:   ret
 
@@ -2546,7 +2554,7 @@ ________0FF0:   ret
 ________0FF1:   ldax [hl]                                       ;or Load a byte
 ________0FF2:   adi a, $01
 ________0FF4:   stax [hl-]
-________0FF5:   #d8 $48, $1A                                    ; SKN     CY		;Quit if any byte overflows!
+________0FF5:   skn cy                                          ;Quit if any byte overflows!
 ________0FF7:   jr $0FF9
 ________0FF8:   ret
 
