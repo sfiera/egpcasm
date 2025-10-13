@@ -244,7 +244,7 @@
     di  => $4824
 
     ; Serial Port Control
-    ; sio
+    sio => $09
     stm => $19
 
     ; Port E Control
