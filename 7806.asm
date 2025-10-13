@@ -42,14 +42,9 @@
     {r: reg_bcdehl} => r
 }
 
-#subruledef reg_vbcdehl {
-    v => 0b000
-    {r: reg_bcdehl} => r
-}
-
 #subruledef reg_vabcdehl {
-    a => 0b001
-    {r: reg_vbcdehl} => r
+    v => 0b000
+    {r: reg_abcdehl} => r
 }
 
 #subruledef ani_port {
@@ -117,43 +112,30 @@
     lxi {reg: inx_reg}, {value: u16} => reg @ $4 @ le(value)
 
     ; Arithmetic
-    add     {reg: reg_vbcdehl}, a   => $604 @ 0b0 @ reg
     add     a, {reg: reg_vabcdehl}  => $60C @ 0b0 @ reg
     addx    [{reg: ldax_reg}]       => $70C @ 0b0 @ reg
-    adc     {reg: reg_vbcdehl}, a   => $605 @ 0b0 @ reg
     adc     a, {reg: reg_vabcdehl}  => $60D @ 0b0 @ reg
     adcx    [{reg: ldax_reg}]       => $70D @ 0b0 @ reg
-    sub     {reg: reg_vbcdehl}, a   => $606 @ 0b0 @ reg
     sub     a, {reg: reg_vabcdehl}  => $60E @ 0b0 @ reg
     subx    [{reg: ldax_reg}]       => $70E @ 0b0 @ reg
-    sbb     {reg: reg_vbcdehl}, a   => $607 @ 0b0 @ reg
     sbb     a, {reg: reg_vabcdehl}  => $60F @ 0b0 @ reg
     sbbx    [{reg: ldax_reg}]       => $70F @ 0b0 @ reg
-    addnc   {reg: reg_vbcdehl}, a   => $602 @ 0b0 @ reg
     addnc   a, {reg: reg_vabcdehl}  => $60A @ 0b0 @ reg
     addncx  [{reg: ldax_reg}]       => $70A @ 0b0 @ reg
-    subnb   {reg: reg_vbcdehl}, a   => $603 @ 0b0 @ reg
     subnb   a, {reg: reg_vabcdehl}  => $60B @ 0b0 @ reg
     subnbx  [{reg: ldax_reg}]       => $70B @ 0b0 @ reg
-    ana     {reg: reg_vbcdehl}, a   => $600 @ 0b1 @ reg
     ana     a, {reg: reg_vabcdehl}  => $608 @ 0b1 @ reg
     anax    [{reg: ldax_reg}]       => $708 @ 0b1 @ reg
-    ora     {reg: reg_vbcdehl}, a   => $601 @ 0b1 @ reg
     ora     a, {reg: reg_vabcdehl}  => $609 @ 0b1 @ reg
     orax    [{reg: ldax_reg}]       => $709 @ 0b1 @ reg
-    xra     {reg: reg_vbcdehl}, a   => $601 @ 0b0 @ reg
     xra     a, {reg: reg_vabcdehl}  => $609 @ 0b0 @ reg
     xrax    [{reg: ldax_reg}]       => $709 @ 0b0 @ reg
-    gta     {reg: reg_vbcdehl}, a   => $602 @ 0b1 @ reg
     gta     a, {reg: reg_vabcdehl}  => $60A @ 0b1 @ reg
     gtax    [{reg: ldax_reg}]       => $70A @ 0b1 @ reg
-    lta     {reg: reg_vbcdehl}, a   => $603 @ 0b1 @ reg
     lta     a, {reg: reg_vabcdehl}  => $60B @ 0b1 @ reg
     ltax    [{reg: ldax_reg}]       => $70B @ 0b1 @ reg
-    nea     {reg: reg_vbcdehl}, a   => $606 @ 0b1 @ reg
     nea     a, {reg: reg_vabcdehl}  => $60E @ 0b1 @ reg
     neax    [{reg: ldax_reg}]       => $70E @ 0b1 @ reg
-    eqa     {reg: reg_vbcdehl}, a   => $607 @ 0b1 @ reg
     eqa     a, {reg: reg_vabcdehl}  => $60F @ 0b1 @ reg
     eqax    [{reg: ldax_reg}]       => $70F @ 0b1 @ reg
 
