@@ -28,6 +28,14 @@
 ;------------------------------------------------------------
 ;                  EPOCH GAME MASK ROM
 ;------------------------------------------------------------
+
+#bankdef rom
+{
+    addr = 0x0000
+    size = 0x1000
+    outp = 0
+}
+
 reset:
     nop
     di
@@ -82,7 +90,7 @@ cont:
     calt SCR1CLR                                    ; "Clear Screen RAM"
     calt TILECLR                                    ; "Clear C4B0~C593"
     calt CALT92                                     ; "Clear C594~C86F?"
-    lxi hl, $FF80
+    lxi hl, aFF80
     mvi b, $49
     calt MEMCLR                                     ; "Clear RAM (HL+)xB"
     calt SCRN2LCD                                   ; Copy Screen RAM to LCD Driver
@@ -205,7 +213,7 @@ memccpy:
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT_00F0:
-    oniw [$FF80], $01                               ;If 1, don't jump to cart.
+    oniw [aFF80], $01                               ;If 1, don't jump to cart.
     jre a015B
 
     dcrw [$FF9A]
@@ -227,7 +235,7 @@ INTT_00F0:
 .a010F:
     dcr a
     jr .a010F
-    oniw [$FF80], $02
+    oniw [aFF80], $02
     jr .a011C
 
     lhld [$FF84]
@@ -235,7 +243,7 @@ INTT_00F0:
     jr a0128
 
 .a011C:
-    aniw [$ff80], $fc
+    aniw [aFF80], $fc
     mvi a, $07
     mov tmm, a
     mvi a, $74
@@ -288,7 +296,7 @@ a015B:
     push bc
     push de
     push hl
-    offiw [$FF80], $80                              ;If 0, don't go to cart's INT routine
+    offiw [aFF80], $80                              ;If 0, don't go to cart's INT routine
     jmp $4009
 ;---------------------------------------
     adc a, b                                        ;Probably a simple random-number generator.
@@ -330,7 +338,7 @@ sndplay:
 ;Format of the data string is the same as "Play Sound", with $FF terminating the song.
 musplay:
     di
-    oriw [$FF80], $02
+    oriw [aFF80], $02
     calf a08A9                                      ;Read notes & set timers
 a01A3:
     ei                                              ;(sometimes skipped)
@@ -356,7 +364,7 @@ cartchk:
     jr .a01B0
 
     calf a0E4D                                      ;Sets a timer
-    oriw [$FF80], $80
+    oriw [aFF80], $80
     inx hl                                          ;->$4001
     pop bc
     ldax [bc]
@@ -389,7 +397,7 @@ calta2:
     ;Set up writing for LCD controller #1
 scrn2lcd:
     ori pa, $08                                     ;(Port A, bit 3 on)
-    lxi hl, $C031
+    lxi hl, scr1 + 49
     lxi de, $007D
     mvi b, $00
 .a01DA:
@@ -418,7 +426,7 @@ scrn2lcd:
 .a01FE:
     ani pa, $F7                                     ;bit 3 off
     ori pa, $10                                     ;bit 4 on
-    lxi hl, $C12C
+    lxi hl, scr1 + 300
     lxi de, $0019
     mvi b, $00
 .a020C:
@@ -450,8 +458,8 @@ scrn2lcd:
     ;Set up writing for LCD controller #3
     ani pa, $EF                                     ;bit 4 off
     ori pa, $20                                     ;bit 5 on
-    lxi hl, $C032
-    lxi de, $C15E
+    lxi hl, scr1 + 50
+    lxi de, scr1 + 350
     mvi b, $00
 .a0241:
     ani pa, $FB
@@ -569,7 +577,7 @@ startup:
     calt CARTCHK                                    ;[PC+1] Check Cartridge
     db $C1                                          ;Jump to ($4003) in cartridge
 
-    offiw [$FF80], $02                              ;If bit 1 is on, no music
+    offiw [aFF80], $02                              ;If bit 1 is on, no music
     jr .a05B2
     calf a0E64                                      ;Point HL to the music data
     calt MUSPLAY                                    ;Setup/Play Music
@@ -1101,7 +1109,7 @@ a06EE:
     calf a0E64                                      ;Point HL to music data
     calt MUSPLAY                                    ;Setup/Play Music
 .a0896:
-    oniw [$FF80], $03
+    oniw [aFF80], $03
     jmp .a0712                                      ;Continue puzzle
     jr .a0896
 ;End of Puzzle Code
@@ -1153,7 +1161,7 @@ a08B6:
     mvi a, $00                                      ;Sound?
     mvi a, $03                                      ;Silent
     mov tmm, a
-    oriw [$FF80], $01
+    oriw [aFF80], $01
     stm
     ret
 
@@ -1204,10 +1212,10 @@ a08F8:
 ;------------------------------------------------------------
 ;Clear Screen 2 RAM
 scr2clr:
-    lxi hl, $C258                                   ;RAM for screen 2
+    lxi hl, scr2                                    ;RAM for screen 2
 ;Clear Screen RAM
 scr1clr:
-    lxi hl, $C000                                   ;RAM for screen 1
+    lxi hl, scr1                                    ;RAM for screen 1
 a0905:
     mvi c, $02
 .a0907:
@@ -1583,14 +1591,14 @@ a0A42:
     lxi de, $FFB0
     lxi bc, $FFB5
     mvi a, $04
-    oriw [$FF80], $08
+    oriw [aFF80], $08
     calf a0C31                                      ;Roll graphics a bit (shift up/dn)
     oniw [$FFC6], $FF
     jr .a0AEF
     lded [$FFC7]
     calf a0E6A                                      ;(FFB0 -> HL)
     mvi b, $04
-    oriw [$FF80], $10
+    oriw [aFF80], $10
     calf a0BD3                                      ;Copy B*A bytes?
 .a0AEF:
     offiw [$FFC6], $08
@@ -1598,7 +1606,7 @@ a0A42:
     lded [$FFC9]
     lxi hl, $FFB5
     mvi b, $04
-    oriw [$FF80], $10
+    oriw [aFF80], $10
     calf a0BD3                                      ;Copy B*A bytes?
 .a0B01:
     ldaw [$FF9B]
@@ -1709,7 +1717,7 @@ calta4:
     dcr b
     jr .a0BA0
     pop hl
-    oriw [$FF80], $08
+    oriw [aFF80], $08
     lxi de, $FFB0
     lxi bc, $FFB8
     calf a0C2F
@@ -1718,7 +1726,7 @@ calta4:
     oni a, $40
     jr .a0BC2
     calf a0E6A
-    oriw [$FF80], $10
+    oriw [aFF80], $10
     calf .a0BD1
 .a0BC2:
     pop de
@@ -1727,7 +1735,7 @@ calta4:
     sknc
     ret
     lxi hl, $FFB8
-    oriw [$FF80], $10
+    oriw [aFF80], $10
 ;--
 .a0BD1:
     mvi b, $07
@@ -1745,7 +1753,7 @@ a0BD3:
     pop va
     jr .a0BE9
 .a0BE2:
-    oniw [$FF80], $10
+    oniw [aFF80], $10
     jr .a0BE8
     inx hl
     jr .a0BE9
@@ -1758,14 +1766,14 @@ a0BD3:
     dcr b
     jr .a0BD5
 .a0BED:
-    aniw [$FF80], $EF
+    aniw [aFF80], $EF
     ret
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
 scr1loc:
-    lxi hl, $BFB5                                   ;Point before Sc. RAM
+    lxi hl, scr1 - 75                               ;Point before Sc. RAM
 scr2loc:
-    lxi hl, $C20D                                   ;Point before Sc.2 RAM
+    lxi hl, scr2 - 75                               ;Point before Sc.2 RAM
     mvi e, $4B
     mov a, c
     mvi c, $00
@@ -1848,7 +1856,7 @@ a0C31:
     jr .a0C3C
 
 .a0C4D:
-    oniw [$FF80], $08
+    oniw [aFF80], $08
     jr .a0C54
     orax [de]
     jr .a0C56
@@ -1859,7 +1867,7 @@ a0C31:
     stax [de]
     mov a, c
     pop bc
-    oniw [$FF80], $08
+    oniw [aFF80], $08
     jr .a0C61
     orax [bc]
     jr .a0C63
@@ -1872,7 +1880,7 @@ a0C31:
     inx de
     dcrw [$FF96]
     jre .a0C33
-    aniw [$FF80], $F7
+    aniw [aFF80], $F7
     ret
 
 ;------------------------------------------------------------
@@ -1940,7 +1948,7 @@ a0CBF:
     jr .a0CD2
     lti a, $05
     jr .a0CD8
-    lxi hl, $C2D8
+    lxi hl, scr2 + 1*75 + 53
 .a0CC8:
     nei a, $04
     ret
@@ -1952,12 +1960,12 @@ a0CBF:
     inr a
     jr .a0CC8
 .a0CD2:
-    lxi hl, $C404
+    lxi hl, scr2 + 5*75 + 53
     sui a, $08
     jr .a0CC8
 ;------------------------------------------------------------
 .a0CD8:
-    lxi hl, $C36E
+    lxi hl, scr2 + 3*75 + 53
     sui a, $04
     jr .a0CC8
 ;------------------------------------------------------------
@@ -1969,8 +1977,8 @@ a0CDE:
 a0CE2:
     inrw [$FF82]
     nop
-    lxi hl, $C25B
-    lxi de, $C258
+    lxi hl, scr2 + 3
+    lxi de, scr2
     mvi b, $47
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
     offiw [$FF82], $01
@@ -1992,7 +2000,7 @@ a0CFA:
     lxi hl, $FFA0                                   ;First copy it to RAM...
 
 a0D0C:
-    lxi de, $C2A0                                   ;Then put it on screen, 3 pixels at a time.
+    lxi de, scr2 + 72                               ;Then put it on screen, 3 pixels at a time.
     mvi b, $02
 
 ;((HL+) ==> (DE+))xB
@@ -2068,7 +2076,7 @@ a0D23:
 ;------------------------------------------------------------
 ;Draw a thick black frame around the screen
 a0D68:
-    lxi hl, $C2A3                                   ;Point to 2nd screen
+    lxi hl, scr2 + 1*75                             ;Point to 2nd screen
     mvi a, $FF                                      ;Black character
     mvi b, $05                                      ;Write 6 characters
     calt MEMSET                                     ; "A ==> (HL+)xB"
@@ -2104,11 +2112,11 @@ a0D92:
     jr .a0DA5
     eqiw [$FFD5], $02
     jre .a0DC3
-    lxi hl, $C2D8
+    lxi hl, scr2 + 1*75 + 53
 .a0DA2:
-    lxi hl, $C2B8
+    lxi hl, scr2 + 1*75 + 21
 .a0DA5:
-    lxi hl, $C2C8
+    lxi hl, scr2 + 1*75 + 75/2
     calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
     db $F0, $00
     mvi b, $04
@@ -2128,10 +2136,10 @@ a0D92:
     inrw [$FFD5]
     jre a0D92
 .a0DC3:
-    lxi hl, $C33E
+    lxi hl, scr2 + 3*75 + 5
     calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
     db $10, $40
-    lxi hl, $C3D4
+    lxi hl, scr2 + 5*75 + 5
     calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
     db $10, $40
     calt ACCCLR                                     ; "Clear A"
@@ -2231,15 +2239,15 @@ a0E4D:
     mov tmm, a
     mvi a, $74
     mov tm0, a
-    aniw [$FF80], $FC
+    aniw [aFF80], $FC
     stm
     ei
     ret
 ;------------------------------------------------------------
 ; Loads (DE/)HL with various common addresses
 a0E5E:
-    lxi de, $C000
-    lxi hl, $C258
+    lxi de, scr1
+    lxi hl, scr2
 a0E64:
     lxi hl, a04EC
 a0E67:
@@ -2404,10 +2412,10 @@ caltd6:
 ;------------------------------------------------------------
 ;Invert Screen RAM (C000~)
 scr1inv:
-    lxi hl, $C000
+    lxi hl, scr1
 ;Invert Screen 2 RAM (C258~)
 scr2inv:
-    lxi hl, $C258
+    lxi hl, scr2
     mvi c, $02
 
 .a0F34:
@@ -2622,4 +2630,20 @@ membump:
 ;------------------------------------------------------------
     db $00, $00, $00, $00                           ;Unused bytes (and who could blame 'em?)
 
-; EOF!
+#bankdef wram
+{
+    addr = 0xc000
+    size = 0x0800
+}
+scr1:
+    #res 75 * 64 / 8
+scr2:
+    #res 75 * 64 / 8
+
+#bankdef hram
+{
+    addr = 0xff80
+    size = 0x0080
+}
+aFF80:
+    #res 1
