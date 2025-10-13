@@ -1,77 +1,85 @@
-#subruledef push_reg {
-    va => 0x0
-    bc => 0x1
-    de => 0x2
-    hl => 0x3
+#subruledef pd7806_r {
+    a => 1`3
+    b => 2`3
+    c => 3`3
+    d => 4`3
+    e => 5`3
+    h => 6`3
+    l => 7`3
 }
 
-#subruledef inx_reg {
-    sp => 0x0
-    bc => 0x1
-    de => 0x2
-    hl => 0x3
+#subruledef pd7806_r1 {
+    b => 2`3
+    c => 3`3
+    d => 4`3
+    e => 5`3
+    h => 6`3
+    l => 7`3
 }
 
-#subruledef ldax_reg {
-    bc  => 0b001
-    de  => 0b010
-    hl  => 0b011
-    de+ => 0b100
-    hl+ => 0b101
-    de- => 0b110
-    hl- => 0b111
+#subruledef pd7802_r2 {
+    a => 1`3
+    b => 2`3
+    c => 3`3
 }
 
-#subruledef reg_inr {
-    a => $1
-    b => $2
-    c => $3
+#subruledef pd7806_sr {
+    pa  => 0`4
+    pb  => 1`4
+    pc  => 2`4
+    mk  => 3`4
+    mb  => 4`4
+    mc  => 5`4
+    tm0 => 6`4
+    tm1 => 7`4
+    s   => 8`4
+    tmm => 9`4
 }
 
-#subruledef reg_bcdehl {
-    b => 0b010
-    c => 0b011
-    d => 0b100
-    e => 0b101
-    h => 0b110
-    l => 0b111
+#subruledef pd7806_rp {
+    sp => 0`4
+    bc => 1`4
+    de => 2`4
+    hl => 3`4
 }
 
-#subruledef reg_abcdehl {
-    a => 0b001
-    {r: reg_bcdehl} => r
+#subruledef pd7806_rp1 {
+    va => 0`4
+    bc => 1`4
+    de => 2`4
+    hl => 3`4
 }
 
-#subruledef reg_vabcdehl {
-    v => 0b000
-    {r: reg_abcdehl} => r
+#subruledef pd7806_rp2 {
+    pa  => 0`2
+    pb  => 1`2
+    pc  => 2`2
+    mk  => 3`2
 }
 
-#subruledef ani_port {
-    pa  => 0b00
-    pb  => 0b01
-    pc  => 0b10
-    mk  => 0b11
+#subruledef pd7806_rpa {
+    bc  => 1`3
+    de  => 2`3
+    hl  => 3`3
+    de+ => 4`3
+    hl+ => 5`3
+    de- => 6`3
+    hl- => 7`3
 }
 
-#subruledef mov_a_port {
-    pa  => 0x0
-    pb  => 0x1
-    pc  => 0x2
-    mk  => 0x3
-    mb  => 0x4
-    mc  => 0x5
-    tm0 => 0x6
-    tm1 => 0x7
-    s   => 0x8
-    tmm => 0x9
-}
-
-#subruledef hi_addr {
+#subruledef pd7806_wa {
     {addr: u16} => {
         assert(addr >= 0xFF00)
         (addr & 0xFF)`8
     }
+}
+
+#subruledef pd7806_f {
+    f0 => 0`4
+    ft => 1`4
+    f1 => 2`4
+    f2 => 3`4
+    fs => 4`4
 }
 
 #subruledef bytes {
@@ -86,17 +94,17 @@
 
 #ruledef {
     ; 8-Bit Data Transfer
-    mov {reg: reg_bcdehl}, a => 0x1 @ 0b1 @ reg
-    mov a, {reg: reg_bcdehl} => 0x0 @ 0b1 @ reg
-    mov {port: mov_a_port}, a => 0x4dc @ port
-    mov a, {port: mov_a_port} => 0x4cc @ port
-    mov {reg: reg_vabcdehl}, [{addr: u16}] => $706 @ 0b1 @ reg @ le(addr)
-    mov [{addr: u16}], {reg: reg_vabcdehl} => $707 @ 0b1 @ reg @ le(addr)
-    mvi {reg: reg_abcdehl}, {value: u8} => $6 @ 0b1 @ reg @ value
-    staw [{addr: hi_addr}] => $38 @ addr
-    ldaw [{addr: hi_addr}] => $28 @ addr
-    stax [{reg: ldax_reg}] => $3 @ 0b1 @ reg
-    ldax [{reg: ldax_reg}] => $2 @ 0b1 @ reg
+    mov {reg: pd7806_r1}, a => 0x1 @ 0b1 @ reg
+    mov a, {reg: pd7806_r1} => 0x0 @ 0b1 @ reg
+    mov {port: pd7806_sr}, a => 0x4dc @ port
+    mov a, {port: pd7806_sr} => 0x4cc @ port
+    mov {reg: pd7806_r}, [{addr: u16}] => $706 @ 0b1 @ reg @ le(addr)
+    mov [{addr: u16}], {reg: pd7806_r} => $707 @ 0b1 @ reg @ le(addr)
+    mvi {reg: pd7806_r}, {value: u8} => $6 @ 0b1 @ reg @ value
+    staw [{addr: pd7806_wa}] => $38 @ addr
+    ldaw [{addr: pd7806_wa}] => $28 @ addr
+    stax [{reg: pd7806_rpa}] => $3 @ 0b1 @ reg
+    ldax [{reg: pd7806_rpa}] => $2 @ 0b1 @ reg
 
     ; 16-Bit Data Transfer
     sbcd [{addr: u16}] => $701E @ le(addr)
@@ -107,37 +115,37 @@
     lded [{addr: u16}] => $702F @ le(addr)
     lhld [{addr: u16}] => $703F @ le(addr)
     lspd [{addr: u16}] => $700F @ le(addr)
-    push {reg: push_reg} => $48 @ reg @ $e
-    pop {reg: push_reg} => $48 @ reg @ $f
-    lxi {reg: inx_reg}, {value: u16} => reg @ $4 @ le(value)
+    push {reg: pd7806_rp1} => $48 @ reg @ $e
+    pop {reg: pd7806_rp1} => $48 @ reg @ $f
+    lxi {reg: pd7806_rp}, {value: u16} => reg @ $4 @ le(value)
 
     ; Arithmetic
-    add     a, {reg: reg_vabcdehl}  => $60C @ 0b0 @ reg
-    addx    [{reg: ldax_reg}]       => $70C @ 0b0 @ reg
-    adc     a, {reg: reg_vabcdehl}  => $60D @ 0b0 @ reg
-    adcx    [{reg: ldax_reg}]       => $70D @ 0b0 @ reg
-    sub     a, {reg: reg_vabcdehl}  => $60E @ 0b0 @ reg
-    subx    [{reg: ldax_reg}]       => $70E @ 0b0 @ reg
-    sbb     a, {reg: reg_vabcdehl}  => $60F @ 0b0 @ reg
-    sbbx    [{reg: ldax_reg}]       => $70F @ 0b0 @ reg
-    addnc   a, {reg: reg_vabcdehl}  => $60A @ 0b0 @ reg
-    addncx  [{reg: ldax_reg}]       => $70A @ 0b0 @ reg
-    subnb   a, {reg: reg_vabcdehl}  => $60B @ 0b0 @ reg
-    subnbx  [{reg: ldax_reg}]       => $70B @ 0b0 @ reg
-    ana     a, {reg: reg_vabcdehl}  => $608 @ 0b1 @ reg
-    anax    [{reg: ldax_reg}]       => $708 @ 0b1 @ reg
-    ora     a, {reg: reg_vabcdehl}  => $609 @ 0b1 @ reg
-    orax    [{reg: ldax_reg}]       => $709 @ 0b1 @ reg
-    xra     a, {reg: reg_vabcdehl}  => $609 @ 0b0 @ reg
-    xrax    [{reg: ldax_reg}]       => $709 @ 0b0 @ reg
-    gta     a, {reg: reg_vabcdehl}  => $60A @ 0b1 @ reg
-    gtax    [{reg: ldax_reg}]       => $70A @ 0b1 @ reg
-    lta     a, {reg: reg_vabcdehl}  => $60B @ 0b1 @ reg
-    ltax    [{reg: ldax_reg}]       => $70B @ 0b1 @ reg
-    nea     a, {reg: reg_vabcdehl}  => $60E @ 0b1 @ reg
-    neax    [{reg: ldax_reg}]       => $70E @ 0b1 @ reg
-    eqa     a, {reg: reg_vabcdehl}  => $60F @ 0b1 @ reg
-    eqax    [{reg: ldax_reg}]       => $70F @ 0b1 @ reg
+    add     a, {reg: pd7806_r}   => $60C @ 0b0 @ reg
+    addx    [{reg: pd7806_rpa}]  => $70C @ 0b0 @ reg
+    adc     a, {reg: pd7806_r}   => $60D @ 0b0 @ reg
+    adcx    [{reg: pd7806_rpa}]  => $70D @ 0b0 @ reg
+    sub     a, {reg: pd7806_r}   => $60E @ 0b0 @ reg
+    subx    [{reg: pd7806_rpa}]  => $70E @ 0b0 @ reg
+    sbb     a, {reg: pd7806_r}   => $60F @ 0b0 @ reg
+    sbbx    [{reg: pd7806_rpa}]  => $70F @ 0b0 @ reg
+    addnc   a, {reg: pd7806_r}   => $60A @ 0b0 @ reg
+    addncx  [{reg: pd7806_rpa}]  => $70A @ 0b0 @ reg
+    subnb   a, {reg: pd7806_r}   => $60B @ 0b0 @ reg
+    subnbx  [{reg: pd7806_rpa}]  => $70B @ 0b0 @ reg
+    ana     a, {reg: pd7806_r}   => $608 @ 0b1 @ reg
+    anax    [{reg: pd7806_rpa}]  => $708 @ 0b1 @ reg
+    ora     a, {reg: pd7806_r}   => $609 @ 0b1 @ reg
+    orax    [{reg: pd7806_rpa}]  => $709 @ 0b1 @ reg
+    xra     a, {reg: pd7806_r}   => $609 @ 0b0 @ reg
+    xrax    [{reg: pd7806_rpa}]  => $709 @ 0b0 @ reg
+    gta     a, {reg: pd7806_r}   => $60A @ 0b1 @ reg
+    gtax    [{reg: pd7806_rpa}]  => $70A @ 0b1 @ reg
+    lta     a, {reg: pd7806_r}   => $60B @ 0b1 @ reg
+    ltax    [{reg: pd7806_rpa}]  => $70B @ 0b1 @ reg
+    nea     a, {reg: pd7806_r}   => $60E @ 0b1 @ reg
+    neax    [{reg: pd7806_rpa}]  => $70E @ 0b1 @ reg
+    eqa     a, {reg: pd7806_r}   => $60F @ 0b1 @ reg
+    eqax    [{reg: pd7806_rpa}]  => $70F @ 0b1 @ reg
 
     ; Immediate Data Transfer (Accumulator)
     xri    a, {value: u8}  => $16 @ value
@@ -157,28 +165,28 @@
     eqi    a, {value: u8}  => $77 @ value
 
     ; Immediate Data Transfer (Special Register)
-    ani  {port: ani_port}, {value: u8} => $648 @ 0b10 @ port @ value
-    ori  {port: ani_port}, {value: u8} => $649 @ 0b10 @ port @ value
-    offi {port: ani_port}, {value: u8} => $64d @ 0b10 @ port @ value
-    oni  {port: ani_port}, {value: u8} => $64c @ 0b10 @ port @ value
+    ani  {port: pd7806_rp2}, {value: u8} => $648 @ 0b10 @ port @ value
+    ori  {port: pd7806_rp2}, {value: u8} => $649 @ 0b10 @ port @ value
+    offi {port: pd7806_rp2}, {value: u8} => $64d @ 0b10 @ port @ value
+    oni  {port: pd7806_rp2}, {value: u8} => $64c @ 0b10 @ port @ value
 
     ; Working Register
-    aniw    [{addr: hi_addr}], {value: u8} => $05 @ addr @ value
-    oriw    [{addr: hi_addr}], {value: u8} => $15 @ addr @ value
-    gtiw    [{addr: hi_addr}], {value: u8} => $25 @ addr @ value
-    ltiw    [{addr: hi_addr}], {value: u8} => $35 @ addr @ value
-    oniw    [{addr: hi_addr}], {value: u8} => $45 @ addr @ value
-    offiw   [{addr: hi_addr}], {value: u8} => $55 @ addr @ value
-    neiw    [{addr: hi_addr}], {value: u8} => $65 @ addr @ value
-    eqiw    [{addr: hi_addr}], {value: u8} => $75 @ addr @ value
+    aniw    [{addr: pd7806_wa}], {value: u8} => $05 @ addr @ value
+    oriw    [{addr: pd7806_wa}], {value: u8} => $15 @ addr @ value
+    gtiw    [{addr: pd7806_wa}], {value: u8} => $25 @ addr @ value
+    ltiw    [{addr: pd7806_wa}], {value: u8} => $35 @ addr @ value
+    oniw    [{addr: pd7806_wa}], {value: u8} => $45 @ addr @ value
+    offiw   [{addr: pd7806_wa}], {value: u8} => $55 @ addr @ value
+    neiw    [{addr: pd7806_wa}], {value: u8} => $65 @ addr @ value
+    eqiw    [{addr: pd7806_wa}], {value: u8} => $75 @ addr @ value
 
     ; Increment/Decrement
-    inr {reg: reg_inr} => $4 @ reg
-    inrw [{addr: hi_addr}] => $20 @ addr
-    dcr {reg: reg_inr} => $5 @ reg
-    dcrw [{addr: hi_addr}] => $30 @ addr
-    inx {reg: inx_reg} => reg @ $2
-    dcx {reg: inx_reg} => reg @ $3
+    inr {reg: pd7802_r2} => $4 @ %0 @ reg
+    inrw [{addr: pd7806_wa}] => $20 @ addr
+    dcr {reg: pd7802_r2} => $5 @ %0 @ reg
+    dcrw [{addr: pd7806_wa}] => $30 @ addr
+    inx {reg: pd7806_rp} => reg @ $2
+    dcx {reg: pd7806_rp} => reg @ $3
 
     ; Miscellaneous
     daa => $61
@@ -230,13 +238,9 @@
     reti => $62
 
     ; Skip
-    sknc      => $481A
-    sknz      => $481C
-    sknit f0  => $4810
-    sknit ft  => $4811
-    sknit f1  => $4812
-    sknit f2  => $4813
-    sknit fs  => $4814
+    sknc                    => $481A
+    sknz                    => $481C
+    sknit {flag: pd7806_f}  => $481 @ flag
 
     ; CPU Control
     nop => $00
