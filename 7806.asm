@@ -70,7 +70,7 @@
 #subruledef pd7806_wa {
     {addr: u16} => {
         assert(addr >= 0xFF00)
-        (addr & 0xFF)`8
+        addr[7:0]
     }
 }
 
@@ -80,6 +80,41 @@
     f1 => 2`4
     f2 => 3`4
     fs => 4`4
+}
+
+#subruledef pd7806_jr_reladdr {
+    {addr: u16} => {
+        reladdr = addr - $ - 1
+        assert(reladdr <= 0x3f)
+        assert(reladdr >= -0x3f)
+        reladdr`6
+    }
+}
+
+#subruledef pd7806_jre_reladdr {
+    {addr: u16} => {
+        reladdr = addr - $ - 2
+        assert(reladdr <= 0xff)
+        assert(reladdr >= -0xff)
+        (reladdr >= 0 ? %0 : %1) @ reladdr`8
+    }
+}
+
+#subruledef pd7806_calf_addr {
+    {addr: u16} => {
+        assert(addr >= 0x0800)
+        assert(addr <= 0x0FFF)
+        addr`12
+    }
+}
+
+#subruledef pd7806_calt_addr {
+    {addr: u16} => {
+        assert(addr[0:0] == 0)
+        assert(addr >= 0x0080)
+        assert(addr <= 0x00FE)
+        (addr - 0x0080)[6:1]
+    }
 }
 
 #subruledef bytes {
@@ -202,35 +237,13 @@
     ; Jump
     jmp {addr: u16} => $54 @ le(addr)
     jb => $73
-    jr {addr: u16} => {
-        reladdr = addr - $ - 1
-        assert(reladdr <= 0x3f)
-        assert(reladdr >= -0x3f)
-        0b11 @ reladdr`6
-    }
-    jre {addr: u16} => {
-        reladdr = addr - $ - 2
-        assert(reladdr <= 0xff)
-        assert(reladdr >= -0xff)
-        ( reladdr >= 0
-        ? 0x4E @ reladdr`8
-        : 0x4F @ reladdr`8
-        )
-    }
+    jr {reladdr: pd7806_jr_reladdr} => 0b11 @ reladdr
+    jre {reladdr: pd7806_jre_reladdr} => $4E[7:1] @ reladdr
 
     ; Call
     call {addr: u16} => $44 @ le(addr)
-    calf {addr: u16} => {
-        assert(addr >= 0x0800)
-        assert(addr <= 0x0FFF)
-        0b0111 @ addr`12
-    }
-    calt {addr: u16} => {
-        assert(addr & 0x0001 == 0)
-        assert(addr >= 0x0080)
-        assert(addr <= 0x00FE)
-        0b10 @ ((addr - 0x0080) >> 1)`6
-    }
+    calf {addr: pd7806_calf_addr} => 0b0111 @ addr
+    calt {addr: pd7806_calt_addr} => 0b10 @ addr
 
     ; Return
     ret => $08
@@ -258,5 +271,4 @@
     ; Data Directives
     db {b: bytes} => b
     dw {w: words} => w
-
 }
