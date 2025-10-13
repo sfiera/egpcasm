@@ -248,13 +248,13 @@
     reti => $62
 
     ; Skip
-    skn cy   => $481A
-    skn z    => $481C
-    sknit f0 => $4810
-    sknit ft => $4811
-    sknit f1 => $4812
-    sknit f2 => $4813
-    sknit fs => $4814
+    sknc      => $481A
+    sknz      => $481C
+    sknit f0  => $4810
+    sknit ft  => $4811
+    sknit f1  => $4812
+    sknit f2  => $4813
+    sknit fs  => $4814
 
     ; CPU Control
     nop => $00

@@ -105,7 +105,7 @@ memsub:
 ; the first difference between 2 buffers, etc.
 memcmp:
     calt MEMSUB                                     ; "(DE+)-(HL+) ==> A"
-    skn z
+    sknz
     jr .a0068
     ret
 
@@ -125,7 +125,7 @@ memccpy:
     pop bc
     pop de
     pop hl
-    skn cy
+    sknc
     jr .a007E
     ret
 
@@ -252,7 +252,7 @@ a012E:
     adi a, $01
     daa
     staw [$FF88]
-    skn cy
+    sknc
     jr .a0139
     jr .a014E
 
@@ -263,7 +263,7 @@ a012E:
     adi a, $01
     daa
     staw [$FF87]
-    skn cy
+    sknc
     jr .a0147
     jr .a014E
 
@@ -1173,7 +1173,7 @@ multiply:
     clc
     rar
     push va
-    skn cy
+    sknc
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     mov a, e
     add a, a
@@ -1724,7 +1724,7 @@ calta4:
     pop de
     lxi hl, $3DA8
     calt ADDRHLDE                                   ; "HL <== HL+DE"
-    skn cy
+    sknc
     ret
     lxi hl, $FFB8
     oriw [$FF80], $10
@@ -2598,7 +2598,7 @@ membump:
     ldax [hl]                                       ;Load a byte
     sui a, $01                                      ;Decrement it
     stax [hl-]
-    skn cy                                          ;Quit our function if any byte= -1!
+    sknc                                            ;Quit our function if any byte= -1!
     jr .a0FEE
     ret
 
@@ -2611,7 +2611,7 @@ membump:
     ldax [hl]                                       ;or Load a byte
     adi a, $01
     stax [hl-]
-    skn cy                                          ;Quit if any byte overflows!
+    sknc                                            ;Quit if any byte overflows!
     jr .a0FF9
     ret
 
