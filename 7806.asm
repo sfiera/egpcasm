@@ -69,7 +69,7 @@
 
 #subruledef pd7806_wa {
     {addr: u16} => {
-        assert(addr >= 0xFF00)
+        assert(addr >= $FF00)
         addr[7:0]
     }
 }
@@ -85,8 +85,8 @@
 #subruledef pd7806_jr_reladdr {
     {addr: u16} => {
         reladdr = addr - $ - 1
-        assert(reladdr <= 0x3f)
-        assert(reladdr >= -0x3f)
+        assert(reladdr <= $3f)
+        assert(reladdr >= -$3f)
         reladdr`6
     }
 }
@@ -94,16 +94,16 @@
 #subruledef pd7806_jre_reladdr {
     {addr: u16} => {
         reladdr = addr - $ - 2
-        assert(reladdr <= 0xff)
-        assert(reladdr >= -0xff)
+        assert(reladdr <= $ff)
+        assert(reladdr >= -$ff)
         (reladdr >= 0 ? %0 : %1) @ reladdr`8
     }
 }
 
 #subruledef pd7806_calf_addr {
     {addr: u16} => {
-        assert(addr >= 0x0800)
-        assert(addr <= 0x0FFF)
+        assert(addr >= $0800)
+        assert(addr <= $0FFF)
         addr`12
     }
 }
@@ -111,9 +111,9 @@
 #subruledef pd7806_calt_addr {
     {addr: u16} => {
         assert(addr[0:0] == 0)
-        assert(addr >= 0x0080)
-        assert(addr <= 0x00FE)
-        (addr - 0x0080)[6:1]
+        assert(addr >= $0080)
+        assert(addr <= $00FE)
+        (addr - $0080)[6:1]
     }
 }
 
@@ -129,17 +129,17 @@
 
 #ruledef {
     ; 8-Bit Data Transfer
-    mov {reg: pd7806_r1}, a => 0x1 @ 0b1 @ reg
-    mov a, {reg: pd7806_r1} => 0x0 @ 0b1 @ reg
-    mov {port: pd7806_sr}, a => 0x4dc @ port
-    mov a, {port: pd7806_sr} => 0x4cc @ port
-    mov {reg: pd7806_r}, [{addr: u16}] => $706 @ 0b1 @ reg @ le(addr)
-    mov [{addr: u16}], {reg: pd7806_r} => $707 @ 0b1 @ reg @ le(addr)
-    mvi {reg: pd7806_r}, {value: u8} => $6 @ 0b1 @ reg @ value
+    mov {reg: pd7806_r1}, a => $1 @ %1 @ reg
+    mov a, {reg: pd7806_r1} => $0 @ %1 @ reg
+    mov {port: pd7806_sr}, a => $4dc @ port
+    mov a, {port: pd7806_sr} => $4cc @ port
+    mov {reg: pd7806_r}, [{addr: u16}] => $706 @ %1 @ reg @ le(addr)
+    mov [{addr: u16}], {reg: pd7806_r} => $707 @ %1 @ reg @ le(addr)
+    mvi {reg: pd7806_r}, {value: u8} => $6 @ %1 @ reg @ value
     staw [{addr: pd7806_wa}] => $38 @ addr
     ldaw [{addr: pd7806_wa}] => $28 @ addr
-    stax [{reg: pd7806_rpa}] => $3 @ 0b1 @ reg
-    ldax [{reg: pd7806_rpa}] => $2 @ 0b1 @ reg
+    stax [{reg: pd7806_rpa}] => $3 @ %1 @ reg
+    ldax [{reg: pd7806_rpa}] => $2 @ %1 @ reg
 
     ; 16-Bit Data Transfer
     sbcd [{addr: u16}] => $701E @ le(addr)
@@ -155,32 +155,32 @@
     lxi {reg: pd7806_rp}, {value: u16} => reg @ $4 @ le(value)
 
     ; Arithmetic
-    add     a, {reg: pd7806_r}   => $60C @ 0b0 @ reg
-    addx    [{reg: pd7806_rpa}]  => $70C @ 0b0 @ reg
-    adc     a, {reg: pd7806_r}   => $60D @ 0b0 @ reg
-    adcx    [{reg: pd7806_rpa}]  => $70D @ 0b0 @ reg
-    sub     a, {reg: pd7806_r}   => $60E @ 0b0 @ reg
-    subx    [{reg: pd7806_rpa}]  => $70E @ 0b0 @ reg
-    sbb     a, {reg: pd7806_r}   => $60F @ 0b0 @ reg
-    sbbx    [{reg: pd7806_rpa}]  => $70F @ 0b0 @ reg
-    addnc   a, {reg: pd7806_r}   => $60A @ 0b0 @ reg
-    addncx  [{reg: pd7806_rpa}]  => $70A @ 0b0 @ reg
-    subnb   a, {reg: pd7806_r}   => $60B @ 0b0 @ reg
-    subnbx  [{reg: pd7806_rpa}]  => $70B @ 0b0 @ reg
-    ana     a, {reg: pd7806_r}   => $608 @ 0b1 @ reg
-    anax    [{reg: pd7806_rpa}]  => $708 @ 0b1 @ reg
-    ora     a, {reg: pd7806_r}   => $609 @ 0b1 @ reg
-    orax    [{reg: pd7806_rpa}]  => $709 @ 0b1 @ reg
-    xra     a, {reg: pd7806_r}   => $609 @ 0b0 @ reg
-    xrax    [{reg: pd7806_rpa}]  => $709 @ 0b0 @ reg
-    gta     a, {reg: pd7806_r}   => $60A @ 0b1 @ reg
-    gtax    [{reg: pd7806_rpa}]  => $70A @ 0b1 @ reg
-    lta     a, {reg: pd7806_r}   => $60B @ 0b1 @ reg
-    ltax    [{reg: pd7806_rpa}]  => $70B @ 0b1 @ reg
-    nea     a, {reg: pd7806_r}   => $60E @ 0b1 @ reg
-    neax    [{reg: pd7806_rpa}]  => $70E @ 0b1 @ reg
-    eqa     a, {reg: pd7806_r}   => $60F @ 0b1 @ reg
-    eqax    [{reg: pd7806_rpa}]  => $70F @ 0b1 @ reg
+    add     a, {reg: pd7806_r}   => $60C @ %0 @ reg
+    addx    [{reg: pd7806_rpa}]  => $70C @ %0 @ reg
+    adc     a, {reg: pd7806_r}   => $60D @ %0 @ reg
+    adcx    [{reg: pd7806_rpa}]  => $70D @ %0 @ reg
+    sub     a, {reg: pd7806_r}   => $60E @ %0 @ reg
+    subx    [{reg: pd7806_rpa}]  => $70E @ %0 @ reg
+    sbb     a, {reg: pd7806_r}   => $60F @ %0 @ reg
+    sbbx    [{reg: pd7806_rpa}]  => $70F @ %0 @ reg
+    addnc   a, {reg: pd7806_r}   => $60A @ %0 @ reg
+    addncx  [{reg: pd7806_rpa}]  => $70A @ %0 @ reg
+    subnb   a, {reg: pd7806_r}   => $60B @ %0 @ reg
+    subnbx  [{reg: pd7806_rpa}]  => $70B @ %0 @ reg
+    ana     a, {reg: pd7806_r}   => $608 @ %1 @ reg
+    anax    [{reg: pd7806_rpa}]  => $708 @ %1 @ reg
+    ora     a, {reg: pd7806_r}   => $609 @ %1 @ reg
+    orax    [{reg: pd7806_rpa}]  => $709 @ %1 @ reg
+    xra     a, {reg: pd7806_r}   => $609 @ %0 @ reg
+    xrax    [{reg: pd7806_rpa}]  => $709 @ %0 @ reg
+    gta     a, {reg: pd7806_r}   => $60A @ %1 @ reg
+    gtax    [{reg: pd7806_rpa}]  => $70A @ %1 @ reg
+    lta     a, {reg: pd7806_r}   => $60B @ %1 @ reg
+    ltax    [{reg: pd7806_rpa}]  => $70B @ %1 @ reg
+    nea     a, {reg: pd7806_r}   => $60E @ %1 @ reg
+    neax    [{reg: pd7806_rpa}]  => $70E @ %1 @ reg
+    eqa     a, {reg: pd7806_r}   => $60F @ %1 @ reg
+    eqax    [{reg: pd7806_rpa}]  => $70F @ %1 @ reg
 
     ; Immediate Data Transfer (Accumulator)
     xri    a, {value: u8}  => $16 @ value
@@ -200,10 +200,10 @@
     eqi    a, {value: u8}  => $77 @ value
 
     ; Immediate Data Transfer (Special Register)
-    ani  {port: pd7806_rp2}, {value: u8} => $648 @ 0b10 @ port @ value
-    ori  {port: pd7806_rp2}, {value: u8} => $649 @ 0b10 @ port @ value
-    offi {port: pd7806_rp2}, {value: u8} => $64d @ 0b10 @ port @ value
-    oni  {port: pd7806_rp2}, {value: u8} => $64c @ 0b10 @ port @ value
+    ani  {port: pd7806_rp2}, {value: u8} => $648 @ %10 @ port @ value
+    ori  {port: pd7806_rp2}, {value: u8} => $649 @ %10 @ port @ value
+    offi {port: pd7806_rp2}, {value: u8} => $64d @ %10 @ port @ value
+    oni  {port: pd7806_rp2}, {value: u8} => $64c @ %10 @ port @ value
 
     ; Working Register
     aniw    [{addr: pd7806_wa}], {value: u8} => $05 @ addr @ value
@@ -237,13 +237,13 @@
     ; Jump
     jmp {addr: u16} => $54 @ le(addr)
     jb => $73
-    jr {reladdr: pd7806_jr_reladdr} => 0b11 @ reladdr
+    jr {reladdr: pd7806_jr_reladdr} => %11 @ reladdr
     jre {reladdr: pd7806_jre_reladdr} => $4E[7:1] @ reladdr
 
     ; Call
     call {addr: u16} => $44 @ le(addr)
-    calf {addr: pd7806_calf_addr} => 0b0111 @ addr
-    calt {addr: pd7806_calt_addr} => 0b10 @ addr
+    calf {addr: pd7806_calf_addr} => %0111 @ addr
+    calt {addr: pd7806_calt_addr} => %10 @ addr
 
     ; Return
     ret => $08
