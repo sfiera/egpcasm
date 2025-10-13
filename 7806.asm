@@ -117,17 +117,17 @@
     }
 }
 
-#subruledef bytes {
+#subruledef pd7806_db {
     {b1: u8} => b1
-    {b1: u8}, {bn: bytes} => b1 @ bn
+    {b1: u8}, {bn: pd7806_db} => b1 @ bn
 }
 
-#subruledef words {
+#subruledef pd7806_dw {
     {w1: u16} => le(w1)
-    {w1: u16}, {wn: words} => le(w1) @ words
+    {w1: u16}, {wn: pd7806_dw} => le(w1) @ pd7806_dw
 }
 
-#ruledef {
+#ruledef pd7806 {
     ; 8-Bit Data Transfer
     mov {reg: pd7806_r1}, a => $1 @ %1 @ reg
     mov a, {reg: pd7806_r1} => $0 @ %1 @ reg
@@ -269,6 +269,6 @@
     per => $483C
 
     ; Data Directives
-    db {b: bytes} => b
-    dw {w: words} => w
+    db {b: pd7806_db} => b
+    dw {w: pd7806_dw} => w
 }
