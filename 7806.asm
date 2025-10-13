@@ -177,6 +177,8 @@
     gtax    [{reg: pd7806_rpa}]  => $70A @ %1 @ reg  ; skip: no borrow
     lta     a, {reg: pd7806_r}   => $60B @ %1 @ reg  ; skip: borrow
     ltax    [{reg: pd7806_rpa}]  => $70B @ %1 @ reg  ; skip: borrow
+    onax    [{reg: pd7806_rpa}]  => $70C @ %1 @ reg  ; skip: no zero
+    offax   [{reg: pd7806_rpa}]  => $70D @ %1 @ reg  ; skip: zero
     nea     a, {reg: pd7806_r}   => $60E @ %1 @ reg  ; skip: no zero
     neax    [{reg: pd7806_rpa}]  => $70E @ %1 @ reg  ; skip: no zero
     eqa     a, {reg: pd7806_r}   => $60F @ %1 @ reg  ; skip: zero
