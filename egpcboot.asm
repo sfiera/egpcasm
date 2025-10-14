@@ -573,14 +573,17 @@ a04EC:
     #d8 $FF
 
     ;Text data
-a0541:
+str_cursor:
     #d8 $27, $32, $21, $0E, $00, $38, $10, $10, $0C, $39, $10, $10  ;GRA. X00,Y00
+.len = ($ - str_cursor)`4
 
-a054D:
+str_puzzle:
     #d8 $30, $35, $3A, $3A, $2C, $25                ;PUZZLE
+.len = ($ - str_puzzle)`4
 
-a0553:
+str_time:
     #d8 $34, $29, $2D, $25, $1B, $10, $10, $10, $0E, $10  ;TIME:000.0
+.len = ($ - str_time)`4
 
     ;Grid data, probably
 a055D:
@@ -650,9 +653,9 @@ paint:
     calf a0E4D                                      ;Turn timer on
     calt SCR2CLR                                    ; "Clear Screen 2 RAM"
     calt TILECLR                                    ; "Clear C4B0~C593"
-    lxi hl, a0541                                   ;"GRA"
+    lxi hl, str_cursor                              ;"GRA"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
-    db $02, $00, $1C                                ;Parameters for the text routine
+    db $02, $00, $1 @ str_cursor.len                ;Parameters for the text routine
 .a05DC:
     mvi a, $05
     lxi hl, $C4B8
@@ -949,9 +952,9 @@ a06EE:
 ;------------------------------------------------------------
 .a0765:
     calt SCR2CLR                                    ; "Clear Screen 2 RAM"
-    lxi hl, a0553                                   ;"TIME"
+    lxi hl, str_time                                ;"TIME"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
-    db $0E, $00, $1A
+    db $0E, $00, $1 @ str_time.len
     lxi hl, $FF86
     mvi b, $02
     calt MEMCLR                                     ; "Clear RAM (HL+)xB"
@@ -1944,9 +1947,9 @@ a0C77:
     ret
 ;------------------------------------------------------------
 a0C7B:
-    lxi hl, a054D                                   ;"PUZZLE"
+    lxi hl, str_puzzle                              ;"PUZZLE"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
-    db $03, $00, $16
+    db $03, $00, $1 @ str_puzzle.len
 a0C82:
     calf a0E67                                      ;(C7F2 -> HL)
     mvi a, $01
