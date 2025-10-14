@@ -1,3 +1,4 @@
 *.bin
+*.sym
 *.1bpp
 /cfg

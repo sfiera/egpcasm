@@ -1,5 +1,5 @@
 ASM ?= customasm
-ASM_FLAGS ?= --color=off --format=binary
+ASM_FLAGS ?= --color=off
 
 OUT = gamepock/egpcboot.bin
 
@@ -11,9 +11,15 @@ compare: $(OUT)
 run: $(OUT)
 	mame gamepock -window -rompath . -resolution 375x320 -nofilter
 
-$(OUT): egpcboot.asm gamepock.asm 7806.asm font.1bpp
+.PHONY: debug
+debug: $(OUT)
+	mame gamepock -window -rompath . -resolution 375x320 -nofilter -debug
+
+$(OUT): gamepock/%.bin: %.asm gamepock.asm 7806.asm font.1bpp
 	@ mkdir -p gamepock
-	$(ASM) $(ASM_FLAGS) $< -o $@
+	$(ASM) $(ASM_FLAGS) $< \
+	    -f binary -o $@ -- \
+	    -f symbols -o gamepock/$*.sym
 
 font.1bpp: font.png
 	rgbgfx -d1 -o $@ $<
