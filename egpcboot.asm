@@ -397,7 +397,7 @@ calta2:
     ;Set up writing for LCD controller #1
 scrn2lcd:
     ori pa, $08                                     ;(Port A, bit 3 on)
-    lxi hl, scr1 + 49
+    lxi hl, scr1.lcd1_start
     lxi de, $007D
     mvi b, $00
 .a01DA:
@@ -426,7 +426,7 @@ scrn2lcd:
 .a01FE:
     ani pa, $F7                                     ;bit 3 off
     ori pa, $10                                     ;bit 4 on
-    lxi hl, scr1 + 300
+    lxi hl, scr1.lcd2_start
     lxi de, $0019
     mvi b, $00
 .a020C:
@@ -458,8 +458,8 @@ scrn2lcd:
     ;Set up writing for LCD controller #3
     ani pa, $EF                                     ;bit 4 off
     ori pa, $20                                     ;bit 5 on
-    lxi hl, scr1 + 50
-    lxi de, scr1 + 350
+    lxi hl, scr1.lcd3a_start
+    lxi de, scr1.lcd3b_start
     mvi b, $00
 .a0241:
     ani pa, $FB
@@ -2630,15 +2630,28 @@ membump:
 ;------------------------------------------------------------
     db $00, $00, $00, $00                           ;Unused bytes (and who could blame 'em?)
 
+SCRN_WIDTH = 75
+SCRN_HEIGHT = 64
+SCRN_AREA = SCRN_WIDTH * SCRN_HEIGHT
+SCRN_BYTES = SCRN_AREA / 8
+
+LCD_WIDTH = 50
+LCD_HEIGHT = 32
+
 #bankdef wram
 {
     addr = 0xc000
     size = 0x0800
 }
 scr1:
-    #res 75 * 64 / 8
+    #res SCRN_BYTES
+.lcd1_start = scr1 + LCD_WIDTH - 1
+.lcd2_start = scr1 + SCRN_BYTES/2
+.lcd3a_start = scr1 + LCD_WIDTH
+.lcd3b_start = scr1 + SCRN_BYTES/2 + LCD_WIDTH
+
 scr2:
-    #res 75 * 64 / 8
+    #res SCRN_BYTES
 
 #bankdef hram
 {
