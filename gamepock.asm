@@ -57,3 +57,31 @@ USER4024  = $00E8
 USER4027  = $00EA
 USER402A  = $00EC
 USER402D  = $00EE
+
+#const LCD = struct {
+    WIDTH   = 50
+    HEIGHT  = 32
+}
+
+#const SCRN = struct {
+    WIDTH   = 75
+    HEIGHT  = 64
+    AREA    = 75 * 64   ; 4800 = WIDTH * HEIGHT
+    BYTES   = 4800 / 8  ; 600 = AREA / 8
+}
+
+#const SCR1 = struct {
+    BEGIN        = $C000
+    END          = $C000 + SCRN.BYTES
+    SIZE         = SCRN.BYTES
+    LCD1_START   = $C000 + LCD.WIDTH - 1
+    LCD2_START   = $C000 + SCRN.BYTES/2
+    LCD3A_START  = $C000 + LCD.WIDTH
+    LCD3B_START  = $C000 + SCRN.BYTES/2 + LCD.WIDTH
+}
+
+#const SCR2 = struct {
+    BEGIN  = SCR1.END
+    END    = SCR1.END + SCRN.BYTES
+    SIZE   = SCRN.BYTES
+}

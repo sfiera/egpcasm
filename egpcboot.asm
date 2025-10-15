@@ -397,7 +397,7 @@ calta2:
     ;Set up writing for LCD controller #1
 scrn2lcd:
     ori pa, $08                                     ;(Port A, bit 3 on)
-    lxi hl, scr1.lcd1_start
+    lxi hl, SCR1.LCD1_START
     lxi de, $007D
     mvi b, $00
 .a01DA:
@@ -426,7 +426,7 @@ scrn2lcd:
 .a01FE:
     ani pa, $F7                                     ;bit 3 off
     ori pa, $10                                     ;bit 4 on
-    lxi hl, scr1.lcd2_start
+    lxi hl, SCR1.LCD2_START
     lxi de, $0019
     mvi b, $00
 .a020C:
@@ -458,8 +458,8 @@ scrn2lcd:
     ;Set up writing for LCD controller #3
     ani pa, $EF                                     ;bit 4 off
     ori pa, $20                                     ;bit 5 on
-    lxi hl, scr1.lcd3a_start
-    lxi de, scr1.lcd3b_start
+    lxi hl, SCR1.LCD3A_START
+    lxi de, SCR1.LCD3B_START
     mvi b, $00
 .a0241:
     ani pa, $FB
@@ -1260,10 +1260,10 @@ a08F8:
 ;------------------------------------------------------------
 ;Clear Screen 2 RAM
 scr2clr:
-    lxi hl, scr2                                    ;RAM for screen 2
+    lxi hl, SCR2.BEGIN                              ;RAM for screen 2
 ;Clear Screen RAM
 scr1clr:
-    lxi hl, scr1                                    ;RAM for screen 1
+    lxi hl, SCR1.BEGIN                              ;RAM for screen 1
 a0905:
     mvi c, $02
 .a0907:
@@ -1819,9 +1819,9 @@ a0BD3:
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
 scr1loc:
-    lxi hl, scr1 - 75                               ;Point before Sc. RAM
+    lxi hl, SCR1.BEGIN - 75                         ;Point before Sc. RAM
 scr2loc:
-    lxi hl, scr2 - 75                               ;Point before Sc.2 RAM
+    lxi hl, SCR2.BEGIN - 75                         ;Point before Sc.2 RAM
     mvi e, $4B
     mov a, c
     mvi c, $00
@@ -1996,7 +1996,7 @@ a0CBF:
     jr .a0CD2
     lti a, $05
     jr .a0CD8
-    lxi hl, scr2 + 1*75 + 53
+    lxi hl, SCR2.BEGIN + 1*75 + 53
 .a0CC8:
     nei a, $04
     ret
@@ -2008,12 +2008,12 @@ a0CBF:
     inr a
     jr .a0CC8
 .a0CD2:
-    lxi hl, scr2 + 5*75 + 53
+    lxi hl, SCR2.BEGIN + 5*75 + 53
     sui a, $08
     jr .a0CC8
 ;------------------------------------------------------------
 .a0CD8:
-    lxi hl, scr2 + 3*75 + 53
+    lxi hl, SCR2.BEGIN + 3*75 + 53
     sui a, $04
     jr .a0CC8
 ;------------------------------------------------------------
@@ -2025,8 +2025,8 @@ a0CDE:
 a0CE2:
     inrw [$FF82]
     nop
-    lxi hl, scr2 + 3
-    lxi de, scr2
+    lxi hl, SCR2.BEGIN + 3
+    lxi de, SCR2.BEGIN
     mvi b, $47
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
     offiw [$FF82], $01
@@ -2048,7 +2048,7 @@ a0CFA:
     lxi hl, $FFA0                                   ;First copy it to RAM...
 
 a0D0C:
-    lxi de, scr2 + 72                               ;Then put it on screen, 3 pixels at a time.
+    lxi de, SCR2.BEGIN + 72                         ;Then put it on screen, 3 pixels at a time.
     mvi b, $02
 
 ;((HL+) ==> (DE+))xB
@@ -2124,7 +2124,7 @@ a0D23:
 ;------------------------------------------------------------
 ;Draw a thick black frame around the screen
 a0D68:
-    lxi hl, scr2 + 1*75                             ;Point to 2nd screen
+    lxi hl, SCR2.BEGIN + 1*75                       ;Point to 2nd screen
     mvi a, $FF                                      ;Black character
     mvi b, $05                                      ;Write 6 characters
     calt MEMSET                                     ; "A ==> (HL+)xB"
@@ -2160,11 +2160,11 @@ a0D92:
     jr .a0DA5
     eqiw [$FFD5], $02
     jre .a0DC3
-    lxi hl, scr2 + 1*75 + 53
+    lxi hl, SCR2.BEGIN + 1*75 + 53
 .a0DA2:
-    lxi hl, scr2 + 1*75 + 21
+    lxi hl, SCR2.BEGIN + 1*75 + 21
 .a0DA5:
-    lxi hl, scr2 + 1*75 + 75/2
+    lxi hl, SCR2.BEGIN + 1*75 + 75/2
     calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
     db $F0, $00
     mvi b, $04
@@ -2184,10 +2184,10 @@ a0D92:
     inrw [$FFD5]
     jre a0D92
 .a0DC3:
-    lxi hl, scr2 + 3*75 + 5
+    lxi hl, SCR2.BEGIN + 3*75 + 5
     calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
     db $10, $40
-    lxi hl, scr2 + 5*75 + 5
+    lxi hl, SCR2.BEGIN + 5*75 + 5
     calt DRAWLINE                                   ; "[PC+2] Draw Horizontal Line"
     db $10, $40
     calt ACCCLR                                     ; "Clear A"
@@ -2294,8 +2294,8 @@ a0E4D:
 ;------------------------------------------------------------
 ; Loads (DE/)HL with various common addresses
 a0E5E:
-    lxi de, scr1
-    lxi hl, scr2
+    lxi de, SCR1.BEGIN
+    lxi hl, SCR2.BEGIN
 a0E64:
     lxi hl, a04EC
 a0E67:
@@ -2460,10 +2460,10 @@ caltd6:
 ;------------------------------------------------------------
 ;Invert Screen RAM (C000~)
 scr1inv:
-    lxi hl, scr1
+    lxi hl, SCR1.BEGIN
 ;Invert Screen 2 RAM (C258~)
 scr2inv:
-    lxi hl, scr2
+    lxi hl, SCR2.BEGIN
     mvi c, $02
 
 .a0F34:
@@ -2678,28 +2678,11 @@ membump:
 ;------------------------------------------------------------
     db $00, $00, $00, $00                           ;Unused bytes (and who could blame 'em?)
 
-SCRN_WIDTH = 75
-SCRN_HEIGHT = 64
-SCRN_AREA = SCRN_WIDTH * SCRN_HEIGHT
-SCRN_BYTES = SCRN_AREA / 8
-
-LCD_WIDTH = 50
-LCD_HEIGHT = 32
-
 #bankdef wram
 {
     addr = 0xc000
     size = 0x0800
 }
-scr1:
-    #res SCRN_BYTES
-.lcd1_start = scr1 + LCD_WIDTH - 1
-.lcd2_start = scr1 + SCRN_BYTES/2
-.lcd3a_start = scr1 + LCD_WIDTH
-.lcd3b_start = scr1 + SCRN_BYTES/2 + LCD_WIDTH
-
-scr2:
-    #res SCRN_BYTES
 
 #bankdef hram
 {
