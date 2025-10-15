@@ -256,30 +256,30 @@ a0128:
     pop bc
 
 a012E:
-    ldaw [$FF88]
+    ldaw [TIME.BCD.SUB]
     adi a, $01
     daa
-    staw [$FF88]
+    staw [TIME.BCD.SUB]
     sknc
     jr .a0139
     jr .a014E
 
 .a0139:
-    inrw [$FF89]
+    inrw [TIME.SEC]
     nop
-    ldaw [$FF87]
+    ldaw [TIME.BCD.SEC]
     adi a, $01
     daa
-    staw [$FF87]
+    staw [TIME.BCD.SEC]
     sknc
     jr .a0147
     jr .a014E
 
 .a0147:
-    ldaw [$FF86]
+    ldaw [TIME.BCD.HUN]
     adi a, $01
     daa
-    staw [$FF86]
+    staw [TIME.BCD.HUN]
 .a014E:
     oniw [$FF8A], $80
     inrw [$FF8A]
@@ -354,13 +354,13 @@ cartchk:
     rets
 
     calt ACCCLR                                     ; "Clear A"
-    staw [$FF89]
+    staw [TIME.SEC]
 .a01B0:
     ldax [hl]
     eqi a, $55
     rets
 ;----------------------------------
-    eqiw [$FF89], $03
+    eqiw [TIME.SEC], $03
     jr .a01B0
 
     calf a0E4D                                      ;Sets a timer
@@ -898,7 +898,7 @@ a06EE:
     calf a0D92                                      ;Draw the grid
     calf a0C7B                                      ;Write "PUZZLE"
 .a0712:
-    aniw [$FF89], $00
+    aniw [TIME.SEC], $00
 .a0715:
     mvi a, $60
     staw [$FF8A]
@@ -946,7 +946,7 @@ a06EE:
 .a0758:
     eqiw [$FF8A], $80
     jre .a0719                                      ;Draw Tiles
-    eqiw [$FF89], $3C
+    eqiw [TIME.SEC], $3C
     jre .a0715                                      ;Reset timer?
     jmp startup                                     ;Go back to startup screen(?)
 ;------------------------------------------------------------
@@ -955,7 +955,7 @@ a06EE:
     lxi hl, str_time                                ;"TIME"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
     db $0E, $00, $1 @ str_time.len
-    lxi hl, $FF86
+    lxi hl, TIME.BCD.HUN
     mvi b, $02
     calt MEMCLR                                     ; "Clear RAM (HL+)xB"
     ldaw [$FF8C]
@@ -982,10 +982,10 @@ a06EE:
     calt CARTCHK                                    ;[PC+1] Check Cartridge
     db $C1                                          ;Jump to ($4003) in cartridge
 ;------------------------------------------------------------
-    lxi hl, $FF86
+    lxi hl, TIME.BCD.HUN
     calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
     db $2C, $00, $12
-    lxi hl, $FF88
+    lxi hl, TIME.BCD.SUB
     calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
     db $44, $00, $08
     calt SCR2COPY                                   ; "C258+ ==> C000+"
@@ -1137,7 +1137,7 @@ a06EE:
     dcr b
     jr .a086F
 .a0875:
-    lxi hl, $FF88
+    lxi hl, TIME.BCD.SUB
     calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
     db $44, $00, $08
     calt SCR2COPY                                   ; "C258+ ==> C000+"

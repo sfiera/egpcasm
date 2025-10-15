@@ -126,3 +126,12 @@ USER402D  = $00EE
         ANY = %00111111  ; STA | SEL | BT1 | BT2 | BT3 | BT4
     }
 }
+
+#const TIME = struct {
+    BCD = struct {
+        HUN = $FF86
+        SEC = $FF87
+        SUB = $FF88
+    }
+    SEC = $FF89
+}
