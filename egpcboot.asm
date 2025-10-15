@@ -560,16 +560,17 @@ a04B8:
     ;     G4 zCFA | c2 c2 c2 c2 | E2 (3EFE F2 (3FGF | G2 G2 C2 DE |
     ;     F6 z2 | z6 :|
 a04EC:
-    #d8 $00, $0A, $06, $0A, $0B, $0A, $0F, $0A
-    #d8 $12, $14, $12, $14, $12, $14, $12, $14
-    #d8 $0A, $14, $0A, $14, $0B, $14, $0B, $07, $0D, $07, $0B, $07
-    #d8 $10, $14, $10, $14, $0F, $14, $0F, $14
-    #d8 $0D, $28, $00, $0A, $06, $0A, $0B, $0A, $0F, $0A
-    #d8 $12, $14, $12, $14, $12, $14, $12, $14
-    #d8 $0A, $14, $0A, $07, $0B, $07, $0A, $07, $0B, $14, $0B, $07, $0D, $07, $0B, $07
-    #d8 $0D, $14, $0D, $14, $06, $14, $08, $0A, $0A, $0A
-    #d8 $0B, $3C
-    #d8 $00, $50
+    #d8 PITCH.NONE, 10, PITCH.C4, 10, PITCH.F4, 10, PITCH.A4, 10
+    #d8 PITCH.C5, 20, PITCH.C5, 20, PITCH.C5, 20, PITCH.C5, 20
+    #d8 PITCH.E4, 20, PITCH.E4, 20, PITCH.F4, 20, PITCH.F4, 7, PITCH.G4, 7, PITCH.F4, 7
+    #d8 PITCH.AS4, 20, PITCH.AS4, 20, PITCH.A4, 20, PITCH.A4, 20
+    #d8 PITCH.G4, 40, PITCH.NONE, 10, PITCH.C4, 10, PITCH.F4, 10, PITCH.A4, 10
+    #d8 PITCH.C5, 20, PITCH.C5, 20, PITCH.C5, 20, PITCH.C5, 20
+    #d8 PITCH.E4, 20, PITCH.E4, 7, PITCH.F4, 7, PITCH.E4, 7
+    #d8 PITCH.F4, 20, PITCH.F4, 7, PITCH.G4, 7, PITCH.F4, 7
+    #d8 PITCH.G4, 20, PITCH.G4, 20, PITCH.C4, 20, PITCH.D4, 10, PITCH.E4, 10
+    #d8 PITCH.F4, 60
+    #d8 PITCH.NONE, 80
     #d8 $FF
 
     ;Text data
@@ -723,7 +724,7 @@ paint:
     jr .a063F
 
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $22, $03
+    db PITCH.E6, $03
     jre .a05DC                                      ;Clear screen
 
 .a063F:
@@ -731,35 +732,35 @@ paint:
     jr .a0647
 
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $23, $03
+    db PITCH.F6, $03
     jre a06EE                                       ;To Puzzle Setup
 
 .a0647:
     eqi a, JOY.BTN.BT1                              ;Button 1
     jr .a064E
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $19, $03
+    db PITCH.G5, $03
     jr .a0664                                       ;Clear a dot
 
 .a064E:
     eqi a, JOY.BTN.BT2                              ;Button 2
     jr .a0655
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $1B, $03
+    db PITCH.A5, $03
     jr .a0664                                       ;Clear a dot
 
 .a0655:
     eqi a, JOY.BTN.BT3                              ;Button 3
     jr .a065C
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $1D, $03
+    db PITCH.B5, $03
     jr .a066C                                       ;Set a dot
 
 .a065C:
     eqi a, JOY.BTN.BT4                              ;Button 4
     jre .a0680
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $1E, $03
+    db PITCH.C6, $03
     jr .a066C                                       ;Set a dot
 
 .a0664:
@@ -798,7 +799,7 @@ paint:
     daa
     staw [PAINT.CURSOR.BCD.Y]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $12, $03
+    db PITCH.C5, $03
     jr .a06AE
 
 .a0694:
@@ -819,7 +820,7 @@ paint:
     daa
     staw [PAINT.CURSOR.BCD.Y]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $14, $03
+    db PITCH.D5, $03
 
 .a06AE:
     ldaw [JOY.DIR.CURR]
@@ -840,7 +841,7 @@ paint:
     daa
     staw [PAINT.CURSOR.BCD.X]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $17, $03
+    db PITCH.F5, $03
 .a06CA:
     jre .a0605
 
@@ -861,13 +862,13 @@ paint:
     daa
     staw [PAINT.CURSOR.BCD.X]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $16, $03
+    db PITCH.E5, $03
 .a06E7:
     jr .a06CA
 ;------------------------------------------------------------
 .a06E8:
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $01, $03
+    db PITCH.G3, $03
     jr .a06E7
 
 ;------------------------------------------------------------
@@ -932,7 +933,7 @@ a06EE:
     jr .a074D
 .a0747:
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $14, $03
+    db PITCH.D5, $03
     jmp paint                                       ;Go to Paint Program
 .a074D:
     neiw [JOY.BTN.CURR], JOY.BTN.STA                ;Start
@@ -940,7 +941,7 @@ a06EE:
     jr .a0758
 .a0754:
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $16, $03
+    db PITCH.E5, $03
     jr .a0765
 ;------------------------------------------------------------
 .a0758:
@@ -1009,7 +1010,7 @@ a06EE:
     jr .a07C6
 ;------------------------------------------------------------
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
-    db $01, $03
+    db PITCH.G3, $03
 .a07C5:
     jr .a07BD
 ;------------------------------------------------------------
