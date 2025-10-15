@@ -631,7 +631,7 @@ startup:
     calt MUSPLAY                                    ;Setup/Play Music
 .a05B2:
     calt JOYREAD                                    ;Read Controller FF90-FF95
-    neiw [$FF93], $01                               ;If Select is pressed...
+    neiw [JOY.BTN.CURR], JOY.BTN.SEL                ;If Select is pressed...
     jmp puzzle                                      ;Setup puzzle
     neiw [$FFD2], $0F
     jre .a0591                                      ;(go to main loop setup)
@@ -639,7 +639,7 @@ startup:
     calf a0D1F                                      ;Draw spiral dot-by-dot
     calt SCR2COPY                                   ; "C258+ ==> C000+"
     calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
-    neiw [$FF93], $08                               ;If Start is pressed...
+    neiw [JOY.BTN.CURR], JOY.BTN.STA                ;If Start is pressed...
     jr paint                                        ;Jump to graphic program
 
     eqiw [$FF8A], $80                               ;Delay for the scrolltext
@@ -708,18 +708,18 @@ paint:
     xri a, $FF
     stax [hl]
     calt JOYREAD                                    ;Read Controller FF90-FF95
-    ldaw [$FF93]
-    offi a, $3F                                     ;Test Buttons 1,2,3,4
+    ldaw [JOY.BTN.CURR]
+    offi a, JOY.BTN.ANY                             ;Test Buttons 1,2,3,4
     jr .a0633
-    ldaw [$FF92]
-    offi a, $0F                                     ;Test U,D,L,R
+    ldaw [JOY.DIR.CURR]
+    offi a, JOY.DIR.ANY                             ;Test U,D,L,R
     jre .a0673
     jre .a0605
 ;------------------------------------------------------------
 .a0633:
-    oniw [$FF95], $09
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA | JOY.BTN.SEL
     jr .a0647
-    eqi a, $08                                      ;Start clears the screen
+    eqi a, JOY.BTN.STA                              ;Start clears the screen
     jr .a063F
 
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
@@ -727,7 +727,7 @@ paint:
     jre .a05DC                                      ;Clear screen
 
 .a063F:
-    eqi a, $01                                      ;Select goes to the Puzzle
+    eqi a, JOY.BTN.SEL                              ;Select goes to the Puzzle
     jr .a0647
 
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
@@ -735,28 +735,28 @@ paint:
     jre a06EE                                       ;To Puzzle Setup
 
 .a0647:
-    eqi a, $02                                      ;Button 1
+    eqi a, JOY.BTN.BT1                              ;Button 1
     jr .a064E
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $19, $03
     jr .a0664                                       ;Clear a dot
 
 .a064E:
-    eqi a, $10                                      ;Button 2
+    eqi a, JOY.BTN.BT2                              ;Button 2
     jr .a0655
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $1B, $03
     jr .a0664                                       ;Clear a dot
 
 .a0655:
-    eqi a, $04                                      ;Button 3
+    eqi a, JOY.BTN.BT3                              ;Button 3
     jr .a065C
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $1D, $03
     jr .a066C                                       ;Set a dot
 
 .a065C:
-    eqi a, $20                                      ;Button 4
+    eqi a, JOY.BTN.BT4                              ;Button 4
     jre .a0680
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $1E, $03
@@ -778,10 +778,10 @@ paint:
     calt DRAWDOT                                    ; "Set Dot; B,C = X-,Y-position"
 
 .a0673:
-    ldaw [$FF92]
-    nei a, $0F                                      ;Check if U,D,L,R pressed at once??
+    ldaw [JOY.DIR.CURR]
+    nei a, JOY.DIR.ANY                              ;Check if U,D,L,R pressed at once??
     jre .a0605
-    oni a, $01                                      ;Up
+    oni a, JOY.DIR.UP                               ;Up
     jr .a0694
 
     ldaw [$FFA7]
@@ -802,7 +802,7 @@ paint:
     jr .a06AE
 
 .a0694:
-    oni a, $04                                      ;Down
+    oni a, JOY.DIR.DN                               ;Down
     jr .a06AE
 
     ldaw [$FFA7]
@@ -822,8 +822,8 @@ paint:
     db $14, $03
 
 .a06AE:
-    ldaw [$FF92]
-    oni a, $08                                      ;Right
+    ldaw [JOY.DIR.CURR]
+    oni a, JOY.DIR.RT                               ;Right
     jr .a06CC
 
     ldaw [$FFA6]
@@ -845,7 +845,7 @@ paint:
     jre .a0605
 
 .a06CC:
-    oni a, $02                                      ;Left
+    oni a, JOY.DIR.LT                               ;Left
     jre .a0605
     ldaw [$FFA6]
     nei a, $07
@@ -927,16 +927,16 @@ a06EE:
     lxi de, $C752
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
     calt JOYREAD                                    ;Read Controller FF90-FF95
-    neiw [$FF93], $01                               ;Select
-    oniw [$FF95], $01                               ;Select trigger
+    neiw [JOY.BTN.CURR], JOY.BTN.SEL                ;Select
+    oniw [JOY.BTN.EDGE], JOY.BTN.SEL                ;Select trigger
     jr .a074D
 .a0747:
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $14, $03
     jmp paint                                       ;Go to Paint Program
 .a074D:
-    neiw [$FF93], $08                               ;Start
-    oniw [$FF95], $08
+    neiw [JOY.BTN.CURR], JOY.BTN.STA                ;Start
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .a0758
 .a0754:
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
@@ -991,17 +991,17 @@ a06EE:
     calt SCR2COPY                                   ; "C258+ ==> C000+"
     calt SCRN2LCD                                   ;Copy Screen RAM to LCD Driver
     calt JOYREAD                                    ;Read Controller FF90-FF95
-    neiw [$FF93], $01                               ;Select
+    neiw [JOY.BTN.CURR], JOY.BTN.SEL                ;Select
     jre .a0747                                      ;To Paint Program
-    neiw [$FF93], $08                               ;Start
-    oniw [$FF95], $08                               ;Start trigger
+    neiw [JOY.BTN.CURR], JOY.BTN.STA                ;Start
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA                ;Start trigger
     jr .a07B4
     jre .a0754                                      ;Restart puzzle
 ;------------------------------------------------------------
 .a07B4:
     eqiw [$FF8A], $80
     jre .a0793
-    ldaw [$FF92]                                    ;Joypad
+    ldaw [JOY.DIR.CURR]                             ;Joypad
     oni a, $0F
 .a07BD:
     jre .a078F                                      ;Keep looping
@@ -1297,8 +1297,8 @@ memset:
 ;------------------------------------------------------------
 ;Read Controller FF90-FF95
 joyread:
-    lxi hl, $FF92                                   ;Current joy storage
-    lxi de, $FF90                                   ;Old joy storage
+    lxi hl, JOY.DIR.CURR                            ;Current joy storage
+    lxi de, JOY.DIR.PREV                            ;Old joy storage
     mvi b, $01                                      ;Copy 2 bytes from curr->old
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
     ani pa, $BF                                     ;PA Bit 6 off
@@ -1345,8 +1345,8 @@ joyread:
     ani a, $38
     orax [de]                                       ;Or with FF93
     stax [de-]                                      ;...and save
-    lxi hl, $FF90                                   ;Get our new,old
-    lxi bc, $FF94
+    lxi hl, JOY.DIR.PREV                            ;Get our new,old
+    lxi bc, JOY.DIR.EDGE
     ldax [hl+]                                      ;And XOR to get controller strobe
     xrax [de+]                                      ;But this strobe function is stupid:
     stax [bc]                                       ;Bits go to 1 whenever the button is

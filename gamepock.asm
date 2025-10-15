@@ -85,3 +85,44 @@ USER402D  = $00EE
     END    = SCR1.END + SCRN.BYTES
     SIZE   = SCRN.BYTES
 }
+
+#const JOY = struct {
+    DIR = struct {
+        PREV = $FF90
+        CURR = $FF92
+        EDGE = $FF94
+
+        UP_F = 0
+        LT_F = 1
+        DN_F = 2
+        RT_F = 3
+
+        UP = %00000001  ; 1 << UP_F
+        LT = %00000010  ; 1 << LT_F
+        DN = %00000100  ; 1 << DN_F
+        RT = %00001000  ; 1 << RT_F
+
+        ANY = %00001111  ; UP | LT | DN | RT
+    }
+    BTN = struct {
+        PREV = $FF91
+        CURR = $FF93
+        EDGE = $FF95
+
+        SEL_F = 0
+        BT1_F = 1
+        BT3_F = 2
+        STA_F = 3
+        BT2_F = 4
+        BT4_F = 5
+
+        SEL = %00000001  ; 1 < SEL
+        BT1 = %00000010  ; 1 < BT1
+        BT3 = %00000100  ; 1 < BT3
+        STA = %00001000  ; 1 < STA
+        BT2 = %00010000  ; 1 < BT2
+        BT4 = %00100000  ; 1 < BT4
+
+        ANY = %00111111  ; STA | SEL | BT1 | BT2 | BT3 | BT4
+    }
+}
