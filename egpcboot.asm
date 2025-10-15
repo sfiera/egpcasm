@@ -398,7 +398,7 @@ calta2:
 scrn2lcd:
     ori pa, $08                                     ;(Port A, bit 3 on)
     lxi hl, SCR1.LCD1_START
-    lxi de, $007D
+    lxi de, SCRN.WIDTH + LCD.WIDTH
     mvi b, $00
 .a01DA:
     ani pa, $FB                                     ;bit 2 off
@@ -406,7 +406,7 @@ scrn2lcd:
     mov pb, a                                       ;Port B = (A)
     ori pa, $02                                     ;bit 1 on
     ani pa, $FD                                     ;bit 1 off
-    mvi c, $31
+    mvi c, LCD.WIDTH - 1
     ori pa, $04                                     ;bit 2 on
 .a01EB:
     ldax [hl-]                                      ;Screen data...
@@ -427,7 +427,7 @@ scrn2lcd:
     ani pa, $F7                                     ;bit 3 off
     ori pa, $10                                     ;bit 4 on
     lxi hl, SCR1.LCD2_START
-    lxi de, $0019
+    lxi de, SCRN.WIDTH - LCD.WIDTH
     mvi b, $00
 .a020C:
     ani pa, $FB                                     ;Same as in 1st loop
@@ -435,7 +435,7 @@ scrn2lcd:
     mov pb, a
     ori pa, $02
     ani pa, $FD
-    mvi c, $31
+    mvi c, LCD.WIDTH - 1
     ori pa, $04
 .a021D:
     ldax [hl+]
@@ -471,7 +471,7 @@ scrn2lcd:
     ori pa, $04
 
 .a0251:
-    mvi c, $18
+    mvi c, (LCD.WIDTH / 2) - 1
 
 .a0253:
     ldax [hl+]
@@ -482,7 +482,7 @@ scrn2lcd:
     jr .a0253
 
     push de
-    lxi de, $0032
+    lxi de, LCD.WIDTH
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     pop de
     calt BYTEXCHG                                   ; "XCHG HL,DE"
