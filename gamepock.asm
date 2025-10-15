@@ -58,6 +58,12 @@ USER4027  = $00EA
 USER402A  = $00EC
 USER402D  = $00EE
 
+#const CART = struct {
+    HEADER = $4000
+
+    MAGIC = $55
+}
+
 #const LCD = struct {
     WIDTH   = 50
     HEIGHT  = 32

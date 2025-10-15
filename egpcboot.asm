@@ -348,16 +348,16 @@ a01A3:
 ; Checks if the cart is present, and possibly jumps to ($4001) or ($4003)
 ; The parameter $C0 sends it to $4001, $C1 to $4003, etc...
 cartchk:
-    lxi hl, $4000
+    lxi hl, CART.HEADER
     ldax [hl]
-    eqi a, $55
+    eqi a, CART.MAGIC
     rets
 
     calt ACCCLR                                     ; "Clear A"
     staw [TIME.SEC]
 .a01B0:
     ldax [hl]
-    eqi a, $55
+    eqi a, CART.MAGIC
     rets
 ;----------------------------------
     eqiw [TIME.SEC], $03
