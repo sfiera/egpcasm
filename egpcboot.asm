@@ -90,7 +90,7 @@ cont:
     calt SCR1CLR                                    ; "Clear Screen RAM"
     calt TILECLR                                    ; "Clear C4B0~C593"
     calt CALT92                                     ; "Clear C594~C86F?"
-    lxi hl, aFF80
+    lxi hl, CART_FLAGS
     mvi b, $49
     calt MEMCLR                                     ; "Clear RAM (HL+)xB"
     calt SCRN2LCD                                   ; Copy Screen RAM to LCD Driver
@@ -213,7 +213,7 @@ memccpy:
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT_00F0:
-    oniw [aFF80], $01                               ;If 1, don't jump to cart.
+    oniw [CART_FLAGS], $01                          ;If 1, don't jump to cart.
     jre a015B
 
     dcrw [$FF9A]
@@ -235,15 +235,15 @@ INTT_00F0:
 .a010F:
     dcr a
     jr .a010F
-    oniw [aFF80], $02
+    oniw [CART_FLAGS], $02
     jr .a011C
 
-    lhld [$FF84]
+    lhld [MUSIC_PTR]
     calf a08A9                               ;Music-playing code...
     jr a0128
 
 .a011C:
-    aniw [aFF80], $fc
+    aniw [CART_FLAGS], $fc
     mvi a, $07
     mov tmm, a
     mvi a, $74
@@ -296,7 +296,7 @@ a015B:
     push bc
     push de
     push hl
-    offiw [aFF80], $80                              ;If 0, don't go to cart's INT routine
+    offiw [CART_FLAGS], $80                         ;If 0, don't go to cart's INT routine
     jmp $4009
 ;---------------------------------------
     adc a, b                                        ;Probably a simple random-number generator.
@@ -338,7 +338,7 @@ sndplay:
 ;Format of the data string is the same as "Play Sound", with $FF terminating the song.
 musplay:
     di
-    oriw [aFF80], $02
+    oriw [CART_FLAGS], $02
     calf a08A9                                      ;Read notes & set timers
 a01A3:
     ei                                              ;(sometimes skipped)
@@ -364,7 +364,7 @@ cartchk:
     jr .a01B0
 
     calf a0E4D                                      ;Sets a timer
-    oriw [aFF80], $80
+    oriw [CART_FLAGS], $80
     inx hl                                          ;->$4001
     pop bc
     ldax [bc]
@@ -625,7 +625,7 @@ startup:
     calt CARTCHK                                    ;[PC+1] Check Cartridge
     db $C1                                          ;Jump to ($4003) in cartridge
 
-    offiw [aFF80], $02                              ;If bit 1 is on, no music
+    offiw [CART_FLAGS], $02                         ;If bit 1 is on, no music
     jr .a05B2
     calf a0E64                                      ;Point HL to the music data
     calt MUSPLAY                                    ;Setup/Play Music
@@ -1157,7 +1157,7 @@ a06EE:
     calf a0E64                                      ;Point HL to music data
     calt MUSPLAY                                    ;Setup/Play Music
 .a0896:
-    oniw [aFF80], $03
+    oniw [CART_FLAGS], $03
     jmp .a0712                                      ;Continue puzzle
     jr .a0896
 ;End of Puzzle Code
@@ -1182,7 +1182,7 @@ a08A9:
     mov b, a
     ldax [hl+]
     staw [$FF99]
-    shld [$FF84]
+    shld [MUSIC_PTR]
     mov a, b
     inr a
     jr a08B6
@@ -1209,7 +1209,7 @@ a08B6:
     mvi a, $00                                      ;Sound?
     mvi a, $03                                      ;Silent
     mov tmm, a
-    oriw [aFF80], $01
+    oriw [CART_FLAGS], $01
     stm
     ret
 
@@ -1639,14 +1639,14 @@ a0A42:
     lxi de, $FFB0
     lxi bc, $FFB5
     mvi a, $04
-    oriw [aFF80], $08
+    oriw [CART_FLAGS], $08
     calf a0C31                                      ;Roll graphics a bit (shift up/dn)
     oniw [$FFC6], $FF
     jr .a0AEF
     lded [$FFC7]
     calf a0E6A                                      ;(FFB0 -> HL)
     mvi b, $04
-    oriw [aFF80], $10
+    oriw [CART_FLAGS], $10
     calf a0BD3                                      ;Copy B*A bytes?
 .a0AEF:
     offiw [$FFC6], $08
@@ -1654,7 +1654,7 @@ a0A42:
     lded [$FFC9]
     lxi hl, $FFB5
     mvi b, $04
-    oriw [aFF80], $10
+    oriw [CART_FLAGS], $10
     calf a0BD3                                      ;Copy B*A bytes?
 .a0B01:
     ldaw [$FF9B]
@@ -1765,7 +1765,7 @@ calta4:
     dcr b
     jr .a0BA0
     pop hl
-    oriw [aFF80], $08
+    oriw [CART_FLAGS], $08
     lxi de, $FFB0
     lxi bc, $FFB8
     calf a0C2F
@@ -1774,7 +1774,7 @@ calta4:
     oni a, $40
     jr .a0BC2
     calf a0E6A
-    oriw [aFF80], $10
+    oriw [CART_FLAGS], $10
     calf .a0BD1
 .a0BC2:
     pop de
@@ -1783,7 +1783,7 @@ calta4:
     sknc
     ret
     lxi hl, $FFB8
-    oriw [aFF80], $10
+    oriw [CART_FLAGS], $10
 ;--
 .a0BD1:
     mvi b, $07
@@ -1801,7 +1801,7 @@ a0BD3:
     pop va
     jr .a0BE9
 .a0BE2:
-    oniw [aFF80], $10
+    oniw [CART_FLAGS], $10
     jr .a0BE8
     inx hl
     jr .a0BE9
@@ -1814,7 +1814,7 @@ a0BD3:
     dcr b
     jr .a0BD5
 .a0BED:
-    aniw [aFF80], $EF
+    aniw [CART_FLAGS], $EF
     ret
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
@@ -1904,7 +1904,7 @@ a0C31:
     jr .a0C3C
 
 .a0C4D:
-    oniw [aFF80], $08
+    oniw [CART_FLAGS], $08
     jr .a0C54
     orax [de]
     jr .a0C56
@@ -1915,7 +1915,7 @@ a0C31:
     stax [de]
     mov a, c
     pop bc
-    oniw [aFF80], $08
+    oniw [CART_FLAGS], $08
     jr .a0C61
     orax [bc]
     jr .a0C63
@@ -1928,7 +1928,7 @@ a0C31:
     inx de
     dcrw [$FF96]
     jre .a0C33
-    aniw [aFF80], $F7
+    aniw [CART_FLAGS], $F7
     ret
 
 ;------------------------------------------------------------
@@ -2287,7 +2287,7 @@ a0E4D:
     mov tmm, a
     mvi a, $74
     mov tm0, a
-    aniw [aFF80], $FC
+    aniw [CART_FLAGS], $FC
     stm
     ei
     ret
@@ -2689,5 +2689,6 @@ membump:
     addr = 0xff80
     size = 0x0080
 }
-aFF80:
-    #res 1
+
+CART_FLAGS = $FF80
+MUSIC_PTR = $FF84
