@@ -666,15 +666,15 @@ paint:
     lxi hl, $C570
     stax [hl+]
     inr a
-    staw [$FFA6]
+    staw [PAINT.CURSOR.X]
     mvi a, $39
     stax [hl+]
     inr a
-    staw [$FFA7]
+    staw [PAINT.CURSOR.Y]
     calt ACCCLR                                     ; "Clear A"
     stax [hl+]
-    staw [$FFA0]                                    ;X,Y position for cursor
-    staw [$FFA1]
+    staw [PAINT.CURSOR.BCD.X]                       ;X,Y position for cursor
+    staw [PAINT.CURSOR.BCD.Y]
     mvi a, $99                                      ;What does this do?
     mvi b, $0A
     inx hl
@@ -690,10 +690,10 @@ paint:
 .a0605:
     mvi a, $70
     staw [$FF8A]
-    lxi hl, $FFA0                                   ;Print the X-, Y- position
+    lxi hl, PAINT.CURSOR.BCD.X                      ;Print the X-, Y- position
     calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
     db $26, $00, $19                                ;Parameters for the print routine
-    lxi hl, $FFA1
+    lxi hl, PAINT.CURSOR.BCD.Y
     calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
     db $3E, $00, $19                                ;Parameters for the print routine
     calt CALTA2                                     ; "CALT A0, CALT A4"
@@ -763,17 +763,17 @@ paint:
     jr .a066C                                       ;Set a dot
 
 .a0664:
-    ldaw [$FFA6]
+    ldaw [PAINT.CURSOR.X]
     mov b, a
-    ldaw [$FFA7]
+    ldaw [PAINT.CURSOR.Y]
     mov c, a
     calt ERASDOT                                    ; "Clear Dot; B,C = X-,Y-position"
     jr .a0673
 
 .a066C:
-    ldaw [$FFA6]
+    ldaw [PAINT.CURSOR.X]
     mov b, a
-    ldaw [$FFA7]
+    ldaw [PAINT.CURSOR.Y]
     mov c, a
     calt DRAWDOT                                    ; "Set Dot; B,C = X-,Y-position"
 
@@ -784,19 +784,19 @@ paint:
     oni a, JOY.DIR.UP                               ;Up
     jr .a0694
 
-    ldaw [$FFA7]
-    nei a, $0E                                      ;Check lower limits of X-pos
+    ldaw [PAINT.CURSOR.Y]
+    nei a, PAINT.TOP                                ;Check lower limits of X-pos
 .a0680:
     jr .a069B
 
     dcr a
-    staw [$FFA7]
+    staw [PAINT.CURSOR.Y]
     dcr a
     mov [$C571], a
-    ldaw [$FFA1]
+    ldaw [PAINT.CURSOR.BCD.Y]
     adi a, $01
     daa
-    staw [$FFA1]
+    staw [PAINT.CURSOR.BCD.Y]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $12, $03
     jr .a06AE
@@ -805,19 +805,19 @@ paint:
     oni a, JOY.DIR.DN                               ;Down
     jr .a06AE
 
-    ldaw [$FFA7]
-    nei a, $3A                                      ;Check lower cursor limit
+    ldaw [PAINT.CURSOR.Y]
+    nei a, PAINT.BOTTOM - 1                         ;Check lower cursor limit
 .a069B:
     jr .a06B7
 
     inr a
-    staw [$FFA7]
+    staw [PAINT.CURSOR.Y]
     dcr a
     mov [$C571], a
-    ldaw [$FFA1]
+    ldaw [PAINT.CURSOR.BCD.Y]
     adi a, $99
     daa
-    staw [$FFA1]
+    staw [PAINT.CURSOR.BCD.Y]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $14, $03
 
@@ -826,19 +826,19 @@ paint:
     oni a, JOY.DIR.RT                               ;Right
     jr .a06CC
 
-    ldaw [$FFA6]
-    nei a, $43
+    ldaw [PAINT.CURSOR.X]
+    nei a, PAINT.RIGHT - 1
 .a06B7:
     jr .a06D4
 
     inr a
-    staw [$FFA6]
+    staw [PAINT.CURSOR.X]
     dcr a
     mov [$C570], a
-    ldaw [$FFA0]
+    ldaw [PAINT.CURSOR.BCD.X]
     adi a, $01
     daa
-    staw [$FFA0]
+    staw [PAINT.CURSOR.BCD.X]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $17, $03
 .a06CA:
@@ -847,19 +847,19 @@ paint:
 .a06CC:
     oni a, JOY.DIR.LT                               ;Left
     jre .a0605
-    ldaw [$FFA6]
-    nei a, $07
+    ldaw [PAINT.CURSOR.X]
+    nei a, PAINT.LEFT
 .a06D4:
     jr .a06E8
 
     dcr a
-    staw [$FFA6]
+    staw [PAINT.CURSOR.X]
     dcr a
     mov [$C570], a
-    ldaw [$FFA0]
+    ldaw [PAINT.CURSOR.BCD.X]
     adi a, $99
     daa
-    staw [$FFA0]
+    staw [PAINT.CURSOR.BCD.X]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db $16, $03
 .a06E7:
@@ -2043,9 +2043,9 @@ a0CFA:
     shld [$FFD6]
     calt FONTGET                                    ;Byte -> Point to Font Graphic
     mvi b, $04                                      ;(5 pixels wide)
-    lxi de, $FFA0
+    lxi de, PAINT.CURSOR.BCD.X
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
-    lxi hl, $FFA0                                   ;First copy it to RAM...
+    lxi hl, PAINT.CURSOR.BCD.X                      ;First copy it to RAM...
 
 a0D0C:
     lxi de, SCR2.BEGIN + 72                         ;Then put it on screen, 3 pixels at a time.
@@ -2692,3 +2692,20 @@ membump:
 
 CART_FLAGS = $FF80
 MUSIC_PTR = $FF84
+
+#const PAINT = struct {
+    CURSOR = struct {
+        X = $FFA6
+        Y = $FFA7
+        BCD = struct {
+            X = $FFA0
+            Y = $FFA1
+        }
+    }
+    LEFT    = 7
+    TOP     = 14
+    RIGHT   = 75 - 7   ; 68 = SCRN.WIDTH - LEFT
+    BOTTOM  = 64 - 5   ; 59 = SCRN.HEIGHT - 5
+    WIDTH   = 68 - 7   ; 61 = RIGHT - LEFT
+    HEIGHT  = 59 - 14  ; 45 = BOTTOM - TOP
+}
