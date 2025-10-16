@@ -88,7 +88,7 @@ cont:
     mvi a, $74
     mov tm0, a                                      ;Timer option reg = #$74
     calt SCR1CLR                                    ; "Clear Screen RAM"
-    calt TILECLR                                    ; "Clear C4B0~C593"
+    calt OBJCLR                                     ; "Clear C4B0~C593"
     calt CALT92                                     ; "Clear C594~C86F?"
     lxi hl, CART_FLAGS
     mvi b, $49
@@ -161,7 +161,7 @@ memccpy:
     dw accclr    ;Clear A
     dw scr2clr   ;Clear Screen 2 RAM
     dw scr1clr   ;Clear Screen RAM
-    dw tileclr   ;Clear C4B0~C593
+    dw objclr    ;Clear C4B0~C593
     dw calt92    ;Clear C594~C7FF
     dw memclr    ;Clear RAM (HL+)xB
     dw addrhlde  ;HL <== HL+DE
@@ -170,8 +170,8 @@ memccpy:
     dw scrnswap  ;Swap C258+ <==> C000+
     dw scr1copy  ;C000+ ==> C258+
     dw scr2copy  ;C258+ ==> C000+
-    dw calta2    ;CALT 00A0, CALT 00A4
-    dw calta4    ;?? (Move some RAM around...)
+    dw scrncomp  ;CALT 00A0, CALT 00A4
+    dw tiledraw  ;?? (Move some RAM around...)
     dw multiply  ;HL <== AxE
     dw bytexchg  ;XCHG HL,DE
     dw memcopy   ;((HL+) ==> (DE+))xB
@@ -387,9 +387,9 @@ cartchk:
 ;CALT 00A0, CALT 00A4
 ; Copies the 2nd screen to the screen buffer & moves some text around
 ; And updates the LCD...
-calta2:
+scrncomp:
     calt SCR2COPY                                   ; "C258+ ==> C000+"
-    calt CALTA4                                     ; "?? (Move some RAM around...)"
+    calt OBJDRAW                                    ; "?? (Move some RAM around...)"
 ;-----------------------------------------------------------
 ;Copy Screen RAM to LCD Driver
 ; A very important and often-used function.  The LCD won't show anything without it...
@@ -653,42 +653,42 @@ startup:
 paint:
     calf a0E4D                                      ;Turn timer on
     calt SCR2CLR                                    ; "Clear Screen 2 RAM"
-    calt TILECLR                                    ; "Clear C4B0~C593"
+    calt OBJCLR                                     ; "Clear C4B0~C593"
     lxi hl, str_cursor                              ;"GRA"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
     db $02, $00, $1 @ str_cursor.len                ;Parameters for the text routine
-.a05DC:
-    mvi a, $05
-    lxi hl, $C4B8
+.clear:
+    mvi a, %101                                     ; a=5
+    lxi hl, PAINT.CURSOR.TILE
     stax [hl+]
     inx hl
     stax [hl]
-    inr a
-    lxi hl, $C570
+    inr a                                           ; a=6 (PAINT.LEFT - 1)
+    lxi hl, PAINT.CURSOR.SPRITE.X
     stax [hl+]
-    inr a
+    inr a                                           ; a=7 (PAINT.LEFT)
     staw [PAINT.CURSOR.X]
-    mvi a, $39
+    mvi a, $39                                      ; a=57 (PAINT.BOTTOM - 2)
     stax [hl+]
-    inr a
+    inr a                                           ; a=58 (PAINT.BOTTOM - 1)
     staw [PAINT.CURSOR.Y]
     calt ACCCLR                                     ; "Clear A"
     stax [hl+]
     staw [PAINT.CURSOR.BCD.X]                       ;X,Y position for cursor
     staw [PAINT.CURSOR.BCD.Y]
-    mvi a, $99                                      ;What does this do?
+    mvi a, $99                                      ;Marker for no sprite?
     mvi b, $0A
     inx hl
     inx hl
 .a05FE:
-    stax [hl+]                                      ;Just writes "99s" 3 bytes apart
+    stax [hl+]                                      ;Clear remaining 11 sprites
     inx hl
     inx hl
     dcr b
     jr .a05FE
     calf a0D68                                      ;Draw Border
 
-.a0605:
+.loop:
     mvi a, $70
     staw [$FF8A]
     lxi hl, PAINT.CURSOR.BCD.X                      ;Print the X-, Y- position
@@ -697,179 +697,182 @@ paint:
     lxi hl, PAINT.CURSOR.BCD.Y
     calt DRAWHEX                                    ; "[PC+3] Print Bytes on-Screen"
     db $3E, $00, $19                                ;Parameters for the print routine
-    calt CALTA2                                     ; "CALT A0, CALT A4"
+    calt SCRNCOMP                                   ; "CALT A0, CALT A4"
 .a0618:
     calt CARTCHK                                    ;[PC+1] Check Cartridge
     db $C1                                          ;Jump to ($4003) in cartridge
 
     oniw [$FF8A], $80
     jr .a0618
-    lxi hl, $C572
+    lxi hl, PAINT.CURSOR.SPRITE.TILE
     ldax [hl]
     xri a, $FF
     stax [hl]
     calt JOYREAD                                    ;Read Controller FF90-FF95
     ldaw [JOY.BTN.CURR]
     offi a, JOY.BTN.ANY                             ;Test Buttons 1,2,3,4
-    jr .a0633
+    jr .input.btn
     ldaw [JOY.DIR.CURR]
     offi a, JOY.DIR.ANY                             ;Test U,D,L,R
-    jre .a0673
-    jre .a0605
+    jre .input.joy
+    jre .loop
+
+.input:
+..btn:
 ;------------------------------------------------------------
-.a0633:
     oniw [JOY.BTN.EDGE], JOY.BTN.STA | JOY.BTN.SEL
-    jr .a0647
+    jr ..button1
     eqi a, JOY.BTN.STA                              ;Start clears the screen
-    jr .a063F
+    jr ..select
 
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.E6, $03
-    jre .a05DC                                      ;Clear screen
+    jre .clear                                      ;Clear screen
 
-.a063F:
+..select:
     eqi a, JOY.BTN.SEL                              ;Select goes to the Puzzle
-    jr .a0647
+    jr ..button1
 
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.F6, $03
     jre a06EE                                       ;To Puzzle Setup
 
-.a0647:
+..button1:
     eqi a, JOY.BTN.BT1                              ;Button 1
-    jr .a064E
+    jr ..button2
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.G5, $03
-    jr .a0664                                       ;Clear a dot
+    jr ..erasedot                                   ;Clear a dot
 
-.a064E:
+..button2:
     eqi a, JOY.BTN.BT2                              ;Button 2
-    jr .a0655
+    jr ..button3
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.A5, $03
-    jr .a0664                                       ;Clear a dot
+    jr ..erasedot                                   ;Clear a dot
 
-.a0655:
+..button3:
     eqi a, JOY.BTN.BT3                              ;Button 3
-    jr .a065C
+    jr ..button4
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.B5, $03
-    jr .a066C                                       ;Set a dot
+    jr ..drawdot                                    ;Set a dot
 
-.a065C:
+..button4:
     eqi a, JOY.BTN.BT4                              ;Button 4
-    jre .a0680
+    jre ..up.error
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.C6, $03
-    jr .a066C                                       ;Set a dot
+    jr ..drawdot                                    ;Set a dot
 
-.a0664:
+..erasedot:
     ldaw [PAINT.CURSOR.X]
     mov b, a
     ldaw [PAINT.CURSOR.Y]
     mov c, a
     calt ERASDOT                                    ; "Clear Dot; B,C = X-,Y-position"
-    jr .a0673
+    jr ..joy
 
-.a066C:
+..drawdot:
     ldaw [PAINT.CURSOR.X]
     mov b, a
     ldaw [PAINT.CURSOR.Y]
     mov c, a
     calt DRAWDOT                                    ; "Set Dot; B,C = X-,Y-position"
 
-.a0673:
+..joy:
+..up:
     ldaw [JOY.DIR.CURR]
     nei a, JOY.DIR.ANY                              ;Check if U,D,L,R pressed at once??
-    jre .a0605
+    jre .loop
     oni a, JOY.DIR.UP                               ;Up
-    jr .a0694
+    jr ..down
 
     ldaw [PAINT.CURSOR.Y]
     nei a, PAINT.TOP                                ;Check lower limits of X-pos
-.a0680:
-    jr .a069B
+...error:
+    jr ..down.error
 
     dcr a
     staw [PAINT.CURSOR.Y]
     dcr a
-    mov [$C571], a
+    mov [PAINT.CURSOR.SPRITE.Y], a
     ldaw [PAINT.CURSOR.BCD.Y]
     adi a, $01
     daa
     staw [PAINT.CURSOR.BCD.Y]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.C5, $03
-    jr .a06AE
+    jr ..right
 
-.a0694:
+..down:
     oni a, JOY.DIR.DN                               ;Down
-    jr .a06AE
+    jr ..right
 
     ldaw [PAINT.CURSOR.Y]
     nei a, PAINT.BOTTOM - 1                         ;Check lower cursor limit
-.a069B:
-    jr .a06B7
+...error:
+    jr ..right.error
 
     inr a
     staw [PAINT.CURSOR.Y]
     dcr a
-    mov [$C571], a
+    mov [PAINT.CURSOR.SPRITE.Y], a
     ldaw [PAINT.CURSOR.BCD.Y]
-    adi a, $99
+    adi a, $99                                      ; BCD "-1"
     daa
     staw [PAINT.CURSOR.BCD.Y]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.D5, $03
 
-.a06AE:
+..right:
     ldaw [JOY.DIR.CURR]
     oni a, JOY.DIR.RT                               ;Right
-    jr .a06CC
+    jr ..left
 
     ldaw [PAINT.CURSOR.X]
     nei a, PAINT.RIGHT - 1
-.a06B7:
-    jr .a06D4
+...error:
+    jr ..left.error
 
     inr a
     staw [PAINT.CURSOR.X]
     dcr a
-    mov [$C570], a
+    mov [PAINT.CURSOR.SPRITE.X], a
     ldaw [PAINT.CURSOR.BCD.X]
     adi a, $01
     daa
     staw [PAINT.CURSOR.BCD.X]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.F5, $03
-.a06CA:
-    jre .a0605
+..loop2:
+    jre .loop
 
-.a06CC:
+..left:
     oni a, JOY.DIR.LT                               ;Left
-    jre .a0605
+    jre .loop
     ldaw [PAINT.CURSOR.X]
     nei a, PAINT.LEFT
-.a06D4:
-    jr .a06E8
+...error:
+    jr ..error
 
     dcr a
     staw [PAINT.CURSOR.X]
     dcr a
-    mov [$C570], a
+    mov [PAINT.CURSOR.SPRITE.X], a
     ldaw [PAINT.CURSOR.BCD.X]
-    adi a, $99
+    adi a, $99                                      ; BCD "-1"
     daa
     staw [PAINT.CURSOR.BCD.X]
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.E5, $03
-.a06E7:
-    jr .a06CA
+..loop3:
+    jr ..loop2
 ;------------------------------------------------------------
-.a06E8:
+..error:
     calt SNDPLAY                                    ;[PC+2] Setup/Play Sound
     db PITCH.G3, $03
-    jr .a06E7
+    jr ..loop3
 
 ;------------------------------------------------------------
 ;Puzzle Setup Routines...
@@ -1282,7 +1285,7 @@ calt92:
     jr memclr                                       ;Clear RAM (HL+)xB
 
 ;Clear C4B0~C593
-tileclr:
+objclr:
     lxi hl, $C4B0                                   ;Set RAM pointer
     mvi b, $E3                                      ;and just drop into the func.
 
@@ -1696,7 +1699,7 @@ fontget:
     ret
 ;------------------------------------------------------------
 ;?? (Move some RAM around...)
-calta4:
+tiledraw:
     lxi hl, $C591
     mvi b, $0B
 
@@ -2407,7 +2410,7 @@ caltd6:
 .a0EE5:
     dcrw [$FF97]
     jr .a0EF0                                       ;Based on 97, jump to cart (4007)!
-    calt CALTA2                                     ; "CALT A0, CALT A4"
+    calt SCRNCOMP                                   ; "CALT A0, CALT A4"
     pop bc
     lbcd [$4007]                                    ;Read vector from $4007 on cart, however...
     jb                                              ;...all 5 Pokekon games have "0000" there!
@@ -2702,6 +2705,12 @@ MUSIC_PTR = $FF84
             X = $FFA0
             Y = $FFA1
         }
+        SPRITE = struct {
+            X     = $C570
+            Y     = $C571
+            TILE  = $C572
+        }
+        TILE = $C4B8
     }
     LEFT    = 7
     TOP     = 14
