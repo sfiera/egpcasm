@@ -9,7 +9,7 @@ ACCCLR    = $008A
 SCR2CLR   = $008C
 SCR1CLR   = $008E
 OBJCLR    = $0090
-CALT92    = $0092
+WRAMCLR   = $0092
 MEMCLR    = $0094
 ADDRHLDE  = $0096
 ADDRHLI   = $0098
@@ -90,6 +90,40 @@ USER402D  = $00EE
     BEGIN  = SCR1.END
     END    = SCR1.END + SCRN.BYTES
     SIZE   = SCRN.BYTES
+}
+
+#const OBJ = struct {
+    BEGIN  = SCR2.END
+    END    = SCR2.END + 16*12 + 3*12
+
+    ; 8 bytes to draw white (mask), then 8 bytes to draw black (set)
+    TILE = struct {
+        SIZE = 16
+        COUNT = 12
+        BEGIN = SCR2.END
+        END = SCR2.END + 16*12
+    }
+
+    COUNT   = 12
+    WIDTH   = 8
+    HEIGHT  = 8
+
+    O0   = struct { X = $C570, Y = $C571, TILE = $C572 }
+    O1   = struct { X = $C573, Y = $C574, TILE = $C575 }
+    O2   = struct { X = $C576, Y = $C577, TILE = $C578 }
+    O3   = struct { X = $C579, Y = $C57A, TILE = $C57B }
+    O4   = struct { X = $C57C, Y = $C57D, TILE = $C57E }
+    O5   = struct { X = $C57F, Y = $C580, TILE = $C581 }
+    O6   = struct { X = $C582, Y = $C583, TILE = $C584 }
+    O7   = struct { X = $C585, Y = $C586, TILE = $C587 }
+    O8   = struct { X = $C588, Y = $C589, TILE = $C58A }
+    O9   = struct { X = $C58B, Y = $C58C, TILE = $C58D }
+    O10  = struct { X = $C58E, Y = $C58F, TILE = $C590 }
+    O11  = struct { X = $C591, Y = $C592, TILE = $C593 }
+}
+
+#const FONT = struct {
+    WIDTH = 5
 }
 
 #const JOY = struct {

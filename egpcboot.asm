@@ -89,7 +89,7 @@ cont:
     mov tm0, a                                      ;Timer option reg = #$74
     calt SCR1CLR                                    ; "Clear Screen RAM"
     calt OBJCLR                                     ; "Clear C4B0~C593"
-    calt CALT92                                     ; "Clear C594~C86F?"
+    calt WRAMCLR                                    ; "Clear C594~C86F?"
     lxi hl, CART_FLAGS
     mvi b, $49
     calt MEMCLR                                     ; "Clear RAM (HL+)xB"
@@ -162,7 +162,7 @@ memccpy:
     dw scr2clr   ;Clear Screen 2 RAM
     dw scr1clr   ;Clear Screen RAM
     dw objclr    ;Clear C4B0~C593
-    dw calt92    ;Clear C594~C7FF
+    dw wramclr   ;Clear C594~C7FF
     dw memclr    ;Clear RAM (HL+)xB
     dw addrhlde  ;HL <== HL+DE
     dw addrhli   ;[PC+1] HL +- byte
@@ -171,7 +171,7 @@ memccpy:
     dw scr1copy  ;C000+ ==> C258+
     dw scr2copy  ;C258+ ==> C000+
     dw scrncomp  ;CALT 00A0, CALT 00A4
-    dw tiledraw  ;?? (Move some RAM around...)
+    dw objdraw   ;?? (Move some RAM around...)
     dw multiply  ;HL <== AxE
     dw bytexchg  ;XCHG HL,DE
     dw memcopy   ;((HL+) ==> (DE+))xB
@@ -659,7 +659,7 @@ paint:
     db $02, $00, $1 @ str_cursor.len                ;Parameters for the text routine
 .clear:
     mvi a, %101                                     ; a=5
-    lxi hl, PAINT.CURSOR.TILE
+    lxi hl, PAINT.CURSOR.TILE + 8
     stax [hl+]
     inx hl
     stax [hl]
@@ -1278,15 +1278,15 @@ a0905:
     ret
 ;------------------------------------------------------------
 ;Clear C594~C7FF
-calt92:
-    lxi hl, $C594                                   ;Set HL
+wramclr:
+    lxi hl, OBJ.END                                 ;Set HL
     calf a0905                                      ;And jump to above routine
     mvi b, $13                                      ;Then clear $14 more bytes
     jr memclr                                       ;Clear RAM (HL+)xB
 
 ;Clear C4B0~C593
 objclr:
-    lxi hl, $C4B0                                   ;Set RAM pointer
+    lxi hl, OBJ.BEGIN                               ;Set RAM pointer
     mvi b, $E3                                      ;and just drop into the func.
 
 ;Clear RAM (HL+)xB
@@ -1480,14 +1480,14 @@ drawhex:
     pop de
     ldax [de+]
     mov b, a
-    staw [$FF9B]
+    staw [DRAW.X]
     ldax [de+]
     mov c, a
     ani a, $07
-    staw [$FF9C]
+    staw [DRAW.YOFF]
     ldax [de+]
     push de
-    staw [$FF9D]
+    staw [DRAW.DATA]
     ani a, $07
     inr a
     push bc
@@ -1496,9 +1496,9 @@ drawhex:
     sded [$FFC0]
     mov b, a
     mvi c, $40
-    oniw [$FF9D], $40
+    oniw [DRAW.DATA], $40
     mvi c, $10
-    oniw [$FF9D], $08
+    oniw [DRAW.DATA], $08
     jr .a0A19
 .a0A0F:
     dcr b
@@ -1525,7 +1525,7 @@ drawhex:
 
 .a0A23:
     pop bc
-    aniw [$FF9D], $BF
+    aniw [DRAW.DATA], $BF
     jr a0A42
 
 ;-----------------------------------------------------------
@@ -1541,19 +1541,19 @@ drawtext:
     pop de
     ldax [de+]
     mov b, a
-    staw [$FF9B]
+    staw [DRAW.X]
     ldax [de+]
     mov c, a                                        ;Save X,Y position in BC
     ani a, $07
-    staw [$FF9C]
+    staw [DRAW.YOFF]
     ldax [de+]
     push de
-    staw [$FF9D]
+    staw [DRAW.DATA]
     ani a, $0F                                      ;Get # of characters to write
     shld [$FFC0]
     staw [$FF98]                                    ;# saved in 98
 a0A42:
-    ldaw [$FF9D]
+    ldaw [DRAW.DATA]
     oni a, $80                                      ;Check if 0 (2nd screen) or 1 (1st screen)
     jr .a0A49
     calt SCR1LOC                                    ; "Set HL to screen (B,C)"
@@ -1567,10 +1567,10 @@ a0A42:
     lxi de, $004B
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     shld [$FFC4]
-    ldaw [$FF9D]
+    ldaw [DRAW.DATA]
     calt NIBLSWAP                                   ; "(RLR A)x4"
     ani a, $07                                      ;Get text spacing (0-7)
-    staw [$FF9D]                                    ;Save in 9D
+    staw [DRAW.DATA]                                ;Save in 9D
 
 ;--
 .a0A62:
@@ -1584,26 +1584,26 @@ a0A42:
     lhld [$FFC2]
     shld [$FFC7]
     lxi de, $FFB0
-    mvi b, $04
-    calf a0BD3
+    mvi b, FONT.WIDTH - 1
+    calf drawstripe
     offi a, $80
     jr .a0A85
-    lded [$FF9D]
+    lded [DRAW.DATA]
     calt ADDRHLE                                    ; "HL <== HL+E"
     shld [$FFC2]
 .a0A85:
     lhld [$FFC4]
     shld [$FFC9]
     lxi de, $FFB5
-    mvi b, $04
-    calf a0BD3                                      ;Copy B*A bytes?
+    mvi b, FONT.WIDTH - 1
+    calf drawstripe                                 ;Copy B*A bytes?
     offi a, $80
     jr .a0AA0
-    lded [$FF9D]
+    lded [DRAW.DATA]
     calt ADDRHLE                                    ; "HL <== HL+E"
     shld [$FFC4]
 .a0AA0:
-    mov b, [$FF9C]
+    mov b, [DRAW.YOFF]
     calt ACCCLR                                     ; "Clear A"
 .a0AA5:
     dcr b
@@ -1649,24 +1649,24 @@ a0A42:
     jr .a0AEF
     lded [$FFC7]
     calf a0E6A                                      ;(FFB0 -> HL)
-    mvi b, $04
+    mvi b, FONT.WIDTH - 1
     oriw [CART_FLAGS], $10
-    calf a0BD3                                      ;Copy B*A bytes?
+    calf drawstripe                                 ;Copy B*A bytes?
 .a0AEF:
     offiw [$FFC6], $08
     jr .a0B01
     lded [$FFC9]
     lxi hl, $FFB5
-    mvi b, $04
+    mvi b, FONT.WIDTH - 1
     oriw [CART_FLAGS], $10
-    calf a0BD3                                      ;Copy B*A bytes?
+    calf drawstripe                                 ;Copy B*A bytes?
 .a0B01:
-    ldaw [$FF9B]
+    ldaw [DRAW.X]
     adi a, $05
     mov b, a
-    ldaw [$FF9D]
+    ldaw [DRAW.DATA]
     add a, b
-    staw [$FF9B]
+    staw [DRAW.X]
     jre .a0A62
 
 ;------------------------------------------------------------
@@ -1699,61 +1699,62 @@ fontget:
     ret
 ;------------------------------------------------------------
 ;?? (Move some RAM around...)
-tiledraw:
-    lxi hl, $C591
-    mvi b, $0B
+objdraw:
+    lxi hl, OBJ.O11.X
+    mvi b, OBJ.COUNT - 1
 
-.a0B3C:
+.loop:
     push hl
     push bc
-    calf .a0B4C
+    calf .draw
     pop bc
     pop hl
     dcx hl
     dcx hl
     dcx hl
     dcr b
-    jr .a0B3C
+    jr .loop
     ret
+
 ;------------------------------------------------------------
-.a0B4C:
+.draw:
     ldax [hl+]
-    staw [$FF9B]
+    staw [DRAW.X]
     mov b, a
-    adi a, $07
-    lti a, $53
+    adi a, OBJ.WIDTH - 1
+    lti a, SCRN.WIDTH + OBJ.WIDTH
     ret
     ldax [hl+]
     mov c, a
     ani a, $07
-    staw [$FF9C]
+    staw [DRAW.YOFF]
     mov a, c
-    adi a, $07
-    lti a, $47
+    adi a, OBJ.HEIGHT - 1
+    lti a, SCRN.HEIGHT + OBJ.HEIGHT - 1
     ret
     ldax [hl]
-    staw [$FF9D]
-    lti a, $0C
+    staw [DRAW.DATA]
+    lti a, OBJ.TILE.COUNT
     ret
     calt SCR1LOC                                    ; "Set HL to screen (B,C)"
-    shld [$FF9E]
+    shld [DRAW.LOC]
     mov a, h
-    oni a, $40
+    oni a, $40                                      ; Not clipped by top of screen
     jr .a0B75
     lxi de, $FFB0
-    calf .a0BD1
+    calf drawtile
 .a0B75:
-    lhld [$FF9E]
-    lxi de, $004B
+    lhld [DRAW.LOC]
+    lxi de, SCRN.WIDTH
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     push hl
     lxi de, $FFB8
-    calf .a0BD1
+    calf drawtile
     calf a0E6A
     lxi de, $FFC0
-    mvi b, $0F
+    mvi b, OBJ.TILE.SIZE - 1
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
-    ldaw [$FF9D]
+    ldaw [DRAW.DATA]
     calt TILELOC                                    ; "HL=C4B0+(A*$10)"
     lxi de, $FFB0
     lxi bc, $FFB8
@@ -1761,72 +1762,91 @@ tiledraw:
     push hl
     calf a0E6A
     lxi de, $FFC0
-    mvi b, $0F
-.a0BA0:
+    mvi b, OBJ.TILE.SIZE - 1
+..loop:
     ldax [hl]
     xrax [de+]
     stax [hl+]
     dcr b
-    jr .a0BA0
+    jr ..loop
     pop hl
     oriw [CART_FLAGS], $08
     lxi de, $FFB0
     lxi bc, $FFB8
     calf a0C2F
-    lded [$FF9E]
+    lded [DRAW.LOC]
     mov a, d
-    oni a, $40
+    oni a, $40                                      ; Not clipped by top of screen
     jr .a0BC2
     calf a0E6A
     oriw [CART_FLAGS], $10
-    calf .a0BD1
+    calf drawtile
 .a0BC2:
     pop de
-    lxi hl, $3DA8
+    lxi hl, $4000 - SCRN.BYTES
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     sknc
     ret
     lxi hl, $FFB8
     oriw [CART_FLAGS], $10
-;--
-.a0BD1:
-    mvi b, $07
+    ; fall through to drawtile
 
-a0BD3:
-    ldaw [$FF9B]
-.a0BD5:
-    offi a, $80
+;------------------------------------------------------------
+; drawtile: Draw 8x8 tile as a stripe of width 8.
+drawtile:
+    mvi b, OBJ.WIDTH - 1
+    ; fall through to drawstripe
+
+;------------------------------------------------------------
+; drawstripe: Copy bytes to a place in the screen.
+; The tile must be aligned in a single 8-bit vertical band,
+; but the tile can have a variable width set by b.
+;
+;   Inputs:
+;     [DRAW.X]:   Horizontal position of first column on screen.
+;                 May be negative or greater than the screen’s width.
+;                 In this case, part of the tile will be cut off.
+;     b:          Columns to draw, minus 1
+;     [hl..hl+b]  Tile data to draw
+;     [de..de+b]  Location in screen to draw data
+drawstripe:
+    ldaw [DRAW.X]
+.loop:
+    offi a, $80                                     ; Past left edge of screen (negative)
     jr .a0BE2
-    lti a, $4B
-    jr .a0BED
+    lti a, SCRN.WIDTH                               ; Past right edge of screen
+    jr .done
     push va
     ldax [hl+]
     stax [de+]
     pop va
-    jr .a0BE9
+    jr .next
 .a0BE2:
     oniw [CART_FLAGS], $10
     jr .a0BE8
     inx hl
-    jr .a0BE9
+    jr .next
 
 .a0BE8:
     inx de
-.a0BE9:
+.next:
     inr a
     nop
     dcr b
-    jr .a0BD5
-.a0BED:
+    jr .loop
+.done:
     aniw [CART_FLAGS], $EF
     ret
+
 ;------------------------------------------------------------
 ;Set HL to screen (B,C)
 scr1loc:
     lxi hl, SCR1.BEGIN - 75                         ;Point before Sc. RAM
+    ; fall through to scr2loc (skip first instruction)
+
 scr2loc:
     lxi hl, SCR2.BEGIN - 75                         ;Point before Sc.2 RAM
-    mvi e, $4B
+    mvi e, SCRN.WIDTH
     mov a, c
     mvi c, $00
     adi a, $08
@@ -1866,33 +1886,37 @@ addrhlde:
     adc a, h
     mov h, a
     ret
+
 ;------------------------------------------------------------
 ;HL=C4B0+(A*$10)
 tileloc:
-    lxi hl, $C4B0
-    mvi e, $10
+    lxi hl, OBJ.BEGIN
+    mvi e, OBJ.TILE.SIZE
     mov b, a
-.a0C2A:
+.loop:
     dcr b
-    jr .a0C2D
+    jr .continue
     ret
 
-.a0C2D:
+.continue:
     calt ADDRHLE                                    ; "HL <== HL+E"
-    jr .a0C2A
+    jr .loop
+
 ;------------------------------------------------------------
 a0C2F:
     mvi a, $07
+
 a0C31:
     staw [$FF96]
 
 .a0C33:
-    ldaw [$FF9C]
+    ldaw [DRAW.YOFF]
     staw [$FF97]
     push bc
     mvi c, $00
     ldax [hl+]
-.a0C3C:
+
+.loop:
     dcrw [$FF97]
     jr .a0C40
     jr .a0C4D
@@ -1905,7 +1929,7 @@ a0C31:
     ral
     mov c, a
     pop va
-    jr .a0C3C
+    jr .loop
 
 .a0C4D:
     oniw [CART_FLAGS], $08
@@ -2422,7 +2446,7 @@ caltd6:
     ani a, $0F
     lti a, $0C
     jr .a0EE5
-    lxi hl, $C56E
+    lxi hl, OBJ.TILE.END - 2
 .a0EFF:
     inx hl
     inx hl
@@ -2705,12 +2729,8 @@ MUSIC_PTR = $FF84
             X = $FFA0
             Y = $FFA1
         }
-        SPRITE = struct {
-            X     = $C570
-            Y     = $C571
-            TILE  = $C572
-        }
-        TILE = $C4B8
+        SPRITE = OBJ.O0
+        TILE = OBJ.BEGIN
     }
     LEFT    = 7
     TOP     = 14
@@ -2718,4 +2738,11 @@ MUSIC_PTR = $FF84
     BOTTOM  = 64 - 5   ; 59 = SCRN.HEIGHT - 5
     WIDTH   = 68 - 7   ; 61 = RIGHT - LEFT
     HEIGHT  = 59 - 14  ; 45 = BOTTOM - TOP
+}
+
+#const DRAW = struct {
+    X     = $FF9B
+    YOFF  = $FF9C
+    DATA  = $FF9D
+    LOC   = $FF9E
 }
