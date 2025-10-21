@@ -67,22 +67,22 @@ cont:
     per                                             ;Set Port E to AB mode
     mvi a, $C1
     mov pa, a
-    ani pa, $FE
-    ori pa, $01
+    ani pa, LCD.RW ^ $FF
+    ori pa, LCD.RW
     calt ACCCLR                                     ; "Clear A"
     mov mb, a                                       ;Mode B = All outputs
-    ori pa, $38
+    ori pa, LCD.CS1 | LCD.CS2 | LCD.CS3
 
-    mvi a, $39
+    mvi a, LCD.I.ON                                 ; All LCDs: turn on
     mov pb, a
-    ori pa, $02
-    ani pa, $FD
-    mvi a, $3E
+    ori pa, LCD.E
+    ani pa, LCD.E ^ $FF
+    mvi a, LCD.I.START |  LCD.I.P1                  ; All LCDs: show page 1 first
     mov pb, a
-    ori pa, $02
-    ani pa, $FD
-    ani pa, $C7
-    ori pa, $04
+    ori pa, LCD.E
+    ani pa, LCD.E ^ $FF
+    ani pa, (LCD.CS1 | LCD.CS2 | LCD.CS3) ^ $FF
+    ori pa, LCD.DI
     mvi a, $07
     mov tmm, a                                      ;Timer register = #$7
     mvi a, $74
@@ -396,90 +396,91 @@ scrncomp:
 
     ;Set up writing for LCD controller #1
 scrn2lcd:
-    ori pa, $08                                     ;(Port A, bit 3 on)
+.lcd1:
+    ori pa, LCD.CS1                                 ;Select LCD chip 1
     lxi hl, SCR1.LCD1_START
     lxi de, SCRN.WIDTH + LCD.WIDTH
-    mvi b, $00
-.a01DA:
-    ani pa, $FB                                     ;bit 2 off
+    mvi b, LCD.I.P1 | 0
+..nextpage:
+    ani pa, LCD.DI ^ $FF                            ;Switch to instruction mode
     mov a, b
-    mov pb, a                                       ;Port B = (A)
-    ori pa, $02                                     ;bit 1 on
-    ani pa, $FD                                     ;bit 1 off
+    mov pb, a                                       ;Select next page
+    ori pa, LCD.E                                   ;Send instruction...
+    ani pa, LCD.E ^ $FF                             ;...with falling edge of E
     mvi c, LCD.WIDTH - 1
-    ori pa, $04                                     ;bit 2 on
-.a01EB:
+    ori pa, LCD.DI                                  ;Switch to data mode
+..nextcol:
     ldax [hl-]                                      ;Screen data...
     mov pb, a                                       ;...to Port B
-    ori pa, $02                                     ;bit 1 on
-    ani pa, $FD                                     ;bit 1 off
+    ori pa, LCD.E                                   ;Send data...
+    ani pa, LCD.E ^ $FF                             ;...with falling edge of E
     dcr c
-    jr .a01EB
+    jr ..nextcol
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     mov a, b
-    adinc a, $40
-    jr .a01FE
+    adinc a, LCD.I.POFF
+    jr .lcd2
     mov b, a
-    jre .a01DA
+    jre ..nextpage
 
     ;Set up writing for LCD controller #2
-.a01FE:
-    ani pa, $F7                                     ;bit 3 off
-    ori pa, $10                                     ;bit 4 on
+.lcd2:
+    ani pa, LCD.CS1 ^ $FF                           ;Deselect LCD chip 1
+    ori pa, LCD.CS2                                 ;Select LCD chip 2
     lxi hl, SCR1.LCD2_START
     lxi de, SCRN.WIDTH - LCD.WIDTH
-    mvi b, $00
-.a020C:
-    ani pa, $FB                                     ;Same as in 1st loop
+    mvi b, LCD.I.P1 | 0
+..nextpage:
+    ani pa, LCD.DI ^ $FF
     mov a, b
     mov pb, a
-    ori pa, $02
-    ani pa, $FD
+    ori pa, LCD.E
+    ani pa, LCD.E ^ $FF
     mvi c, LCD.WIDTH - 1
-    ori pa, $04
-.a021D:
+    ori pa, LCD.DI
+..nextcol:
     ldax [hl+]
     mov pb, a
-    ori pa, $02
-    ani pa, $FD
+    ori pa, LCD.E
+    ani pa, LCD.E ^ $FF
     dcr c
-    jr .a021D
+    jr ..nextcol
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     mov a, b
-    adinc a, $40
-    jr .a0230
+    adinc a, LCD.I.POFF
+    jr .lcd3
     mov b, a
-    jre .a020C
+    jre ..nextpage
 
-.a0230:
+.lcd3:
     calt ACCCLR                                     ; "Clear A"
     staw [$FF96]
 
     ;Set up writing for LCD controller #3
-    ani pa, $EF                                     ;bit 4 off
-    ori pa, $20                                     ;bit 5 on
+    ani pa, LCD.CS2 ^ $FF                           ;Deselect LCD chip 2
+    ori pa, LCD.CS3                                 ;Select LCD chip 3
     lxi hl, SCR1.LCD3A_START
     lxi de, SCR1.LCD3B_START
-    mvi b, $00
-.a0241:
-    ani pa, $FB
+    mvi b, LCD.I.P1 | 0
+..nextpage:
+    ani pa, LCD.DI ^ $FF
     mov a, b
     mov pb, a
-    ori pa, $02
-    ani pa, $FD
+    ori pa, LCD.E
+    ani pa, LCD.E ^ $FF
     nop
-    ori pa, $04
+    ori pa, LCD.DI
 
-.a0251:
+..nexthalf:
     mvi c, (LCD.WIDTH / 2) - 1
 
-.a0253:
+..nextcol:
     ldax [hl+]
     mov pb, a
-    ori pa, $02
-    ani pa, $FD
+    ori pa, LCD.E
+    ani pa, LCD.E ^ $FF
     dcr c
-    jr .a0253
+    jr ..nextcol
 
     push de
     lxi de, LCD.WIDTH
@@ -488,16 +489,16 @@ scrn2lcd:
     calt BYTEXCHG                                   ; "XCHG HL,DE"
     inrw [$FF96]                                    ;Skip if a carry...
     offiw [$FF96], $01                              ;Do alternating lines
-    jr .a0251
+    jr ..nexthalf
 
     mov a, b
-    adinc a, $40
-    jr .a0274
+    adinc a, LCD.I.POFF
+    jr .done
     mov b, a
-    jre .a0241
+    jre ..nextpage
 
-.a0274:
-    ani pa, $DF                                     ;bit 5 off
+.done:
+    ani pa, LCD.CS3 ^ $FF                           ;bit 5 off
     ret
 
 ;-----------------------------------------------------------
@@ -1305,7 +1306,7 @@ joyread:
     lxi de, JOY.DIR.PREV                            ;Old joy storage
     mvi b, $01                                      ;Copy 2 bytes from curr->old
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
-    ani pa, $BF                                     ;PA Bit 6 off
+    ani pa, JOY.CS1 ^ $FF                           ;PA Bit 6 off
     mov a, pc                                       ;Get port C
     xri a, $FF
 .a092F:
@@ -1318,14 +1319,14 @@ joyread:
     xri a, $FF
     eqa a, c                                        ;Check if both reads are equal
     jr .a092F
-    ori pa, $40                                     ;PA Bit 6 on
+    ori pa, JOY.CS1                                 ;PA Bit 6 on
     ani a, $03
     stax [de+]                                      ;Save controller read in 92
     mov a, c
     calf rar2x                                      ;RLR A x2
     ani a, $07
     stax [de-]                                      ;Save cont in 93
-    ani pa, $7F                                     ;PA bit 7 off
+    ani pa, JOY.CS2 ^ $FF                           ;PA bit 7 off
     mov a, pc                                       ;Get other controller bits
     xri a, $FF
 .a094E:
@@ -1338,7 +1339,7 @@ joyread:
     xri a, $FF
     eqa a, c                                        ;...check again
     jr .a094E
-    ori pa, $80                                     ;PA bit 7 on
+    ori pa, JOY.CS2                                 ;PA bit 7 on
     ral
     ral
     ani a, $0C

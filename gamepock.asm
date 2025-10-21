@@ -67,6 +67,23 @@ USER402D  = $00EE
 #const LCD = struct {
     WIDTH   = 50
     HEIGHT  = 32
+
+    RW   = %00000001  ; Hypothetical
+    E    = %00000010
+    DI   = %00000100
+    CS1  = %00001000
+    CS2  = %00010000
+    CS3  = %00100000
+    I = struct {
+        ON     = %00111001   ; Turn LCD on
+        OFF    = %00111000   ; Turn LCD off
+        START  = %00111110   ; Show page N first
+        P1     = (0 << 6)`8  ; Top 50x8 slice of LCD
+        P2     = (1 << 6)`8  ; Second 50x8 slice of LCD
+        P3     = (2 << 6)`8  ; Third 50x8 slice of LCD
+        P4     = (3 << 6)`8  ; Bottom 50x8 slice of LCD
+        POFF   = (1 << 6)`8  ; Offset between pages
+    }
 }
 
 #const SCRN = struct {
@@ -165,6 +182,9 @@ USER402D  = $00EE
 
         ANY = %00111111  ; STA | SEL | BT1 | BT2 | BT3 | BT4
     }
+
+    CS1 = %01000000
+    CS2 = %10000000
 }
 
 #const TIME = struct {
