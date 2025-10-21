@@ -173,7 +173,7 @@ memccpy:
     dw scrncomp  ;CALT 00A0, CALT 00A4
     dw objdraw   ;?? (Move some RAM around...)
     dw multiply  ;HL <== AxE
-    dw bytexchg  ;XCHG HL,DE
+    dw xchghlde  ;XCHG HL,DE
     dw memcopy   ;((HL+) ==> (DE+))xB
     dw memrcpy   ;((HL-) ==> (DE-))xB
     dw memswap   ;((HL+) <==> (DE+))xB
@@ -486,7 +486,7 @@ scrn2lcd:
     lxi de, LCD.WIDTH
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     pop de
-    calt BYTEXCHG                                   ; "XCHG HL,DE"
+    calt XCHGHLDE                                   ; "XCHG HL,DE"
     inrw [$FF96]                                    ;Skip if a carry...
     offiw [$FF96], $01                              ;Do alternating lines
     jr ..nexthalf
@@ -1129,7 +1129,7 @@ a06EE:
     dcx hl                                          ;Is this a delay or something?
     dcr b                                           ;There's already a CALT that subs HL...
     jr .a0862
-    calt BYTEXCHG                                   ; "XCHG HL,DE"
+    calt XCHGHLDE                                   ; "XCHG HL,DE"
     pop va
     push de
     calt FONTGET                                    ;Byte -> Point to Font Graphic
@@ -1174,7 +1174,7 @@ accclr:
     ret
 ;------------------------------------------------------------
 ;XCHG HL,DE
-bytexchg:
+xchghlde:
     push hl
     push de
     pop hl
@@ -1369,7 +1369,7 @@ scr2copy:
 ;C000+ ==> C258+
 scr1copy:
     calf a0E5E
-    calt BYTEXCHG                                   ; "XCHG HL,DE"
+    calt XCHGHLDE                                   ; "XCHG HL,DE"
 a0984:
     mvi c, $02
 .a0986:
@@ -1989,7 +1989,7 @@ a0C82:
     nei a, $FF                                      ;If it's a terminator, loop
     jre .a0CB6
     calt FONTGET                                    ;Byte -> Point to Font Graphic
-    calt BYTEXCHG                                   ; "XCHG HL,DE"
+    calt XCHGHLDE                                   ; "XCHG HL,DE"
     ldaw [$FF83]
     calf a0CBF                                      ;(Scroll text)
     push de
@@ -2341,7 +2341,7 @@ caltd0:
     push hl
 a0E73:
     calt TILELOC                                    ; "HL=C4B0+(A*$10)"
-    calt BYTEXCHG                                   ; "XCHG HL,DE"
+    calt XCHGHLDE                                   ; "XCHG HL,DE"
     call .a0E78                                     ;This call means the next code runs twice
 
 .a0E78:
@@ -2389,7 +2389,7 @@ caltd4:
 a0EA9:
     calt TILELOC                                    ; "HL=C4B0+(A*$10)"
     lxi de, $FFBF
-    calt BYTEXCHG                                   ; "XCHG HL,DE"
+    calt XCHGHLDE                                   ; "XCHG HL,DE"
     push de
     mvi c, $0F
 .a0EB2:
