@@ -22,4 +22,4 @@ $(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm font.1bpp
 	    -f symbols -o gamepock/$*.sym
 
 font.1bpp: font.png
-	rgbgfx -d1 -o $@ $<
+	rgbgfx -Zd1 -o $@ $<
