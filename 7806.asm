@@ -68,7 +68,7 @@
 }
 
 #subruledef pd7806_wa {
-    {addr: u16} => {
+    {addr: i16} => {
         assert(addr >= $FF00)
         addr[7:0]
     }
@@ -83,7 +83,7 @@
 }
 
 #subruledef pd7806_jr_reladdr {
-    {addr: u16} => {
+    {addr: i16} => {
         reladdr = addr - $ - 1
         assert(reladdr <= $3f)
         assert(reladdr >= -$3f)
@@ -92,7 +92,7 @@
 }
 
 #subruledef pd7806_jre_reladdr {
-    {addr: u16} => {
+    {addr: i16} => {
         reladdr = addr - $ - 2
         assert(reladdr <= $ff)
         assert(reladdr >= -$ff)
@@ -101,7 +101,7 @@
 }
 
 #subruledef pd7806_calf_addr {
-    {addr: u16} => {
+    {addr: i16} => {
         assert(addr >= $0800)
         assert(addr <= $0FFF)
         addr`12
@@ -109,7 +109,7 @@
 }
 
 #subruledef pd7806_calt_addr {
-    {addr: u16} => {
+    {addr: i16} => {
         assert(addr[0:0] == 0)
         assert(addr >= $0080)
         assert(addr <= $00FE)
@@ -118,13 +118,13 @@
 }
 
 #subruledef pd7806_db {
-    {b1: u8} => b1
-    {b1: u8}, {bn: pd7806_db} => b1 @ bn
+    {b1: i8} => b1
+    {b1: i8}, {bn: pd7806_db} => b1 @ bn
 }
 
 #subruledef pd7806_dw {
-    {w1: u16} => le(w1)
-    {w1: u16}, {wn: pd7806_dw} => le(w1) @ pd7806_dw
+    {w1: i16} => le(w1)
+    {w1: i16}, {wn: pd7806_dw} => le(w1) @ pd7806_dw
 }
 
 #ruledef pd7806 {
@@ -133,26 +133,26 @@
     mov a, {reg: pd7806_r1} => $0 @ %1 @ reg
     mov {port: pd7806_sr}, a => $4dc @ port
     mov a, {port: pd7806_sr} => $4cc @ port
-    mov {reg: pd7806_r}, [{addr: u16}] => $706 @ %1 @ reg @ le(addr)
-    mov [{addr: u16}], {reg: pd7806_r} => $707 @ %1 @ reg @ le(addr)
-    mvi {reg: pd7806_r}, {value: u8} => $6 @ %1 @ reg @ value
+    mov {reg: pd7806_r}, [{addr: i16}] => $706 @ %1 @ reg @ le(addr)
+    mov [{addr: i16}], {reg: pd7806_r} => $707 @ %1 @ reg @ le(addr)
+    mvi {reg: pd7806_r}, {value: i8} => $6 @ %1 @ reg @ value
     staw [{addr: pd7806_wa}] => $38 @ addr
     ldaw [{addr: pd7806_wa}] => $28 @ addr
     stax [{reg: pd7806_rpa}] => $3 @ %1 @ reg
     ldax [{reg: pd7806_rpa}] => $2 @ %1 @ reg
 
     ; 16-Bit Data Transfer
-    sbcd [{addr: u16}] => $701E @ le(addr)
-    sded [{addr: u16}] => $702E @ le(addr)
-    shld [{addr: u16}] => $703E @ le(addr)
-    sspd [{addr: u16}] => $700E @ le(addr)
-    lbcd [{addr: u16}] => $701F @ le(addr)
-    lded [{addr: u16}] => $702F @ le(addr)
-    lhld [{addr: u16}] => $703F @ le(addr)
-    lspd [{addr: u16}] => $700F @ le(addr)
+    sbcd [{addr: i16}] => $701E @ le(addr)
+    sded [{addr: i16}] => $702E @ le(addr)
+    shld [{addr: i16}] => $703E @ le(addr)
+    sspd [{addr: i16}] => $700E @ le(addr)
+    lbcd [{addr: i16}] => $701F @ le(addr)
+    lded [{addr: i16}] => $702F @ le(addr)
+    lhld [{addr: i16}] => $703F @ le(addr)
+    lspd [{addr: i16}] => $700F @ le(addr)
     push {reg: pd7806_rp1} => $48 @ reg @ $e
     pop {reg: pd7806_rp1} => $48 @ reg @ $f
-    lxi {reg: pd7806_rp}, {value: u16} => reg @ $4 @ le(value)
+    lxi {reg: pd7806_rp}, {value: i16} => reg @ $4 @ le(value)
 
     ; Arithmetic
     add     a, {reg: pd7806_r}   => $60C @ %0 @ reg
@@ -185,37 +185,37 @@
     eqax    [{reg: pd7806_rpa}]  => $70F @ %1 @ reg  ; skip: zero
 
     ; Immediate Data Transfer (Accumulator)
-    xri    a, {value: u8}  => $16 @ value
-    adinc  a, {value: u8}  => $26 @ value  ; skip: no carry
-    suinb  a, {value: u8}  => $36 @ value  ; skip: no borrow
-    adi    a, {value: u8}  => $46 @ value
-    aci    a, {value: u8}  => $56 @ value
-    sui    a, {value: u8}  => $66 @ value
-    sbi    a, {value: u8}  => $76 @ value
-    ani    a, {value: u8}  => $07 @ value
-    ori    a, {value: u8}  => $17 @ value
-    gti    a, {value: u8}  => $27 @ value  ; skip: no borrow
-    lti    a, {value: u8}  => $37 @ value  ; skip: borrow
-    oni    a, {value: u8}  => $47 @ value  ; skip: no zero
-    offi   a, {value: u8}  => $57 @ value  ; skip: zero
-    nei    a, {value: u8}  => $67 @ value  ; skip: no zero
-    eqi    a, {value: u8}  => $77 @ value  ; skip: zero
+    xri    a, {value: i8}  => $16 @ value
+    adinc  a, {value: i8}  => $26 @ value  ; skip: no carry
+    suinb  a, {value: i8}  => $36 @ value  ; skip: no borrow
+    adi    a, {value: i8}  => $46 @ value
+    aci    a, {value: i8}  => $56 @ value
+    sui    a, {value: i8}  => $66 @ value
+    sbi    a, {value: i8}  => $76 @ value
+    ani    a, {value: i8}  => $07 @ value
+    ori    a, {value: i8}  => $17 @ value
+    gti    a, {value: i8}  => $27 @ value  ; skip: no borrow
+    lti    a, {value: i8}  => $37 @ value  ; skip: borrow
+    oni    a, {value: i8}  => $47 @ value  ; skip: no zero
+    offi   a, {value: i8}  => $57 @ value  ; skip: zero
+    nei    a, {value: i8}  => $67 @ value  ; skip: no zero
+    eqi    a, {value: i8}  => $77 @ value  ; skip: zero
 
     ; Immediate Data Transfer (Special Register)
-    ani  {port: pd7806_rp2}, {value: u8} => $648 @ %10 @ port @ value
-    ori  {port: pd7806_rp2}, {value: u8} => $649 @ %10 @ port @ value
-    offi {port: pd7806_rp2}, {value: u8} => $64d @ %10 @ port @ value  ; skip: no zero
-    oni  {port: pd7806_rp2}, {value: u8} => $64c @ %10 @ port @ value  ; skip: zero
+    ani  {port: pd7806_rp2}, {value: i8} => $648 @ %10 @ port @ value
+    ori  {port: pd7806_rp2}, {value: i8} => $649 @ %10 @ port @ value
+    offi {port: pd7806_rp2}, {value: i8} => $64d @ %10 @ port @ value  ; skip: no zero
+    oni  {port: pd7806_rp2}, {value: i8} => $64c @ %10 @ port @ value  ; skip: zero
 
     ; Working Register
-    aniw    [{addr: pd7806_wa}], {value: u8} => $05 @ addr @ value
-    oriw    [{addr: pd7806_wa}], {value: u8} => $15 @ addr @ value
-    gtiw    [{addr: pd7806_wa}], {value: u8} => $25 @ addr @ value  ; skip: no borrow
-    ltiw    [{addr: pd7806_wa}], {value: u8} => $35 @ addr @ value  ; skip: borrow
-    oniw    [{addr: pd7806_wa}], {value: u8} => $45 @ addr @ value  ; skip: no zero
-    offiw   [{addr: pd7806_wa}], {value: u8} => $55 @ addr @ value  ; skip: zero
-    neiw    [{addr: pd7806_wa}], {value: u8} => $65 @ addr @ value  ; skip: no zero
-    eqiw    [{addr: pd7806_wa}], {value: u8} => $75 @ addr @ value  ; skip: zero
+    aniw    [{addr: pd7806_wa}], {value: i8} => $05 @ addr @ value
+    oriw    [{addr: pd7806_wa}], {value: i8} => $15 @ addr @ value
+    gtiw    [{addr: pd7806_wa}], {value: i8} => $25 @ addr @ value  ; skip: no borrow
+    ltiw    [{addr: pd7806_wa}], {value: i8} => $35 @ addr @ value  ; skip: borrow
+    oniw    [{addr: pd7806_wa}], {value: i8} => $45 @ addr @ value  ; skip: no zero
+    offiw   [{addr: pd7806_wa}], {value: i8} => $55 @ addr @ value  ; skip: zero
+    neiw    [{addr: pd7806_wa}], {value: i8} => $65 @ addr @ value  ; skip: no zero
+    eqiw    [{addr: pd7806_wa}], {value: i8} => $75 @ addr @ value  ; skip: zero
 
     ; Increment/Decrement
     inr {reg: pd7802_r2} => $4 @ %0 @ reg   ; skip: carry
@@ -237,13 +237,13 @@
     rar => $4831
 
     ; Jump
-    jmp {addr: u16} => $54 @ le(addr)
+    jmp {addr: i16} => $54 @ le(addr)
     jb => $73
     jr {reladdr: pd7806_jr_reladdr} => %11 @ reladdr
     jre {reladdr: pd7806_jre_reladdr} => $4E[7:1] @ reladdr
 
     ; Call
-    call {addr: u16} => $44 @ le(addr)
+    call {addr: i16} => $44 @ le(addr)
     calf {addr: pd7806_calf_addr} => %0111 @ addr
     calt {addr: pd7806_calt_addr} => %10 @ addr
 

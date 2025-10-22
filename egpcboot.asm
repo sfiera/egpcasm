@@ -67,7 +67,7 @@ cont:
     per                                             ;Set Port E to AB mode
     mvi a, $C1
     mov pa, a
-    ani pa, LCD.RW ^ $FF
+    ani pa, !LCD.RW
     ori pa, LCD.RW
     calt ACCCLR                                     ; "Clear A"
     mov mb, a                                       ;Mode B = All outputs
@@ -76,12 +76,12 @@ cont:
     mvi a, LCD.I.ON                                 ; All LCDs: turn on
     mov pb, a
     ori pa, LCD.E
-    ani pa, LCD.E ^ $FF
+    ani pa, !LCD.E
     mvi a, LCD.I.START |  LCD.I.P1                  ; All LCDs: show page 1 first
     mov pb, a
     ori pa, LCD.E
-    ani pa, LCD.E ^ $FF
-    ani pa, (LCD.CS1 | LCD.CS2 | LCD.CS3) ^ $FF
+    ani pa, !LCD.E
+    ani pa, !LCD.CS1 & !LCD.CS2 & !LCD.CS3
     ori pa, LCD.DI
     mvi a, $07
     mov tmm, a                                      ;Timer register = #$7
@@ -402,18 +402,18 @@ scrn2lcd:
     lxi de, SCRN.WIDTH + LCD.WIDTH
     mvi b, LCD.I.P1 | 0
 ..nextpage:
-    ani pa, LCD.DI ^ $FF                            ;Switch to instruction mode
+    ani pa, !LCD.DI                                 ;Switch to instruction mode
     mov a, b
     mov pb, a                                       ;Select next page
     ori pa, LCD.E                                   ;Send instruction...
-    ani pa, LCD.E ^ $FF                             ;...with falling edge of E
+    ani pa, !LCD.E                                  ;...with falling edge of E
     mvi c, LCD.WIDTH - 1
     ori pa, LCD.DI                                  ;Switch to data mode
 ..nextcol:
     ldax [hl-]                                      ;Screen data...
     mov pb, a                                       ;...to Port B
     ori pa, LCD.E                                   ;Send data...
-    ani pa, LCD.E ^ $FF                             ;...with falling edge of E
+    ani pa, !LCD.E                                  ;...with falling edge of E
     dcr c
     jr ..nextcol
     calt ADDRHLDE                                   ; "HL <== HL+DE"
@@ -425,24 +425,24 @@ scrn2lcd:
 
     ;Set up writing for LCD controller #2
 .lcd2:
-    ani pa, LCD.CS1 ^ $FF                           ;Deselect LCD chip 1
+    ani pa, !LCD.CS1                                ;Deselect LCD chip 1
     ori pa, LCD.CS2                                 ;Select LCD chip 2
     lxi hl, SCR1.LCD2_START
     lxi de, SCRN.WIDTH - LCD.WIDTH
     mvi b, LCD.I.P1 | 0
 ..nextpage:
-    ani pa, LCD.DI ^ $FF
+    ani pa, !LCD.DI
     mov a, b
     mov pb, a
     ori pa, LCD.E
-    ani pa, LCD.E ^ $FF
+    ani pa, !LCD.E
     mvi c, LCD.WIDTH - 1
     ori pa, LCD.DI
 ..nextcol:
     ldax [hl+]
     mov pb, a
     ori pa, LCD.E
-    ani pa, LCD.E ^ $FF
+    ani pa, !LCD.E
     dcr c
     jr ..nextcol
     calt ADDRHLDE                                   ; "HL <== HL+DE"
@@ -457,17 +457,17 @@ scrn2lcd:
     staw [$FF96]
 
     ;Set up writing for LCD controller #3
-    ani pa, LCD.CS2 ^ $FF                           ;Deselect LCD chip 2
+    ani pa, !LCD.CS2                                ;Deselect LCD chip 2
     ori pa, LCD.CS3                                 ;Select LCD chip 3
     lxi hl, SCR1.LCD3A_START
     lxi de, SCR1.LCD3B_START
     mvi b, LCD.I.P1 | 0
 ..nextpage:
-    ani pa, LCD.DI ^ $FF
+    ani pa, !LCD.DI
     mov a, b
     mov pb, a
     ori pa, LCD.E
-    ani pa, LCD.E ^ $FF
+    ani pa, !LCD.E
     nop
     ori pa, LCD.DI
 
@@ -478,7 +478,7 @@ scrn2lcd:
     ldax [hl+]
     mov pb, a
     ori pa, LCD.E
-    ani pa, LCD.E ^ $FF
+    ani pa, !LCD.E
     dcr c
     jr ..nextcol
 
@@ -498,7 +498,7 @@ scrn2lcd:
     jre ..nextpage
 
 .done:
-    ani pa, LCD.CS3 ^ $FF                           ;bit 5 off
+    ani pa, !LCD.CS3                                ;bit 5 off
     ret
 
 ;-----------------------------------------------------------
@@ -1306,7 +1306,7 @@ joyread:
     lxi de, JOY.DIR.PREV                            ;Old joy storage
     mvi b, $01                                      ;Copy 2 bytes from curr->old
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
-    ani pa, JOY.CS1 ^ $FF                           ;PA Bit 6 off
+    ani pa, !JOY.CS1                                ;PA Bit 6 off
     mov a, pc                                       ;Get port C
     xri a, $FF
 .a092F:
@@ -1586,7 +1586,7 @@ drawstr:
     jr .a0A85
     lhld [$FFC2]
     shld [$FFC7]
-    lxi de, $10000 - SCRN.WIDTH - FONT.WIDTH
+    lxi de, -(SCRN.WIDTH + FONT.WIDTH)
     mvi b, FONT.WIDTH - 1
     calf drawstripe
     offi a, $80
@@ -1597,7 +1597,7 @@ drawstr:
 .a0A85:
     lhld [$FFC4]
     shld [$FFC9]
-    lxi de, $10000 - SCRN.WIDTH
+    lxi de, -SCRN.WIDTH
     mvi b, FONT.WIDTH - 1
     calf drawstripe                                 ;Copy B*A bytes?
     offi a, $80
