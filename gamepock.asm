@@ -1,65 +1,82 @@
 #include "7806.asm"
 
-CARTCHK   = $0080
-SCRN2LCD  = $0082
-SNDPLAY   = $0084
-MUSPLAY   = $0086
-JOYREAD   = $0088
-ACCCLR    = $008A
-SCR2CLR   = $008C
-SCR1CLR   = $008E
-OBJCLR    = $0090
-WRAMCLR   = $0092
-MEMCLR    = $0094
-ADDRHLDE  = $0096
-ADDRHLI   = $0098
-ADDRHLE   = $009A
-SCRNSWAP  = $009C
-SCR1COPY  = $009E
-SCR2COPY  = $00A0
-SCRNCOMP  = $00A2
-OBJDRAW   = $00A4
-MULTIPLY  = $00A6
-XCHGHLDE  = $00A8
-MEMCOPY   = $00AA
-MEMRCPY   = $00AC
-MEMSWAP   = $00AE
-DRAWDOT   = $00B0
-DRAWLINE  = $00B2
-DRAWHEX   = $00B4
-DRAWTEXT  = $00B6
-FONTGET   = $00B8
-SCR1LOC   = $00BA
-TILELOC   = $00BC
-MEMSET    = $00BE
+CARTCHK   = $0080  ; [PC+1] Check for cartridge and run if present
+SCRN2LCD  = $0082  ; Send contents of screen 1 to LCD controllers
+SNDPLAY   = $0084  ; [PC+2] Start playing single tone
+MUSPLAY   = $0086  ; Start playing music track
+JOYREAD   = $0088  ; Read controller data to JOY.{DIR,BTN}.{PREV,CURR,EDGE}
+ACCCLR    = $008A  ; Clear accumulator register (a)
+SCR2CLR   = $008C  ; Clear screen 2 area of WRAM
+SCR1CLR   = $008E  ; Clear screen 1 area of WRAM
+OBJCLR    = $0090  ; Clear object tile and data area of WRAM
+WRAMCLR   = $0092  ; Clear general purpose area of WRAM
+MEMCLR    = $0094  ; Clear memory in hl..hl+b
+ADDRHLDE  = $0096  ; hl += de
+ADDRHLI   = $0098  ; [PC+1] hl += immediate value
+ADDRHLE   = $009A  ; hl += e
+SCRNSWAP  = $009C  ; Swap screen 1 and screen 2
+SCR1COPY  = $009E  ; Copy screen 1 from screen 2
+SCR2COPY  = $00A0  ; Copy screen 2 from screen 1
+SCRNCOMP  = $00A2  ; Composite screen 2 and objects into screen 1
+OBJDRAW   = $00A4  ; Draw objects into screen 1
+MULTIPLY  = $00A6  ; hl = a*e
+XCHGHLDE  = $00A8  ; hl, de = de, hl
+MEMCOPY   = $00AA  ; Copy memory from hl..hl+b to de..de+b
+MEMRCPY   = $00AC  ; Copy memory from hl-b..hl to de-b..de
+MEMSWAP   = $00AE  ; Swap memory between hl..hl+b and de..de+b
+DRAWDOT   = $00B0  ; Draw screen 2 pixel at (x, y) position (b, c)
+DRAWLINE  = $00B2  ; [PC+2]
+DRAWHEX   = $00B4  ; [PC+3]
+DRAWTEXT  = $00B6  ; [PC+3]
+FONTGET   = $00B8  ; Get address of font data
+SCR1LOC   = $00BA  ; Get screen 1 address of (x, y) position (b, c)
+TILELOC   = $00BC  ; Get address of object tile index a
+MEMSET    = $00BE  ; Set memory in hl..hl+b to a
 NIBLSWAP  = $00C0
-MEMSUB    = $00C2
+MEMSUB    = $00C2  ; a = *(de+) - *(hl+)
 MEMCMP    = $00C4
 MEMCCPY   = $00C6
 ARITHMTC  = $00C8
-TILEINV   = $00CA
-SCR1INV   = $00CC
-SCR2INV   = $00CE
+TILEINV   = $00CA  ; Invert object tile at index a
+SCR1INV   = $00CC  ; Invert screen 1
+SCR2INV   = $00CE  ; Invert screen 2
 CALTD0    = $00D0
 CALTD2    = $00D2
 CALTD4    = $00D4
 CALTD6    = $00D6
 MEMBUMP   = $00D8
-ERASDOT   = $00DA
+ERASDOT   = $00DA  ; Clear screen 2 pixel at (x, y) position (b, c)
 
-USER4012  = $00DC
-USER4015  = $00DE
-USER4018  = $00E0
-USER401B  = $00E2
-USER401E  = $00E4
-USER4021  = $00E6
-USER4024  = $00E8
-USER4027  = $00EA
-USER402A  = $00EC
-USER402D  = $00EE
+USER0     = $00DC
+USER1     = $00DE
+USER2     = $00E0
+USER3     = $00E2
+USER4     = $00E4
+USER5     = $00E6
+USER6     = $00E8
+USER7     = $00EA
+USER8     = $00EC
+USER9     = $00EE
 
 #const CART = struct {
-    HEADER = $4000
+    HEADER  = $4000  ; [1B] must be CART.MAGIC ($55)
+    MAIN    = $4001  ; [2B] proc address for normal startup
+    MAIN2   = $4003  ; [2B] proc address for hot-swap startup
+    FONT    = $4005  ; [2B] address of font table
+    UNKN    = $4007  ; [2B] proc address of unknown procedure
+    INTT    = $4009  ; [3B] handler, usually “jmp $4XXX”
+    INT0    = $400C  ; [3B] handler, usually “jmp $4XXX”
+    INT1    = $400F  ; [3B] handler, usually “jmp $4XXX”
+    USER0   = $4012  ; [3B] handler, usually “jmp $4XXX”
+    USER1   = $4015  ; [3B] handler, usually “jmp $4XXX”
+    USER2   = $4018  ; [3B] handler, usually “jmp $4XXX”
+    USER3   = $401B  ; [3B] handler, usually “jmp $4XXX”
+    USER4   = $401E  ; [3B] handler, usually “jmp $4XXX”
+    USER5   = $4021  ; [3B] handler, usually “jmp $4XXX”
+    USER6   = $4024  ; [3B] handler, usually “jmp $4XXX”
+    USER7   = $4027  ; [3B] handler, usually “jmp $4XXX”
+    USER8   = $402A  ; [3B] handler, usually “jmp $4XXX”
+    USER9   = $402D  ; [3B] handler, usually “jmp $4XXX”
 
     MAGIC = $55
 }
@@ -141,6 +158,7 @@ USER402D  = $00EE
 
 #const FONT = struct {
     WIDTH = 5
+    COUNT = $64
 }
 
 #const JOY = struct {

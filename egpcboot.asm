@@ -42,7 +42,7 @@ reset:
     jr cont
 ;------------------------------------------------------------
 INT0:
-    jmp $400C
+    jmp CART.INT0
     nop
 ;------------------------------------------------------------
 INTT:
@@ -60,7 +60,7 @@ memrcpy:
     nop
 ;------------------------------------------------------------
 INT1:
-    jmp $400F
+    jmp CART.INT1
 ;------------------------------------------------------------
 cont:
     lxi sp, $0000
@@ -200,16 +200,16 @@ memccpy:
     dw membump   ;[PC+1] INC/DEC Range of bytes from (HL)
     dw erasdot   ;Clear Dot; B,C = X-,Y-position
 
-    dw $4012      ;Jump table for cartridge routines
-    dw $4015
-    dw $4018
-    dw $401B
-    dw $401E
-    dw $4021
-    dw $4024
-    dw $4027
-    dw $402A
-    dw $402D
+    dw CART.USER0  ;Jump table for cartridge routines
+    dw CART.USER1
+    dw CART.USER2
+    dw CART.USER3
+    dw CART.USER4
+    dw CART.USER5
+    dw CART.USER6
+    dw CART.USER7
+    dw CART.USER8
+    dw CART.USER9
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
 INTT_00F0:
@@ -297,7 +297,7 @@ a015B:
     push de
     push hl
     offiw [CART_FLAGS], $80                         ;If 0, don't go to cart's INT routine
-    jmp $4009
+    jmp CART.INTT
 ;---------------------------------------
     adc a, b                                        ;Probably a simple random-number generator.
     adc a, c
@@ -1673,14 +1673,14 @@ a0A42:
 ;------------------------------------------------------------
 ;Byte -> Point to Font Graphic
 fontget:
-    lti a, $64                                      ;If it's greater than 64, use cart font
+    lti a, FONT.COUNT                               ;If it's greater than 64, use cart font
     jr .a0B15                                       ;or...
     lxi de, a02C4                                   ;Point to built-in font
     jr .a0B1B
 
 .a0B15:
-    lded [$4005]                                    ;4005-6 on cart is the font pointer
-    sui a, $64
+    lded [CART.FONT]                                ;4005-6 on cart is the font pointer
+    sui a, FONT.COUNT
 .a0B1B:
     sded [$FF96]
     mov c, a
@@ -1698,6 +1698,7 @@ fontget:
     lded [$FF96]
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     ret
+
 ;------------------------------------------------------------
 ;?? (Move some RAM around...)
 objdraw:
@@ -2437,7 +2438,7 @@ caltd6:
     jr .a0EF0                                       ;Based on 97, jump to cart (4007)!
     calt SCRNCOMP                                   ; "CALT A0, CALT A4"
     pop bc
-    lbcd [$4007]                                    ;Read vector from $4007 on cart, however...
+    lbcd [CART.UNKN]                                ;Read vector from $4007 on cart, however...
     jb                                              ;...all 5 Pokekon games have "0000" there!
 .a0EF0:
     pop hl
