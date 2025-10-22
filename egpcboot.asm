@@ -46,7 +46,7 @@ INT0:
     nop
 ;------------------------------------------------------------
 INTT:
-    jre INTT_00F0
+    jre timer
 ;------------------------------------------------------------
 ;((HL-) ==> (DE-))xB
 ; Copies the data pointed to by HL "(HL)" to (DE).
@@ -210,20 +210,21 @@ memccpy:
     dw CART.USER7
     dw CART.USER8
     dw CART.USER9
+
 ;-----------------------------------------------------------
 ;                        Timer Interrupt
-INTT_00F0:
-    oniw [CART_FLAGS], $01                          ;If 1, don't jump to cart.
-    jre a015B
+timer:
+    oniw [CART_FLAGS], $01
+    jre .a015B
 
     dcrw [$FF9A]
-    jre a0158
+    jre .done
 
     push va
     ldaw [$FF8F]
     staw [$FF9A]
     dcrw [$FF99]
-    jre a012E
+    jre .inctime
 
     push bc
     push de
@@ -240,7 +241,7 @@ INTT_00F0:
 
     lhld [MUSIC_PTR]
     calf a08A9                               ;Music-playing code...
-    jr a0128
+    jr .a0128
 
 .a011C:
     aniw [CART_FLAGS], $fc
@@ -250,21 +251,21 @@ INTT_00F0:
     mov tm0, a
     stm
 
-a0128:
+.a0128:
     pop hl
     pop de
     pop bc
 
-a012E:
+.inctime:
     ldaw [TIME.BCD.SUB]
     adi a, $01
     daa
     staw [TIME.BCD.SUB]
     sknc
-    jr .a0139
-    jr .a014E
+    jr ..sec
+    jr ..user
 
-.a0139:
+..sec:
     inrw [TIME.SEC]
     nop
     ldaw [TIME.BCD.SEC]
@@ -272,26 +273,28 @@ a012E:
     daa
     staw [TIME.BCD.SEC]
     sknc
-    jr .a0147
-    jr .a014E
+    jr ..hun
+    jr ..user
 
-.a0147:
+..hun:
     ldaw [TIME.BCD.HUN]
     adi a, $01
     daa
     staw [TIME.BCD.HUN]
-.a014E:
+
+..user:
     oniw [$FF8A], $80
     inrw [$FF8A]
     inrw [$FF8B]
     nop
     pop va
+
 ;--------
-a0158:
+.done:
     ei
     reti
 ;------------------------------------------------------------
-a015B:
+.a015B:
     push va
     push bc
     push de
@@ -317,7 +320,8 @@ a015B:
     rar
     adc a, b
     staw [$FF8E]
-    jre a0128
+    jre .a0128
+
 ;------------------------------------------------------------
 ;[PC+2] Setup/Play Sound
 ; 1st byte is sound pitch (00[silence] to $25); 2nd byte is length.
