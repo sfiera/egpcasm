@@ -1,4 +1,4 @@
-#include "7806.asm"
+#include "pd7806.asm"
 
 CARTCHK   = $0080  ; [PC+1] Check for cartridge and run if present
 SCRN2LCD  = $0082  ; Send contents of screen 1 to LCD controllers
