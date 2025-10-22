@@ -185,7 +185,7 @@ memccpy:
     dw scr1loc   ;Set HL to screen (B,C)
     dw tileloc   ;HL=C4B0+(A*$10)
     dw memset    ;A ==> (HL+)xB
-    dw niblswap  ;(RLR A)x4
+    dw acc4rar   ;(RLR A)x4
     dw memsub    ;(DE+)-(HL+) ==> A
     dw memcmp    ;?? (Find 1st diff. byte in (HL),(DE)xB)
     dw memccpy   ;?? (Find diff. & Copy bytes)
@@ -1512,7 +1512,7 @@ drawhex:
 
 .a0A12:
     ldax [hl]
-    calt NIBLSWAP                                   ; "(RLR A)x4"
+    calt ACC4RAR                                    ; "(RLR A)x4"
     ani a, $0F
     ora a, c
     stax [de+]
@@ -1575,7 +1575,7 @@ drawstr:
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     shld [$FFC4]
     ldaw [DRAW.DATA]
-    calt NIBLSWAP                                   ; "(RLR A)x4"
+    calt ACC4RAR                                    ; "(RLR A)x4"
     ani a, $07                                      ;Get text spacing (0-7)
     staw [DRAW.DATA]                                ;Save in 9D
 
@@ -1695,7 +1695,7 @@ fontget:
     calt MULTIPLY                                   ; "Add A to "Pointer""
     push hl
     mov a, c
-    calt NIBLSWAP                                   ; "(RLR A)x4"
+    calt ACC4RAR                                    ; "(RLR A)x4"
     ani a, $0F
     mvi e, $50
     calt MULTIPLY                                   ; "Add A to "Pointer""
@@ -1969,7 +1969,7 @@ a0C31:
 
 ;------------------------------------------------------------
 ;(RLR A)x4 (Divides A by 16)
-niblswap:
+acc4rar:
     rar
     rar
 rar2x:
@@ -2434,7 +2434,7 @@ caltd6:
     ani a, $0F
     staw [$FF96]
     mov a, b
-    calt NIBLSWAP                                   ; "(RLR A)x4"
+    calt ACC4RAR                                    ; "(RLR A)x4"
     ani a, $0F
     lti a, $0D
     ret

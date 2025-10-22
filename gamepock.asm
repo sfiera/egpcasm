@@ -32,7 +32,7 @@ FONTGET   = $00B8  ; Get address of font data
 SCR1LOC   = $00BA  ; Get screen 1 address of (x, y) position (b, c)
 TILELOC   = $00BC  ; Get address of object tile index a
 MEMSET    = $00BE  ; Set memory in hl..hl+b to a
-NIBLSWAP  = $00C0
+ACC4RAR   = $00C0  ; Rotate accumulator register (a) right 4 times
 MEMSUB    = $00C2  ; a = *(de+) - *(hl+)
 MEMCMP    = $00C4
 MEMCCPY   = $00C6
