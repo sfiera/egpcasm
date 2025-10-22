@@ -1527,7 +1527,7 @@ drawhex:
 .a0A23:
     pop bc
     aniw [DRAW.DATA], $BF
-    jr a0A42
+    jr drawstr
 
 ;-----------------------------------------------------------
 ;[PC+3] Print Text on-Screen
@@ -1553,19 +1553,21 @@ drawtext:
     ani a, $0F                                      ;Get # of characters to write
     shld [$FFC0]
     staw [$FF98]                                    ;# saved in 98
-a0A42:
+    ; fall through to drawstr
+
+drawstr:
     ldaw [DRAW.DATA]
     oni a, $80                                      ;Check if 0 (2nd screen) or 1 (1st screen)
-    jr .a0A49
+    jr .screen2
     calt SCR1LOC                                    ; "Set HL to screen (B,C)"
-    jr .a0A4B
+    jr .start
 
-.a0A49:
-    calf scr2loc                                    ;This points to Sc 1
-.a0A4B:
+.screen2:
+    calf scr2loc
+.start:
     mov [$FFC6], c
     shld [$FFC2]
-    lxi de, $004B
+    lxi de, SCRN.WIDTH
     calt ADDRHLDE                                   ; "HL <== HL+DE"
     shld [$FFC4]
     ldaw [DRAW.DATA]
@@ -1574,17 +1576,17 @@ a0A42:
     staw [DRAW.DATA]                                ;Save in 9D
 
 ;--
-.a0A62:
+.nextchar:
     dcrw [$FF98]                                    ;The loop starts here
-    jr .a0A66
+    jr .notdone
     ret
 
-.a0A66:
+.notdone:
     oniw [$FFC6], $FF
     jr .a0A85
     lhld [$FFC2]
     shld [$FFC7]
-    lxi de, $FFB0
+    lxi de, $10000 - SCRN.WIDTH - FONT.WIDTH
     mvi b, FONT.WIDTH - 1
     calf drawstripe
     offi a, $80
@@ -1595,7 +1597,7 @@ a0A42:
 .a0A85:
     lhld [$FFC4]
     shld [$FFC9]
-    lxi de, $FFB5
+    lxi de, $10000 - SCRN.WIDTH
     mvi b, FONT.WIDTH - 1
     calf drawstripe                                 ;Copy B*A bytes?
     offi a, $80
@@ -1668,7 +1670,7 @@ a0A42:
     ldaw [DRAW.DATA]
     add a, b
     staw [DRAW.X]
-    jre .a0A62
+    jre .nextchar
 
 ;------------------------------------------------------------
 ;Byte -> Point to Font Graphic
