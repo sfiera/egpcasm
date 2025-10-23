@@ -215,8 +215,9 @@ memccpy:
 ;                        Timer Interrupt
 timer:
     oniw [INTF.ADDR], INTF.SOUND
-    jre .a015B
+    jre .silent
 
+.sound:
     dcrw [$FF9A]
     jre .done
 
@@ -233,17 +234,17 @@ timer:
     mov tmm, a                                      ;Adjust timer
     mvi a, $53
 
-.a010F:
+..wait:
     dcr a
-    jr .a010F
+    jr ..wait
     oniw [INTF.ADDR], INTF.MUSIC
-    jr .a011C
+    jr ..quiet
 
     lhld [MUSIC_PTR]
     calf a08A9                               ;Music-playing code...
-    jr .a0128
+    jr .continue
 
-.a011C:
+..quiet:
     aniw [INTF.ADDR], !INTF.SOUND & !INTF.MUSIC
     mvi a, $07
     mov tmm, a
@@ -251,7 +252,7 @@ timer:
     mov tm0, a
     stm
 
-.a0128:
+.continue:
     pop hl
     pop de
     pop bc
@@ -289,19 +290,18 @@ timer:
     nop
     pop va
 
-;--------
 .done:
     ei
     reti
-;------------------------------------------------------------
-.a015B:
+
+.silent:
     push va
     push bc
     push de
     push hl
     offiw [INTF.ADDR], INTF.CART                    ;If 0, don't go to cart's INT routine
     jmp CART.INTT
-;---------------------------------------
+
     adc a, b                                        ;Probably a simple random-number generator.
     adc a, c
     adc a, d
@@ -320,7 +320,7 @@ timer:
     rar
     adc a, b
     staw [$FF8E]
-    jre .a0128
+    jre .continue
 
 ;------------------------------------------------------------
 ;[PC+2] Setup/Play Sound
