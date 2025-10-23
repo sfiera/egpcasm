@@ -555,16 +555,13 @@ a02C4:
 ;-----------------------------------------------------------
     ;Text data
 a04B8:
-    #d8 $2C, $23, $24, $00, $24, $2F, $34, $00, $2D, $21, $34, $32, $29, $38, $00, $33  ;LCD DOT MATRIX SYSTEM
-    #d8 $39, $33, $34, $25, $2D, $00, $26, $35, $2C, $2C, $00, $27, $32, $21, $30, $28  ;FULL GRAPHIC
-    #d8 $29, $23, $00, $08, $17, $15, $0A, $16, $14, $00, $24, $2F, $34, $33, $09, $00  ;(75*64 DOTS)
-    #d8 $00, $00, $00, $FF
+    #d largetext("LCD DOT MATRIX SYSTEM FULL GRAPHIC (75*64 DOTS)    "), $FF
 
+a04EC:
     ; Music notation data:
     ;     |: zCFA | c2 c2 c2 c2 | E2 E2    F2 (3FGF | B2 B2 A2 A2 |
     ;     G4 zCFA | c2 c2 c2 c2 | E2 (3EFE F2 (3FGF | G2 G2 C2 DE |
     ;     F6 z2 | z6 :|
-a04EC:
     #d8 PITCH.NONE, 10, PITCH.C4, 10, PITCH.F4, 10, PITCH.A4, 10
     #d8 PITCH.C5, 20, PITCH.C5, 20, PITCH.C5, 20, PITCH.C5, 20
     #d8 PITCH.E4, 20, PITCH.E4, 20, PITCH.F4, 20, PITCH.F4, 7, PITCH.G4, 7, PITCH.F4, 7
@@ -580,15 +577,15 @@ a04EC:
 
     ;Text data
 str_cursor:
-    #d8 $27, $32, $21, $0E, $00, $38, $10, $10, $0C, $39, $10, $10  ;GRA. X00,Y00
+    #d largetext("GRA. X00,Y00")
 .len = ($ - str_cursor)`4
 
 str_puzzle:
-    #d8 $30, $35, $3A, $3A, $2C, $25                ;PUZZLE
+    #d largetext("PUZZLE")
 .len = ($ - str_puzzle)`4
 
 str_time:
-    #d8 $34, $29, $2D, $25, $1B, $10, $10, $10, $0E, $10  ;TIME:000.0
+    #d largetext("TIME;000.0")
 .len = ($ - str_time)`4
 
     ;Grid data, probably
