@@ -29,6 +29,5 @@ main:
     jr .loop
 
 str_greeting:
-    #d8 "H"-$20, "E"-$20, "L"-$20, "L"-$20, "O"-$20, " "-$20
-    #d8 "W"-$20, "O"-$20, "R"-$20, "L"-$20, "D"-$20, "!"-$20
+    #d largetext("HELLO WORLD!")
 .len = $ - str_greeting

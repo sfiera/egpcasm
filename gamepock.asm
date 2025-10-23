@@ -58,6 +58,37 @@ USER7     = $00EA
 USER8     = $00EC
 USER9     = $00EE
 
+#fn reduce(input, chunk, initial, callback) => {
+    len = sizeof(input)
+    assert(len % chunk == 0)
+    len == chunk ? {
+        callback(initial, input)
+    } : {
+        split = (len / chunk / 2) * chunk
+        assert(split < len)
+        assert(split > 0)
+        middle = reduce(input[len-1:split], chunk, initial, callback)
+        final = reduce(input[split-1:0], chunk, middle, callback)
+        final
+    }
+}
+
+#fn largereducer(out, ch) => {
+    assert((" " <= ch) && (ch <= "_"))
+    out @ (ch - $20)`8
+}
+
+#fn smallreducer(out, ch) => {
+    is_space = (ch == $20)
+    is_number = ("0" <= ch) && (ch <= "9")
+    is_upper = ("A" <= ch) && (ch <= "Z")
+    assert(is_space || is_number || is_upper)
+    out @ (is_space ? 0 : is_number ? (ch - "0" + $40) : (ch - "A" + $4A))`8
+}
+
+#fn largetext(s) => reduce(s, 8, "", largereducer)
+#fn smalltext(s) => reduce(s, 8, "", smallreducer)
+
 #const CART = struct {
     HEADER  = $4000  ; [1B] must be CART.MAGIC ($55)
     MAIN    = $4001  ; [2B] proc address for normal startup
