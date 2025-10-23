@@ -77,6 +77,7 @@ USER9     = $00EE
     USER7   = $4027  ; [3B] handler, usually “jmp $4XXX”
     USER8   = $402A  ; [3B] handler, usually “jmp $4XXX”
     USER9   = $402D  ; [3B] handler, usually “jmp $4XXX”
+    BEGIN   = $4030  ; End of header, start of code
 
     MAGIC = $55
 }
