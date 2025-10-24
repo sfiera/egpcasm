@@ -85,7 +85,7 @@ cont:
     ori pa, LCD.DI
     mvi a, TMM_SLOW | TMM_NOEXT
     mov tmm, a                                      ;Timer register = #$7
-    mvi a, $74
+    mvi a, SLOW_10MS
     mov tm0, a                                      ;Timer option reg = #$74
     calt SCR1CLR                                    ; "Clear Screen RAM"
     calt OBJCLR                                     ; "Clear C4B0~C593"
@@ -230,13 +230,14 @@ timer:
     push bc
     push de
     push hl
+
     mvi a, TMM_FAST | TMM_NOEXT
     mov tmm, a                                      ;Adjust timer
     mvi a, $53
-
 ..wait:
     dcr a
     jr ..wait
+
     oniw [INTF.ADDR], INTF.MUSIC
     jr ..quiet
 
@@ -248,7 +249,7 @@ timer:
     aniw [INTF.ADDR], !INTF.SOUND & !INTF.MUSIC
     mvi a, TMM_SLOW | TMM_NOEXT
     mov tmm, a
-    mvi a, $74
+    mvi a, SLOW_10MS
     mov tm0, a
     stm
 
@@ -510,7 +511,14 @@ scrn2lcd:
     ret
 
 ;-----------------------------------------------------------
-    ;Sound note and timer data...
+; Pitch and timer data
+;
+; While sound is enabled, the interrupt timer is put in fast (5us) mode.
+; The first value (m) is used as the tm0 counter to set the frequency.
+; The second value (n) is used as a counter, decremented each interrupt.
+; After the second value decrements to 0, a regular interrupt happens.
+; The values are paired so that m*n*5 = ~9500, meaning 9.5ms.
+; This gives roughly the same interrupt frequency as without sound.
 a0278:
     #d8 $B2, $0A  ; 0 = silent
     #d8 $EE, $07  ; 1 = G3
@@ -2324,7 +2332,7 @@ a0E4D:
     di
     mvi a, TMM_SLOW | TMM_NOEXT
     mov tmm, a
-    mvi a, $74
+    mvi a, SLOW_10MS
     mov tm0, a
     aniw [INTF.ADDR], !INTF.SOUND & !INTF.MUSIC
     stm
@@ -2765,3 +2773,8 @@ MUSIC_PTR = $FF84
     DATA  = $FF9D
     LOC   = $FF9E
 }
+
+; With the slow (82us/tick) setting, this value of tm0 results in
+; an interrupt approximately every 9.5ms. (9.5ms/82us = ~116).
+; This results in an interrupt rate of about 100Hz. (1s/9.5us = ~105)
+#const SLOW_10MS = 116
