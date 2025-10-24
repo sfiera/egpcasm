@@ -76,6 +76,7 @@
     addr = 0x0000
     size = 0x1000
     outp = 0
+    fill = true
 }
 
 reset:
@@ -2764,5 +2765,3 @@ membump:
     dcr b
     jr .a0FF1
     ret                                             ;What a weird way to end a BIOS...
-;------------------------------------------------------------
-    db $00, $00, $00, $00                           ;Unused bytes (and who could blame 'em?)
