@@ -83,7 +83,7 @@ cont:
     ani pa, !LCD.E
     ani pa, !LCD.CS1 & !LCD.CS2 & !LCD.CS3
     ori pa, LCD.DI
-    mvi a, $07
+    mvi a, TMM_SLOW | TMM_NOEXT
     mov tmm, a                                      ;Timer register = #$7
     mvi a, $74
     mov tm0, a                                      ;Timer option reg = #$74
@@ -230,7 +230,7 @@ timer:
     push bc
     push de
     push hl
-    mvi a, $03
+    mvi a, TMM_FAST | TMM_NOEXT
     mov tmm, a                                      ;Adjust timer
     mvi a, $53
 
@@ -241,12 +241,12 @@ timer:
     jr ..quiet
 
     lhld [MUSIC_PTR]
-    calf a08A9                               ;Music-playing code...
-    jr .continue
+    calf musnext                             ;Music-playing code...
+    jr .continue                             ; skipped if end of music
 
 ..quiet:
     aniw [INTF.ADDR], !INTF.SOUND & !INTF.MUSIC
-    mvi a, $07
+    mvi a, TMM_SLOW | TMM_NOEXT
     mov tmm, a
     mvi a, $74
     mov tm0, a
@@ -334,8 +334,9 @@ sndplay:
     ldax [hl+]                                      ;(PC+1)
     push hl
     staw [$FF99]
-    calf a08B6                                      ;Set note timers
-    jr a01A3
+    calf audioplay                                  ;Set note timers
+    jr audiodone
+
 ;------------------------------------------------------------
 ;Setup/Play Music
 ;HL should already contain the address of the music data.
@@ -343,10 +344,13 @@ sndplay:
 musplay:
     di
     oriw [INTF.ADDR], INTF.MUSIC
-    calf a08A9                                      ;Read notes & set timers
-a01A3:
+    calf musnext                                    ;Read notes & set timers
+    ; fall through
+
+audiodone:
     ei                                              ;(sometimes skipped)
     ret
+
 ;------------------------------------------------------------
 ;[PC+1] Check Cartridge
 ; Checks if the cart is present, and possibly jumps to ($4001) or ($4003)
@@ -1024,7 +1028,7 @@ a06EE:
     mvi a, $03
     staw [$FF99]
     di
-    calf a08B6                                      ;Play Music (Snd)
+    calf audioplay                                  ;Play Music (Snd)
     ei
     lxi hl, $C7FE
     ldax [hl+]
@@ -1181,9 +1185,10 @@ xchghlde:
     pop hl
     pop de
     ret
+
 ;------------------------------------------------------------
 ;Music-playing code...
-a08A9:
+musnext:
     ldax [hl+]
     mov b, a
     ldax [hl+]
@@ -1191,29 +1196,30 @@ a08A9:
     shld [MUSIC_PTR]
     mov a, b
     inr a
-    jr a08B6
+    jr audioplay
     rets                                            ;Return & Skip if read "$FF"
 
 ;Move "note" into TM0
-a08B6:
+audioplay:
     lxi hl, a0278                                   ;Table Start
     mov a, b
-.a08BA:
+
+.loop:
     suinb a, $01
-    jr .a08C0
+    jr .play
     inx hl                                          ;Add A*2 to HL (wastefully)
     inx hl
-    jr .a08BA
+    jr .loop
 
-.a08C0:
+.play:
     ldax [hl+]
     mov tm0, a
     ldax [hl]
     staw [$FF9A]
     staw [$FF8F]
     dcr b
-    mvi a, $00                                      ;Sound?
-    mvi a, $03                                      ;Silent
+    mvi a, TMM_FAST | TMM_EXT                       ;Sound?
+    mvi a, TMM_FAST | TMM_NOEXT                     ;Silent
     mov tmm, a
     oriw [INTF.ADDR], INTF.SOUND
     stm
@@ -2316,7 +2322,7 @@ a0E3B:
 ; Turns on a hardware timer
 a0E4D:
     di
-    mvi a, $07
+    mvi a, TMM_SLOW | TMM_NOEXT
     mov tmm, a
     mvi a, $74
     mov tm0, a

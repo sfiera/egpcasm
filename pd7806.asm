@@ -274,3 +274,8 @@
     db {b: pd7806_db} => b
     dw {w: pd7806_dw} => w
 }
+
+#const TMM_EXT    = %00000000  ; Output timer to TO pin
+#const TMM_NOEXT  = %00000011  ; Don't output timer to TO pin
+#const TMM_FAST   = %00000000  ; Decrement tm0 with 82us clock
+#const TMM_SLOW   = %00000100  ; Decrement tm0 with 5us clock
