@@ -29,6 +29,48 @@
 ;                  EPOCH GAME MASK ROM
 ;------------------------------------------------------------
 
+#const INTF = struct {
+    ADDR = $FF80
+
+    SOUND = %00000001
+    MUSIC = %00000010
+    FLAG3 = %00001000
+    FLAG4 = %00010000
+    CART  = %10000000
+}
+#const MUSIC_PTR = $FF84
+
+#const PAINT = struct {
+    CURSOR = struct {
+        X = $FFA6
+        Y = $FFA7
+        BCD = struct {
+            X = $FFA0
+            Y = $FFA1
+        }
+        SPRITE = OBJ.O0
+        TILE = OBJ.BEGIN
+    }
+    LEFT    = 7
+    TOP     = 14
+    RIGHT   = 75 - 7   ; 68 = SCRN.WIDTH - LEFT
+    BOTTOM  = 64 - 5   ; 59 = SCRN.HEIGHT - 5
+    WIDTH   = 68 - 7   ; 61 = RIGHT - LEFT
+    HEIGHT  = 59 - 14  ; 45 = BOTTOM - TOP
+}
+
+#const DRAW = struct {
+    X     = $FF9B
+    YOFF  = $FF9C
+    DATA  = $FF9D
+    LOC   = $FF9E
+}
+
+; With the slow (82us/tick) setting, this value of tm0 results in
+; an interrupt approximately every 9.5ms. (9.5ms/82us = ~116).
+; This results in an interrupt rate of about 100Hz. (1s/9.5us = ~105)
+#const SLOW_10MS = 116
+
 #bankdef rom
 {
     addr = 0x0000
@@ -2724,57 +2766,3 @@ membump:
     ret                                             ;What a weird way to end a BIOS...
 ;------------------------------------------------------------
     db $00, $00, $00, $00                           ;Unused bytes (and who could blame 'em?)
-
-#bankdef wram
-{
-    addr = 0xc000
-    size = 0x0800
-}
-
-#bankdef hram
-{
-    addr = 0xff80
-    size = 0x0080
-}
-
-INTF = struct {
-    ADDR = $FF80
-
-    SOUND = %00000001
-    MUSIC = %00000010
-    FLAG3 = %00001000
-    FLAG4 = %00010000
-    CART  = %10000000
-}
-MUSIC_PTR = $FF84
-
-#const PAINT = struct {
-    CURSOR = struct {
-        X = $FFA6
-        Y = $FFA7
-        BCD = struct {
-            X = $FFA0
-            Y = $FFA1
-        }
-        SPRITE = OBJ.O0
-        TILE = OBJ.BEGIN
-    }
-    LEFT    = 7
-    TOP     = 14
-    RIGHT   = 75 - 7   ; 68 = SCRN.WIDTH - LEFT
-    BOTTOM  = 64 - 5   ; 59 = SCRN.HEIGHT - 5
-    WIDTH   = 68 - 7   ; 61 = RIGHT - LEFT
-    HEIGHT  = 59 - 14  ; 45 = BOTTOM - TOP
-}
-
-#const DRAW = struct {
-    X     = $FF9B
-    YOFF  = $FF9C
-    DATA  = $FF9D
-    LOC   = $FF9E
-}
-
-; With the slow (82us/tick) setting, this value of tm0 results in
-; an interrupt approximately every 9.5ms. (9.5ms/82us = ~116).
-; This results in an interrupt rate of about 100Hz. (1s/9.5us = ~105)
-#const SLOW_10MS = 116
