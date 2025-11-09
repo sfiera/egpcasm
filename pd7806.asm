@@ -124,7 +124,7 @@
 
 #subruledef pd7806_dw {
     {w1: i16} => le(w1)
-    {w1: i16}, {wn: pd7806_dw} => le(w1) @ pd7806_dw
+    {w1: i16}, {wn: pd7806_dw} => le(w1) @ wn
 }
 
 #ruledef pd7806 {

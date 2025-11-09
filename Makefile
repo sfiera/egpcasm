@@ -4,7 +4,7 @@ MAME ?= mame
 MAMEDEBUG ?= -debug
 MAMEFLAGS ?= -window -resolution 375x320 -nofilter $(MAMEDEBUG)
 
-OUT = gamepock/egpcboot.bin gamepock/hellowd.bin gamepock/boing.bin
+OUT = gamepock/egpcboot.bin gamepock/hellowd.bin gamepock/boing.bin gamepock/demo1.bin
 
 .PHONY: compare
 compare: $(OUT)
@@ -20,6 +20,10 @@ run-hellowd: gamepock/hellowd.bin gamepock/egpcboot.bin
 
 .PHONY: run-boing
 run-boing: gamepock/boing.bin gamepock/egpcboot.bin
+	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
+
+.PHONY: run-demo1
+run-demo1: gamepock/demo1.bin gamepock/egpcboot.bin
 	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
 
 $(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
