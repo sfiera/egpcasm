@@ -99,33 +99,6 @@ INSTEXT		= $C71C	;13 BYTES FOR OUR TEXT WRITING...
 ANOTHERVAR	= $C729
 NOTERAM		= $C72F	;C72F-C78F (OUR NOTEPAD RAM STORAGE)
 
-
-
-;HARDCODED ROM DATA POINTERS...
-MYTXT1		= $5500       ;POINTER TO THE SCROLLER TEXT IN ROM
-MYPIC4		= $5A40	;4TH (*RLE*) INTERLACED PICTURE OF MAD BALL
-CALTBL		= $5E00	;CALT NAME TABLE
-
-MYMUSIC		= $6000	;POINTER TO THE MUSIC DATA
-MYFONT		= $6094	;START AT BYTE "64"
-MYGFX2		= $63A9       ;THIS IS NOW *RUN-LENGTH ENCODED*!!!!
-OPTB64		= $6570	;OP TABLE FOR 64xx
-OPTB70		= $65F0	;UPPER OPCODE TABLE FOR 70xx
-OPTB48		= $6670	;OPCODE TABLE FOR 48xx
-OPTBL1		= $6800	;OPCODE TABLE 1
-MARSPR		= $6C00	;3 MARIO SPRITE DEFINITIONS
-OPT70E		= $6C40	;OPCODE TABLE FOR 70:0E, 0F, 1E, 1F, 2E, 2F, 3E, 3F
-OPTB60		= $6D00       ;OPCODE TABLE FOR 60xx
-MARLEV		= $6DA0	;2 SCREENS (*RLE*) FOR THE MARIO "GAME"
-
-MYPIC1		= $7000	;1ST (*RLE*) INTERLACED PICTURE OF ASTRONAUT
-NOTTXT		= $7290	;96 BYTES (+1) FOR THE "NOTEPAD" ROUTINE.
-MYPIC2		= $7300	;2ND (*RLE*) INTERLACED PICTURE OF DRACULA
-MYPIC3		= $7750	;3ND (*RLE*) INTERLACED PICTURE OF A RODENT
-MARPC1		= $7B37	;LAST (*RLE*) INTERLACED PICTURE OF "EPOCH LAND"
-EXBYT1		= $7FD0	;EXTRA BYTE TABLE 1 (VABCDEHL)
-EXBYT2		= $7FDC	;EXTRA BYTE TABLE 2 (B D H D+...)
-EXBYT3		= $7FEC	;EXTRA BYTE TABLE 3 (PA, PB, MK...)
 ;------------------------------
 HEXDEF		= $FF80	;DEFAULT ADDRESS FOR HEX EDITOR
 PRGDEF		= $C500	;DEFAULT ADDRESS FOR PROGRAM EDITOR
@@ -143,7 +116,7 @@ SPRDEST		= $C1E2	;THE DESTINATION FOR THE BOTTOM HALF OF THE SPRITE
 ;--------------------------------------------------------
 	DB	$55		;Pokekon Identifier
 	DW	START, START     ;RESET Addresses
-	DW	MYFONT		;FONT Address
+	DW	MYFONT - $8C		;FONT Address
 	DW	$0000		;CALT 00D6 data
 IntT:	JMP 	INTERRUPT
 Int0:    JMP 	RESET
@@ -3211,3 +3184,417 @@ PRGRES_TEXT:	;THE TEXT FOR OUR PROGRAM RESULT
       NOP
 DEADBEEF:
       DB	$DE, $AD, $BE, $EF
+
+#addr $5500
+MYTXT1:
+    #d incbin("demo1/scroll.txt"), $FF
+
+#addr $5A40
+MYPIC4:
+    ;4TH (*RLE*) INTERLACED PICTURE OF MAD BALL
+    #d incbin("demo1/madball.bin")
+
+#fn pad(bin, size) => bin @ 0`(size - sizeof(bin))
+#addr $5E00
+CALTBL:
+    ;CALT NAME TABLE
+    #d pad("ChkCart", 64)
+    #d pad("WritLCD", 64)
+    #d pad("PlaySnd", 64)
+    #d pad("PlayMus", 64)
+    #d pad("ReadJoy", 64)
+    #d pad("Clear A", 64)
+    #d pad("ClS2RAM", 64)
+    #d pad("ClScRAM", 64)
+    #d pad("ClC4B0+", 64)
+    #d pad("ClC594+", 64)
+    #d pad("Cl(H)xB", 64)
+    #d pad("HL+=DE", 64)
+    #d pad("HL+-Byt", 64)
+    #d pad("HL+=E", 64)
+    #d pad("Sc<>Sc2", 64)
+    #d pad("Sc2<-Sc", 64)
+    #d pad("Sc<-Sc2", 64)
+    #d pad("@ 01CD", 64)
+    #d pad("@ 0B37", 64)
+    #d pad("H<-AxE", 64)
+    #d pad("HL<->DE", 64)
+    #d pad("H+>D+xB", 64)
+    #d pad("H->D-xB", 64)
+    #d pad("H<->DxB", 64)
+    #d pad("StDotBC", 64)
+    #d pad("DrwLine", 64)
+    #d pad("PrtByte", 64)
+    #d pad("PrtText", 64)
+    #d pad("@ 0B0E", 64)
+    #d pad("ScPosBC", 64)
+    #d pad("@ 0C24", 64)
+    #d pad("A->H+xB", 64)
+    #d pad("RLR x4", 64)
+    #d pad("A=(D-H)", 64)
+    #d pad("@ 0063", 64)
+    #d pad("@ 006D", 64)
+    #d pad("+- Word", 64)
+    #d pad("@ 0F42", 64)
+    #d pad("InvrtSc", 64)
+    #d pad("InvtSc2", 64)
+    #d pad("@ 0E6E", 64)
+    #d pad("@ 0E98", 64)
+    #d pad("@ 0EA4", 64)
+    #d pad("@ 0ED2", 64)
+    #d pad("@ 0FD9", 64)
+    #d pad("ClDotBC", 64)
+    #d pad("@ 4012", 64)
+    #d pad("@ 4015", 64)
+    #d pad("@ 4018", 64)
+    #d pad("@ 401B", 64)
+    #d pad("@ 401E", 64)
+    #d pad("@ 4021", 64)
+    #d pad("@ 4024", 64)
+    #d pad("@ 4027", 64)
+    #d pad("@ 402A", 64)
+    #d pad("@ 402D", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+    #d pad("xx", 64)
+
+#addr $6000
+MYMUSIC:
+    #d $06, $12, $06, $09, $0b, $2d, $0b, $09, $0d, $24, $0e, $09, $10, $09, $0e, $36
+    #d $06, $1b, $06, $12, $06, $09, $0b, $2d, $0d, $09, $0e, $12, $0b, $09, $0e, $09
+    #d $0b, $09, $12, $09, $10, $36, $ff, $ff, $0b, $09, $06, $09, $0b, $09, $0f, $24
+    #d $0b, $12, $0f, $09, $0b, $09, $0f, $09, $12, $24, $0f, $12, $12, $09, $0f, $09
+    #d $12, $09, $16, $24, $0a, $12, $0a, $12, $0a, $09, $0f, $36, $ff, $ff, $ff, $ff
+    #d $0a, $04, $00, $03, $04, $03, $00, $03, $02, $03, $00, $02, $01, $05, $ff, $ff
+    #d $04, $01, $03, $01, $01, $01, $00, $00, $ff, $ff, $ff, $ff, $14, $02, $00, $01
+    #d $14, $03, $00, $01, $ff, $ff, $ff, $ff, $01, $05, $00, $03, $03, $05, $00, $03
+    #d $05, $05, $00, $03, $06, $06, $00, $03, $08, $07, $00, $03, $ff, $ff, $ff, $ff
+    #d $12, $05, $13, $04, $14, $03, $15, $02, $13, $04, $11, $05, $10, $06, $ff, $ff
+    #d $12, $00, $0f, $00, $16, $00, $ff, $ff, $06, $04, $05, $03, $06, $04, $07, $03
+    #d $08, $04, $09, $03, $08, $04, $07, $03, $06, $04, $05, $03, $ff, $ff, $ff, $ff
+    #d $02, $01, $01, $01, $00, $01, $ff, $ff, $12, $02, $16, $01, $00, $01, $12, $02
+    #d $16, $01, $00, $01, $12, $02, $16, $01, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+    #d $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+    #d $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+
+#addr $6120
+MYFONT:
+    #d incbin("demo1/font.1bpp")[720*8 - 1:71*8]
+
+#addr $63A9
+MYGFX2:
+    ;THIS IS NOW *RUN-LENGTH ENCODED*!!!!
+    #d incbin("demo1/mygfx2.bin")
+
+#addr $6570
+OPTB64:
+    ;OP TABLE FOR 64xx
+    #d pad($f0, 64)
+    #d pad($52`8 @ "ANI ", 64)
+    #d pad($52`8 @ "XRI ", 64)
+    #d pad($52`8 @ "ORI ", 64)
+    #d pad($52`8 @ "ADINC ", 64)
+    #d pad($52`8 @ "GTI ", 64)
+    #d pad($52`8 @ "SUINB ", 64)
+    #d pad($52`8 @ "LTI ", 64)
+    #d pad($52`8 @ "ADI ", 64)
+    #d pad($52`8 @ "ONI ", 64)
+    #d pad($52`8 @ "ACI ", 64)
+    #d pad($52`8 @ "OFFI ", 64)
+    #d pad($52`8 @ "SUI ", 64)
+    #d pad($52`8 @ "NEI ", 64)
+    #d pad($52`8 @ "SBI ", 64)
+    #d pad($52`8 @ "EQI ", 64)
+
+#addr $65F0
+OPTB70:
+    ;UPPER OPCODE TABLE FOR 70xx
+    #d pad($f0, 64)
+    #d pad($60`8 @ "ANAX ", 64)
+    #d pad($60`8 @ "XRAX ", 64)
+    #d pad($60`8 @ "ORAX ", 64)
+    #d pad($60`8 @ "ADDNCX ", 64)
+    #d pad($60`8 @ "GTAX ", 64)
+    #d pad($60`8 @ "SUBNBX ", 64)
+    #d pad($60`8 @ "LTAX ", 64)
+    #d pad($60`8 @ "ADDX ", 64)
+    #d pad($60`8 @ "ONAX ", 64)
+    #d pad($60`8 @ "ADCX ", 64)
+    #d pad($60`8 @ "OFFAX ", 64)
+    #d pad($60`8 @ "SUBX ", 64)
+    #d pad($60`8 @ "NEAX ", 64)
+    #d pad($60`8 @ "SBBX ", 64)
+    #d pad($60`8 @ "EQAX ", 64)
+
+#addr $6670
+OPTB48:
+    ;OPCODE TABLE FOR 48xx
+    #d pad($00`8 @ "PUSH V", 64)
+    #d pad($00`8 @ "POP V", 64)
+    #d pad($00`8 @ "SKNITFO", 64)
+    #d pad($00`8 @ "SKNITFT", 64)
+    #d pad($00`8 @ "SKNITF1", 64)
+    #d pad($00`8 @ "SKNITF2", 64)
+    #d pad($00`8 @ "SKNITFS", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "SKN CY", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "SKN Z", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "PUSH B", 64)
+    #d pad($00`8 @ "POP B", 64)
+    #d pad($00`8 @ "EI", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "DI", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "CLC", 64)
+    #d pad($00`8 @ "STC", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "PEX", 64)
+    #d pad($00`8 @ "PUSH D", 64)
+    #d pad($00`8 @ "POP D", 64)
+    #d pad($00`8 @ "RLL A", 64)
+    #d pad($00`8 @ "RLR A", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "RLD A/H", 64)
+    #d pad($00`8 @ "RRD A/H", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "PER", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "PUSH H", 64)
+    #d pad($00`8 @ "POP H", 64)
+
+#addr $6800
+OPTBL1:
+    ;OPCODE TABLE 1
+    #d pad($00`8 @ "NOP", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "INX SP ", 64)
+    #d pad($00`8 @ "DCX SP ", 64)
+    #d pad($40`8 @ "LXI SP,", 64)
+    #d pad($22`8 @ "ANIW ", 64)
+    #d pad($f0, 64)
+    #d pad($20`8 @ "ANI A,", 64)
+    #d pad($00`8 @ "RET", 64)
+    #d pad($00`8 @ "SIO", 64)
+    #d pad($00`8 @ "MOV A,B", 64)
+    #d pad($00`8 @ "MOV A,C", 64)
+    #d pad($00`8 @ "MOV A,D", 64)
+    #d pad($00`8 @ "MOV A,E", 64)
+    #d pad($00`8 @ "MOV A,H", 64)
+    #d pad($00`8 @ "MOV A,L", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "INX B", 64)
+    #d pad($00`8 @ "DCX\0B", 64)
+    #d pad($40`8 @ "LXI B,", 64)
+    #d pad($22`8 @ "ORIW ", 64)
+    #d pad($20`8 @ "XRI A,", 64)
+    #d pad($20`8 @ "ORI A,", 64)
+    #d pad($00`8 @ "RETS", 64)
+    #d pad($00`8 @ "STM", 64)
+    #d pad($00`8 @ "MOV B,A", 64)
+    #d pad($00`8 @ "MOV C,A", 64)
+    #d pad($00`8 @ "MOV D,A", 64)
+    #d pad($00`8 @ "MOV E,A", 64)
+    #d pad($00`8 @ "MOV H,A", 64)
+    #d pad($00`8 @ "MOV L,A", 64)
+    #d pad($20`8 @ "INRW ", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "INX D", 64)
+    #d pad($00`8 @ "DCX D", 64)
+    #d pad($40`8 @ "LXI D,", 64)
+    #d pad($22`8 @ "GTIW ", 64)
+    #d pad($02`8 @ "ADINC A", 64)
+    #d pad($20`8 @ "GTI A,", 64)
+    #d pad($20`8 @ "LDAW ", 64)
+    #d pad($00`8 @ "LDAX B", 64)
+    #d pad($00`8 @ "LDAX D", 64)
+    #d pad($00`8 @ "LDAX H", 64)
+    #d pad($00`8 @ "LDAX D+", 64)
+    #d pad($00`8 @ "LDAX H+", 64)
+    #d pad($00`8 @ "LDAX D-", 64)
+    #d pad($00`8 @ "LDAX H-", 64)
+    #d pad($20`8 @ "DCRW ", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "INX H", 64)
+    #d pad($00`8 @ "DCX H", 64)
+    #d pad($40`8 @ "LXI H,", 64)
+    #d pad($22`8 @ "LTIW ", 64)
+    #d pad($02`8 @ "SUINB A", 64)
+    #d pad($20`8 @ "LTI A,", 64)
+    #d pad($20`8 @ "STAW ", 64)
+    #d pad($00`8 @ "STAX B", 64)
+    #d pad($00`8 @ "STAX D", 64)
+    #d pad($00`8 @ "STAX H", 64)
+    #d pad($00`8 @ "STAX D+", 64)
+    #d pad($00`8 @ "STAX H+", 64)
+    #d pad($00`8 @ "STAX D-", 64)
+    #d pad($00`8 @ "STAX H-", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "INR A", 64)
+    #d pad($00`8 @ "INR B", 64)
+    #d pad($00`8 @ "INR C", 64)
+    #d pad($40`8 @ "CALL ", 64)
+    #d pad($22`8 @ "ONIW ", 64)
+    #d pad($20`8 @ "ADI A,", 64)
+    #d pad($20`8 @ "ONI A,", 64)
+    #d pad($90`8 @ "48 xx", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($a0`8 @ "4C xx", 64)
+    #d pad($b0`8 @ "4D xx", 64)
+    #d pad($70`8 @ "JRE+", 64)
+    #d pad($80`8 @ "JRE-", 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "DCR A", 64)
+    #d pad($00`8 @ "DCR B", 64)
+    #d pad($00`8 @ "DCR C", 64)
+    #d pad($40`8 @ "JMP ", 64)
+    #d pad($22`8 @ "OFFIW ", 64)
+    #d pad($20`8 @ "ACI A,", 64)
+    #d pad($20`8 @ "OFFI A,", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($c0`8 @ "60 xx", 64)
+    #d pad($00`8 @ "DAA", 64)
+    #d pad($00`8 @ "RETI", 64)
+    #d pad($f0, 64)
+    #d pad($d0`8 @ "64 xx", 64)
+    #d pad($22`8 @ "NEIW ", 64)
+    #d pad($20`8 @ "SUI A,", 64)
+    #d pad($20`8 @ "NEI A,", 64)
+    #d pad($f0, 64)
+    #d pad($20`8 @ "MVI A,", 64)
+    #d pad($20`8 @ "MVI B,", 64)
+    #d pad($20`8 @ "MVI C,", 64)
+    #d pad($20`8 @ "MVI D,", 64)
+    #d pad($20`8 @ "MVI E,", 64)
+    #d pad($20`8 @ "MVI H,", 64)
+    #d pad($20`8 @ "MVI L,", 64)
+    #d pad($e0`8 @ "70 xx", 64)
+    #d pad($f0, 64)
+    #d pad($f0, 64)
+    #d pad($00`8 @ "JB", 64)
+    #d pad($f0, 64)
+    #d pad($22`8 @ "EQIW ", 64)
+    #d pad($20`8 @ "SBI A,", 64)
+    #d pad($20`8 @ "EQI A,", 64)
+
+#addr $6C00
+MARSPR:
+    ;3 MARIO SPRITE DEFINITIONS
+    #d incbin("demo1/marspr.1bpp")[511:416]
+    #d incbin("demo1/marspr.1bpp")[383:288], (-1)`64
+    #d incbin("demo1/marspr.1bpp")[255:160]
+    #d incbin("demo1/marspr.1bpp")[127:32], (-1)`64
+
+#addr $6C40
+OPT70E:
+    ;OPCODE TABLE FOR 70:0E, 0F, 1E, 1F, 2E, 2F, 3E, 3F
+    #d pad($40`8 @ "SSPD ", 64)
+    #d pad($40`8 @ "LSPD ", 64)
+    #d pad($40`8 @ "SBCD ", 64)
+    #d pad($40`8 @ "LBCD ", 64)
+    #d pad($40`8 @ "SDED ", 64)
+    #d pad($40`8 @ "LDED ", 64)
+    #d pad($40`8 @ "SHLD ", 64)
+    #d pad($40`8 @ "LHLD ", 64)
+    #d $0c6cf6ffbe3e367e6d6c740c00c0e030785818b090d00000ffffffffffffffff
+    #d $0c746c6d7e363ebefff66c0c0000d090b018587830e0c000ffffffffffffffff
+    #d $00001c3ffeeef6feb518000000c0e030785818b090d00000ffffffffffffffff
+    #d $000018b5fef6eefe3f1c00000000d090b018587830e0c000ffffffffffffffff
+    #d pad($f0, 64)
+    #d pad($51`8 @ "ANA ", 64)
+    #d pad($51`8 @ "XRA ", 64)
+    #d pad($51`8 @ "ORA ", 64)
+    #d pad($51`8 @ "ADDNC ", 64)
+    #d pad($51`8 @ "GTA ", 64)
+    #d pad($51`8 @ "SUBNB ", 64)
+    #d pad($51`8 @ "LTA ", 64)
+    #d pad($51`8 @ "ADD ", 64)
+    #d pad($f0, 64)
+    #d pad($51`8 @ "ADC ", 64)
+    #d pad($f0, 64)
+    #d pad($51`8 @ "SUB ", 64)
+    #d pad($51`8 @ "NEA ", 64)
+    #d pad($51`8 @ "SBB ", 64)
+    #d pad($51`8 @ "EQA ", 64)
+
+#addr $6D00
+OPTB60:
+    ;OPCODE TABLE FOR 60xx
+
+#addr $6DA0
+MARLEV:
+    ;2 SCREENS (*RLE*) FOR THE MARIO "GAME"
+    #d incbin("demo1/marlev.bin")
+
+#addr $7000
+MYPIC1:
+    ;1ST (*RLE*) INTERLACED PICTURE OF ASTRONAUT
+    #d incbin("demo1/mypic1.bin")
+
+#addr $7290
+NOTTXT:
+    ;96 BYTES (+1) FOR THE "NOTEPAD" ROUTINE.
+    #d incbin("demo1/nottxt.bin")
+
+#addr $7300
+MYPIC2:
+    ;2ND (*RLE*) INTERLACED PICTURE OF DRACULA
+    #d incbin("demo1/mypic2.bin")
+
+#addr $7750
+MYPIC3:
+    ;3ND (*RLE*) INTERLACED PICTURE OF A RODENT
+    #d incbin("demo1/mypic3.bin")
+
+#addr $7B37
+MARPC1:
+    ;LAST (*RLE*) INTERLACED PICTURE OF "EPOCH LAND"
+    #d incbin("demo1/marpc1.bin")
+
+#addr $7FD0
+EXBYT1:
+    ; Extra byte table 1 (VABCDEHL)
+    #d "VABCDEHL"
+    #d 0`48
+
+EXBYT2:
+    ; Extra byte table 2 (B D H D+...)
+    #d "B D H D+H+D-H-"
+
+EXBYT3:
+    ; Extra byte table 3 (PA, PB, MK...)
+    #d "PAPBPC"
+    #d "MKMBMC"
+    #d "T0T1S TM"

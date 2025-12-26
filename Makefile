@@ -40,3 +40,6 @@ $(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
 
 gamepock/egpcboot.bin: font.1bpp
 gamepock/boing.bin: ball.2bpp
+gamepock/demo1.bin: demo1/font.1bpp
+gamepock/demo1.bin: demo1/marspr.1bpp
+gamepock/demo1.bin: $(wildcard demo1/*.bin)

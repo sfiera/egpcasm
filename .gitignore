@@ -1,5 +1,5 @@
-*.bin
 *.sym
 *.1bpp
 *.2bpp
 /cfg
+/gamepock
