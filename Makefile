@@ -17,16 +17,7 @@ compare: $(OUT)
 run: gamepock/egpcboot.bin
 	$(MAME) gamepock -rompath . $(MAMEFLAGS)
 
-.PHONY: run-hellowd
-run-hellowd: gamepock/hellowd.bin gamepock/egpcboot.bin
-	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
-
-.PHONY: run-boing
-run-boing: gamepock/boing.bin gamepock/egpcboot.bin
-	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
-
-.PHONY: run-pokedemo
-run-pokedemo: gamepock/pokedemo.bin gamepock/egpcboot.bin
+run-%: gamepock/%.bin gamepock/egpcboot.bin
 	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
 
 $(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
