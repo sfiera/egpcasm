@@ -4,7 +4,10 @@ MAME ?= mame
 MAMEDEBUG ?= -debug
 MAMEFLAGS ?= -window -resolution 375x320 -nofilter $(MAMEDEBUG)
 
-OUT = gamepock/egpcboot.bin gamepock/hellowd.bin gamepock/boing.bin gamepock/demo1.bin
+OUT = gamepock/egpcboot.bin \
+	  gamepock/hellowd.bin \
+	  gamepock/boing.bin \
+	  gamepock/pokedemo.bin
 
 .PHONY: compare
 compare: $(OUT)
@@ -22,8 +25,8 @@ run-hellowd: gamepock/hellowd.bin gamepock/egpcboot.bin
 run-boing: gamepock/boing.bin gamepock/egpcboot.bin
 	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
 
-.PHONY: run-demo1
-run-demo1: gamepock/demo1.bin gamepock/egpcboot.bin
+.PHONY: run-pokedemo
+run-pokedemo: gamepock/pokedemo.bin gamepock/egpcboot.bin
 	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
 
 $(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
@@ -40,6 +43,6 @@ $(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
 
 gamepock/egpcboot.bin: font.1bpp
 gamepock/boing.bin: ball.2bpp
-gamepock/demo1.bin: demo1/font.1bpp
-gamepock/demo1.bin: demo1/marspr.1bpp
-gamepock/demo1.bin: $(wildcard demo1/*.bin)
+gamepock/pokedemo.bin: pokedemo/font.1bpp
+gamepock/pokedemo.bin: pokedemo/marspr.1bpp
+gamepock/pokedemo.bin: $(wildcard pokedemo/*.bin)

@@ -3187,12 +3187,12 @@ DEADBEEF:
 
 #addr $5500
 MYTXT1:
-    #d incbin("demo1/scroll.txt"), $FF
+    #d incbin("pokedemo/scroll.txt"), $FF
 
 #addr $5A40
 MYPIC4:
     ;4TH (*RLE*) INTERLACED PICTURE OF MAD BALL
-    #d incbin("demo1/madball.bin")
+    #d incbin("pokedemo/madball.bin")
 
 #fn pad(bin, size) => bin @ 0`(size - sizeof(bin))
 #addr $5E00
@@ -3284,12 +3284,12 @@ MYMUSIC:
 
 #addr $6120
 MYFONT:
-    #d incbin("demo1/font.1bpp")[720*8 - 1:71*8]
+    #d incbin("pokedemo/font.1bpp")[720*8 - 1:71*8]
 
 #addr $63A9
 MYGFX2:
     ;THIS IS NOW *RUN-LENGTH ENCODED*!!!!
-    #d incbin("demo1/mygfx2.bin")
+    #d incbin("pokedemo/mygfx2.bin")
 
 #addr $6570
 OPTB64:
@@ -3512,10 +3512,10 @@ OPTBL1:
 #addr $6C00
 MARSPR:
     ;3 MARIO SPRITE DEFINITIONS
-    #d incbin("demo1/marspr.1bpp")[511:416]
-    #d incbin("demo1/marspr.1bpp")[383:288], (-1)`64
-    #d incbin("demo1/marspr.1bpp")[255:160]
-    #d incbin("demo1/marspr.1bpp")[127:32], (-1)`64
+    #d incbin("pokedemo/marspr.1bpp")[511:416]
+    #d incbin("pokedemo/marspr.1bpp")[383:288], (-1)`64
+    #d incbin("pokedemo/marspr.1bpp")[255:160]
+    #d incbin("pokedemo/marspr.1bpp")[127:32], (-1)`64
 
 #addr $6C40
 OPT70E:
@@ -3556,32 +3556,32 @@ OPTB60:
 #addr $6DA0
 MARLEV:
     ;2 SCREENS (*RLE*) FOR THE MARIO "GAME"
-    #d incbin("demo1/marlev.bin")
+    #d incbin("pokedemo/marlev.bin")
 
 #addr $7000
 MYPIC1:
     ;1ST (*RLE*) INTERLACED PICTURE OF ASTRONAUT
-    #d incbin("demo1/mypic1.bin")
+    #d incbin("pokedemo/mypic1.bin")
 
 #addr $7290
 NOTTXT:
     ;96 BYTES (+1) FOR THE "NOTEPAD" ROUTINE.
-    #d incbin("demo1/nottxt.bin")
+    #d incbin("pokedemo/nottxt.bin")
 
 #addr $7300
 MYPIC2:
     ;2ND (*RLE*) INTERLACED PICTURE OF DRACULA
-    #d incbin("demo1/mypic2.bin")
+    #d incbin("pokedemo/mypic2.bin")
 
 #addr $7750
 MYPIC3:
     ;3ND (*RLE*) INTERLACED PICTURE OF A RODENT
-    #d incbin("demo1/mypic3.bin")
+    #d incbin("pokedemo/mypic3.bin")
 
 #addr $7B37
 MARPC1:
     ;LAST (*RLE*) INTERLACED PICTURE OF "EPOCH LAND"
-    #d incbin("demo1/marpc1.bin")
+    #d incbin("pokedemo/marpc1.bin")
 
 #addr $7FD0
 EXBYT1:
