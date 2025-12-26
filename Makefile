@@ -7,7 +7,8 @@ MAMEFLAGS ?= -window -resolution 375x320 -nofilter $(MAMEDEBUG)
 OUT = gamepock/egpcboot.bin \
 	  gamepock/hellowd.bin \
 	  gamepock/boing.bin \
-	  gamepock/pokedemo.bin
+	  gamepock/pokedemo.bin \
+	  gamepock/sokoban.bin
 
 .PHONY: compare
 compare: $(OUT)
