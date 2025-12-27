@@ -4,11 +4,13 @@ MAME ?= mame
 MAMEDEBUG ?= -debug
 MAMEFLAGS ?= -window -resolution 375x320 -nofilter $(MAMEDEBUG)
 
-OUT = gamepock/egpcboot.bin \
+BIN = gamepock/egpcboot.bin \
 	  gamepock/hellowd.bin \
 	  gamepock/boing.bin \
 	  gamepock/pokedemo.bin \
 	  gamepock/sokoban.bin
+OUT = $(BIN) \
+	  gamepock/sokoban-pre0125.bin
 
 .PHONY: compare
 compare: $(OUT)
@@ -21,9 +23,16 @@ run: gamepock/egpcboot.bin
 run-%: gamepock/%.bin gamepock/egpcboot.bin
 	$(MAME) gamepock -rompath . $(MAMEFLAGS) -cart $<
 
-$(OUT): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
+$(BIN): gamepock/%.bin: %.asm gamepock.asm pd7806.asm
 	@ mkdir -p gamepock
 	$(ASM) $(ASM_FLAGS) $< \
+	    -f binary -o $@ -- \
+	    -f symbols -o gamepock/$*.sym
+
+gamepock/sokoban-pre0125.bin: sokoban.asm gamepock.asm pd7806.asm
+	@ mkdir -p gamepock
+	$(ASM) $(ASM_FLAGS) $< \
+	    -d VERSION=1_25 \
 	    -f binary -o $@ -- \
 	    -f symbols -o gamepock/$*.sym
 
