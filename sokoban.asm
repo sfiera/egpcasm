@@ -12,6 +12,12 @@ VERSION = VERSION_FINAL
     outp = 0
 }
 
+WRAMC594 = OBJ.END
+WRAMC63E = WRAMC594 + 170
+WRAMC6E8 = WRAMC63E + 170
+WRAMC6F2 = WRAMC6E8 + 10
+WRAMC788 = WRAMC6F2 + 150
+
 header:
     db CART.MAGIC
     dw start
@@ -91,7 +97,7 @@ call409e:
     calt OBJCLR
     staw [$ffd2]
     lxi hl, data4efc
-    lxi de, $c4b0
+    lxi de, OBJ.BEGIN
     mvi c, $0f
 .jr40a9:
     mvi b, $03
@@ -107,21 +113,21 @@ call409e:
     ret
 
 call40b9:
-    lxi hl, $c6e8
+    lxi hl, WRAMC6E8
     mvi b, $a9
     calt MEMCLR
     mvi c, $01
 .jr40c1:
     mov a, c
     eqi a, $01
-    lxi hl, $c788
-    lxi hl, $c6e8
+    lxi hl, WRAMC788
+    lxi hl, WRAMC6E8
     mvi a, $11
     mvi b, $09
     calt MEMSET
     dcr c
     jr .jr40c1
-    lxi hl, $c6f2
+    lxi hl, WRAMC6F2
     lxi de, $0009
     mvi b, $0e
 .jr40d9:
@@ -163,21 +169,21 @@ call40f0:
     calt DRAWTEXT
     db $11, $19, $17
 
-    lxi hl, $c2fb
+    lxi hl, SCR2.BEGIN + 2*75 + 13
     mvi a, $f8
     stax [hl+]
     mvi a, $04
     stax [hl]
-    lxi hl, $c32a
+    lxi hl, SCR2.BEGIN + 2*75 + 60
     stax [hl+]
     mvi a, $f8
     stax [hl]
-    lxi hl, $c346
+    lxi hl, SCR2.BEGIN + 3*75 + 13
     mvi a, $1f
     stax [hl+]
     mvi a, $20
     stax [hl]
-    lxi hl, $c375
+    lxi hl, SCR2.BEGIN + 3*75 + 60
     stax [hl+]
     mvi a, $1f
     stax [hl]
@@ -535,8 +541,8 @@ call436a:
     call call491c
     neiw [$ffd2], $00
     jr .jr437e
-    lxi hl, $c6e8
-    lxi de, $c594
+    lxi hl, WRAMC6E8
+    lxi de, WRAMC594
     mvi b, $a9
     calt MEMCOPY
     call call4bd3
@@ -639,8 +645,8 @@ call43f5:
     call call48ff
     oniw [$ffd0], $08
     jre .jr448c
-    lxi hl, $c594
-    lxi de, $c63e
+    lxi hl, WRAMC594
+    lxi de, WRAMC63E
     mvi b, $a9
     calt MEMCOPY
     call call4992
@@ -719,8 +725,8 @@ call44bf:
     calt MUSPLAY
     call call4986
     call call491c
-    lxi hl, $c63e
-    lxi de, $c594
+    lxi hl, WRAMC63E
+    lxi de, WRAMC594
     mvi b, $a9
     calt MEMCOPY
     call call4bd3
@@ -797,8 +803,8 @@ call4539:
     staw [$ffe0]
     mvi a, $10
     staw [$ffe1]
-    lxi hl, $c6e8
-    lxi de, $c594
+    lxi hl, WRAMC6E8
+    lxi de, WRAMC594
     mvi b, $a9
     calt MEMCOPY
     call call4bd3
@@ -818,8 +824,8 @@ call4539:
     calt JOYREAD
     eqiw [$ff93], $09
     jr .jr4582
-    lxi hl, $c594
-    lxi de, $c6e8
+    lxi hl, WRAMC594
+    lxi de, WRAMC6E8
     mvi b, $a9
     calt MEMCOPY
     jmp jr4030.jr4047
@@ -1011,8 +1017,8 @@ call469b:
     jr .jr46b3
     mvi a, $04
     call call4878
-    lxi hl, $c594
-    lxi de, $c6e8
+    lxi hl, WRAMC594
+    lxi de, WRAMC6E8
     mvi b, $a9
     calt MEMCOPY
     rets
@@ -1283,7 +1289,7 @@ call482a:
     calt MULTIPLY
     pop de
     calt ADDRHLDE
-    lxi de, $c594
+    lxi de, WRAMC594
     calt ADDRHLDE
     ret
 
@@ -1834,7 +1840,7 @@ call4b18:
     call call495e
     mov e, a
     calt $9a
-    lxi de, $c258
+    lxi de, SCR2.BEGIN
     calt $96
     pop de
     mov a, b
@@ -1898,14 +1904,14 @@ call4b18:
     ret
 
 call4ba2:
-    lxi hl, $c570
+    lxi hl, OBJ.O0.X
     mvi a, $80
     mvi b, $23
     calt MEMSET
     ret
 
 call4bab:
-    lxi hl, $c570
+    lxi hl, OBJ.O0.X
     ldaw [$ffe5]
     dcr a
     nop
@@ -1988,7 +1994,7 @@ call4bd3:
     ret
 
 call4c1c:
-    lxi hl, $c594
+    lxi hl, WRAMC594
     mvi b, $a9
     calt MEMCLR
     staw [$ffd1]
