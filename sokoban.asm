@@ -33,11 +33,11 @@ jr4030:
 .jr4033:
     jmp $0128
     calt JOYREAD
-    neiw [$ff93], $09
+    neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jr .jr4047
-    neiw [$ff93], $08
+    neiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr4047
-    eqiw [$ff93], $01
+    eqiw [JOY.BTN.CURR], JOY.BTN.SEL
     jr .jr4033
     lxi hl, music_step
     calt MUSPLAY
@@ -68,16 +68,16 @@ start:
     call call4158
 .jr4071:
     calt JOYREAD
-    eqiw [$ff93], $01
+    eqiw [JOY.BTN.CURR], JOY.BTN.SEL
     jr .jr407e
-    oniw [$ff95], $01
+    oniw [JOY.BTN.EDGE], JOY.BTN.SEL
     jr .jr4094
     call call4175
     jr .jr4065
 .jr407e:
-    eqiw [$ff93], $08
+    eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr408b
-    oniw [$ff95], $08
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr4094
     call call4184
     jre .jr4062
@@ -380,25 +380,25 @@ call4236:
     calt SCRN2LCD
 .jr4274:
     calt JOYREAD
-    neiw [$ff93], $09
+    neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jmp jr4030.jr4047
-    eqiw [$ff93], $08
+    eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr4288
-    oniw [$ff95], $08
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr4274
     call call42f6
     jre .jr42a7
 .jr4288:
-    eqiw [$ff93], $02
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT1
     jr .jr4294
-    oniw [$ff95], $02
+    oniw [JOY.BTN.EDGE], JOY.BTN.BT1
     jr .jr4274
     call call42c6
     jr .jr42a1
 .jr4294:
-    eqiw [$ff93], $10
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT2
     jre .jr4274
-    oniw [$ff95], $10
+    oniw [JOY.BTN.EDGE], JOY.BTN.BT2
     jre .jr4274
     call call42a8
 .jr42a1:
@@ -488,11 +488,11 @@ call42f6:
     jre .jr4363
 .jr4311:
     calt JOYREAD
-    neiw [$ff93], $09
+    neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jmp jr4030.jr4047
-    eqiw [$ff93], $04
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT3
     jr .jr432c
-    offiw [$ff95], $04
+    offiw [JOY.BTN.EDGE], JOY.BTN.BT3
     jr .jr4325
     oniw [$ffd1], $80
     jre .jr4359
@@ -501,17 +501,17 @@ call42f6:
     jre .jr4359
     jre .jr434d
 .jr432c:
-    eqiw [$ff93], $08
+    eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr433b
-    oniw [$ff95], $08
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr434d
     call call44e4
     jre .jr4369
     jre .jr42fa
 .jr433b:
-    offiw [$ff93], $3f
+    offiw [JOY.BTN.CURR], JOY.BTN.ANY
     jr .jr4354
-    oniw [$ff92], $0f
+    oniw [JOY.DIR.CURR], JOY.DIR.ANY
     jr .jr434d
     call call4a0d
     jr .jr434d
@@ -623,7 +623,7 @@ call43f5:
 .jr4413:
     offiw [$ffd0], $80
     jr .jr441f
-    oniw [$ff94], $0f
+    oniw [JOY.DIR.EDGE], JOY.DIR.ANY
     jr .jr441f
     offiw [$ffd0], $08
     jr .jr442c
@@ -822,7 +822,7 @@ call4539:
 .jr456e:
     aniw [$ffd0], $cf
     calt JOYREAD
-    eqiw [$ff93], $09
+    eqiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jr .jr4582
     lxi hl, WRAMC594
     lxi de, WRAMC6E8
@@ -830,29 +830,29 @@ call4539:
     calt MEMCOPY
     jmp jr4030.jr4047
 .jr4582:
-    eqiw [$ff93], $08
+    eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr4592
-    offiw [$ff95], $08
+    offiw [JOY.BTN.EDGE], JOY.BTN.STA
     jre .jr45cd
     offiw [$ffd1], $80
     jre .jr45cd
     jre .jr45c3
 .jr4592:
-    eqiw [$ff93], $18
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT2 | JOY.BTN.STA
     jr .jr459f
-    oniw [$ff95], $18
+    oniw [JOY.BTN.EDGE], JOY.BTN.BT2 | JOY.BTN.STA
     jr .jr45b7
     call call4694
     jre .jr453f
 .jr459f:
-    offiw [$ff93], $09
+    offiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jr .jr45be
-    oniw [$ff93], $36
+    oniw [JOY.BTN.CURR], JOY.BTN.BT1 | JOY.BTN.BT2 | JOY.BTN.BT3 | JOY.BTN.BT4
     jr .jr45ab
     call call45d2
     jr .jr45be
 .jr45ab:
-    oniw [$ff92], $0f
+    oniw [JOY.DIR.CURR], JOY.DIR.ANY
     jr .jr45b7
     call call4a0d
     jr .jr45be
@@ -876,32 +876,32 @@ call4539:
     ret
 
 call45d2:
-    neiw [$ff93], $02
+    neiw [JOY.BTN.CURR], JOY.BTN.BT1
     jr .jr45e2
-    neiw [$ff93], $04
+    neiw [JOY.BTN.CURR], JOY.BTN.BT3
     jr .jr45e2
-    neiw [$ff93], $20
+    neiw [JOY.BTN.CURR], JOY.BTN.BT4
     jr .jr45e2
-    eqiw [$ff93], $10
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT2
     ret
 .jr45e2:
     offiw [$ffd1], $80
     jre .jr4631
     call call49b6
     call call484e
-    eqiw [$ff93], $02
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT1
     jr .jr45f7
     call call4632
     jre .jr462e
     jr .jr460f
 .jr45f7:
-    eqiw [$ff93], $04
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT3
     jr .jr4601
     call call463e
     jre .jr462e
     jr .jr460f
 .jr4601:
-    eqiw [$ff93], $20
+    eqiw [JOY.BTN.CURR], JOY.BTN.BT4
     jr .jr460b
     call call464a
     jre .jr462e
@@ -990,7 +990,7 @@ call4664:
     call call49bf
     aniw [$ffd0], $fb
     call call48ff
-    offiw [$ff94], $0f
+    offiw [JOY.DIR.EDGE], JOY.DIR.ANY
     mvi a, $13
     mvi a, $09
     mov b, a
@@ -1509,9 +1509,9 @@ call4970:
     call call4928
 .jr4973:
     calt JOYREAD
-    neiw [$ff93], $08
+    neiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr4985
-    eqiw [$ff93], $01
+    eqiw [JOY.BTN.CURR], JOY.BTN.SEL
     jr .jr4981
     lxi hl, music_step
     calt MUSPLAY
@@ -1633,22 +1633,22 @@ call49f2:
 call4a0d:
     ldaw [$ffd0]
     ani a, $fc
-    eqiw [$ff92], $01
+    eqiw [JOY.DIR.CURR], JOY.DIR.UP
     jr .jr4a18
     ori a, $03
     jr .jr4a2a
 .jr4a18:
-    eqiw [$ff92], $02
+    eqiw [JOY.DIR.CURR], JOY.DIR.LT
     jr .jr4a1f
     ori a, $01
     jr .jr4a2a
 .jr4a1f:
-    eqiw [$ff92], $04
+    eqiw [JOY.DIR.CURR], JOY.DIR.DN
     jr .jr4a26
     ori a, $02
     jr .jr4a2a
 .jr4a26:
-    eqiw [$ff92], $08
+    eqiw [JOY.DIR.CURR], JOY.DIR.RT
     ret
 .jr4a2a:
     staw [$ffd0]
@@ -1785,13 +1785,13 @@ call4add:
     stax [hl]
     jr .jr4b16
 .jr4afa:
-    oniw [$ff92], $0f
+    oniw [JOY.DIR.CURR], JOY.DIR.ANY
     jr .jr4b17
     call call4a0d
     jr .jr4b17
     offiw [$ffd1], $80
     jr .jr4b17
-    oniw [$ff93], $3f
+    oniw [JOY.BTN.CURR], JOY.BTN.ANY
     jr .jr4b13
     offiw [$ffd0], $10
     jr .jr4b13
