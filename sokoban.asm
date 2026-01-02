@@ -20,42 +20,45 @@ WRAMC788 = WRAMC6F2 + 150
 
 header:
     db CART.MAGIC
-    dw start
-    dw start
+    dw setup
+    dw setup
     dw font
     dw 0
 
-    jre jr4030
+    jre interrupt
 
 #addr $4030
-jr4030:
+interrupt:
     oniw [$ffd0], $80
 .jr4033:
     jmp $0128
     calt JOYREAD
     neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
-    jr .jr4047
+    jr reset
     neiw [JOY.BTN.CURR], JOY.BTN.STA
-    jr .jr4047
+    jr reset
     eqiw [JOY.BTN.CURR], JOY.BTN.SEL
     jr .jr4033
     lxi hl, music_step
     calt MUSPLAY
-.jr4047:
+    ; fall through
+
+reset:
     oniw [$ffd1], $80
     jr .jr4050
     offiw [$ff80], $03
     calf $0e4d
 .jr4050:
     lxi sp, $c800
-    jr start.jr405d
+    jr start
 
-start:
+setup:
     di
     calt WRAMCLR
     lxi sp, $c800
     call call409e
-.jr405d:
+
+start:
     call call40e3
     ei
 .jr4062:
@@ -381,7 +384,7 @@ call4236:
 .jr4274:
     calt JOYREAD
     neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
-    jmp jr4030.jr4047
+    jmp reset
     eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr4288
     oniw [JOY.BTN.EDGE], JOY.BTN.STA
@@ -489,7 +492,7 @@ call42f6:
 .jr4311:
     calt JOYREAD
     neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
-    jmp jr4030.jr4047
+    jmp reset
     eqiw [JOY.BTN.CURR], JOY.BTN.BT3
     jr .jr432c
     offiw [JOY.BTN.EDGE], JOY.BTN.BT3
@@ -828,7 +831,7 @@ call4539:
     lxi de, WRAMC6E8
     mvi b, $a9
     calt MEMCOPY
-    jmp jr4030.jr4047
+    jmp reset
 .jr4582:
     eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr4592
