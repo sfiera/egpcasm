@@ -39,7 +39,7 @@ jr4030:
     jr .jr4047
     eqiw [$ff93], $01
     jr .jr4033
-    lxi hl, music4faa
+    lxi hl, music_step
     calt MUSPLAY
 .jr4047:
     oniw [$ffd1], $80
@@ -153,21 +153,21 @@ call40e3:
 call40f0:
     calt SCR2CLR
 
-    lxi hl, text4e82
+    lxi hl, text_logo_top
     calt DRAWTEXT
-    db $0c, $01, $0a
+    db $0c, $01, text_logo_top.size
 
-    lxi hl, text4e8c
+    lxi hl, text_logo_bottom
     calt DRAWTEXT
-    db $0c, $09, $0a
+    db $0c, $09, text_logo_bottom.size
 
-    lxi hl, text4e96
+    lxi hl, text_store
     calt DRAWTEXT
-    db $17, $12, $15
+    db $17, $12, $10 | text_store.size
 
-    lxi hl, text4e9b
+    lxi hl, text_keepers
     calt DRAWTEXT
-    db $11, $19, $17
+    db $11, $19, $10 | text_keepers.size
 
     lxi hl, SCR2.BEGIN + 2*75 + 13
     mvi a, $f8
@@ -188,29 +188,29 @@ call40f0:
     mvi a, $1f
     stax [hl]
 
-    lxi hl, text4ea2
+    lxi hl, text_play
     calt DRAWTEXT
-    db $11, $22, $15
+    db $11, $22, $10 | text_play.size
 
-    lxi hl, text4ea7
+    lxi hl, text_editor
     calt DRAWTEXT
-    db $11, $2c, $13
+    db $11, $2c, $10 | 3
 
-    lxi hl, text4eaa
+    lxi hl, text_editor + 3
     calt DRAWTEXT
-    db $22, $2c, $01
+    db $22, $2c, 1
 
-    lxi hl, text4eab
+    lxi hl, text_editor + 4
     calt DRAWTEXT
-    db $27, $2c, $13
+    db $27, $2c, $10 | (text_editor.size - 4)
 
-    lxi hl, text4eae
+    lxi hl, text_eplay
     calt DRAWTEXT
-    db $11, $36, $13
+    db $11, $36, $10 | 3
 
-    lxi hl, text4eb1
+    lxi hl, text_eplay + 3
     calt DRAWTEXT
-    db $22, $36, $14
+    db $22, $36, $10 | (text_eplay.size - 3)
 
     ret
 
@@ -236,7 +236,7 @@ call4158:
     ret
 
 call4175:
-    lxi hl, music4faa
+    lxi hl, music_step
     calt MUSPLAY
     ldaw [$ffd2]
     inr a
@@ -279,12 +279,12 @@ call4197:
     staw [$ffe9]
     call call46b7
     call call4a2d
-    lxi hl, text4ee9
+    lxi hl, text_dis
     calt DRAWTEXT
-    db $12, $04, $03
-    lxi hl, text4ee4
+    db $12, $04, text_dis.size
+    lxi hl, text_play3
     calt DRAWTEXT
-    db $22, $04, $14
+    db $22, $04, $10 | 4
     call call4902
     mvi b, $05
     call call4967
@@ -368,12 +368,12 @@ call4236:
     call call4c36
     mvi c, $01
     call call4c36
-    lxi hl, text4eb5
+    lxi hl, text_start
     calt DRAWTEXT
-    db $06, $01, $95
-    lxi hl, text4eba
+    db $06, $01, $90 | text_start.size
+    lxi hl, text_no
     calt DRAWTEXT
-    db $28, $01, $93
+    db $28, $01, $90 | text_no.size
     lxi hl, $ffd3
     calt DRAWHEX
     db $3a, $01, $99
@@ -402,7 +402,7 @@ call4236:
     jre .jr4274
     call call42a8
 .jr42a1:
-    lxi hl, music4faa
+    lxi hl, music_step
     calt MUSPLAY
     jre .jr4247
 .jr42a7:
@@ -561,13 +561,13 @@ call436a:
     mvi c, $0a
     call call4c36
 
-    lxi hl, text4ee1
+    lxi hl, text_e2
     calt DRAWTEXT
-    db $0f, $0a, $93
+    db $0f, $0a, $90 | text_e2.size
 
-    lxi hl, text4ee4
+    lxi hl, text_play3
     calt DRAWTEXT
-    db $20, $0a, $95
+    db $20, $0a, $90 | text_play3.size
 
     jr .jr43c4
 .jr43a8:
@@ -577,9 +577,9 @@ call436a:
     call call4c36
     mvi c, $0a
     call call4c36
-    lxi hl, text4ebd
+    lxi hl, text_no2
     calt DRAWTEXT
-    db $11, $0a, $97
+    db $11, $0a, $90 | text_no2.size
     lxi hl, $ffd3
     calt DRAWHEX
     db $29, $0a, $99
@@ -590,14 +590,14 @@ call436a:
     call call4c36
     mvi c, $1a
     call call4c36
-    lxi hl, text4ec4
+    lxi hl, text_challenge
     calt DRAWTEXT
-    db $06, $1a, $99
+    db $06, $1a, $90 | text_challenge.size
     lxi hl, $ffd4
     calt DRAWHEX
     db $40, $1a, $80
     calt SCRN2LCD
-    lxi hl, music4f3c
+    lxi hl, music_start
     calt MUSPLAY
     db $44, $86, $49
     oriw [$ffd0], $40
@@ -721,7 +721,7 @@ call448d:
 call44bf:
     oniw [$ffd0], $10
     jr .jr44e0
-    lxi hl, music4f9d
+    lxi hl, music_undo
     calt MUSPLAY
     call call4986
     call call491c
@@ -918,7 +918,7 @@ call45d2:
     offi a, $08
     mvi a, $08
     call call4b18
-    lxi hl, music4faa
+    lxi hl, music_step
     calt MUSPLAY
     aniw [$ffd0], $fb
     call call48ff
@@ -1342,7 +1342,7 @@ call4878:
     ret
 
 call4892:
-    lxi hl, music4f5d
+    lxi hl, music_win
     calt MUSPLAY
     call call4986
     mvi b, $16
@@ -1351,14 +1351,14 @@ call4892:
     call call4c36
     mvi c, $1c
     call call4c36
-    lxi hl, text4ecd
+    lxi hl, text_good
     calt DRAWTEXT
-    db $18, $1c, $95
+    db $18, $1c, $90 | text_good.size
     calt SCRN2LCD
     ret
 
 call48b0:
-    lxi hl, music4f7c
+    lxi hl, music_lose
     calt MUSPLAY
     call call4986
     call call48df
@@ -1368,15 +1368,15 @@ call48b0:
     call call4c36
     mvi c, $24
     call call4c36
-    lxi hl, text4eda
+    lxi hl, text_give
     calt DRAWTEXT
-    db $11, $24, $82
-    lxi hl, text4edc
+    db $11, $24, $80 | 2
+    lxi hl, text_give + 2
     calt DRAWTEXT
-    db $1b, $24, $92
-    lxi hl, text4ede
+    db $1b, $24, $90 | (text_give.size - 2)
+    lxi hl, text_up
     calt DRAWTEXT
-    db $2b, $24, $93
+    db $2b, $24, $90 | text_up.size
     calt SCRN2LCD
     ret
 
@@ -1387,12 +1387,12 @@ call48df:
     call call4c36
     mvi c, $0a
     call call4c36
-    lxi hl, text4ed2
+    lxi hl, text_game
     calt DRAWTEXT
-    db $0c, $0a, $94
-    lxi hl, text4ed6
+    db $0c, $0a, $90 | text_game.size
+    lxi hl, text_over
     calt DRAWTEXT
-    db $28, $0a, $94
+    db $28, $0a, $90 | text_over.size
     ret
 
 call48fc:
@@ -1513,7 +1513,7 @@ call4970:
     jr .jr4985
     eqiw [$ff93], $01
     jr .jr4981
-    lxi hl, music4faa
+    lxi hl, music_step
     calt MUSPLAY
     jr .jr4985
 .jr4981:
@@ -2092,74 +2092,81 @@ font:
     #d incbin("sokoban/font.1bpp")[895:496]
     #d incbin("sokoban/font.1bpp")[1343:944]
 
-text4e82:
+text_logo_top:
     #d $6a6b6c6d6e6f70717273
+.size = $ - text_logo_top
 
-text4e8c:
+text_logo_bottom:
     #d $7475767778797a7b7c7d
+.size = $ - text_logo_bottom
 
-text4e96:
+text_store:
     #d smalltext("STORE")
+.size = $ - text_store
 
-text4e9b:
+text_keepers:
     #d smalltext("KEEPERS")
+.size = $ - text_keepers
 
-text4ea2:
+text_play:
     #d $64, largetext("PLAY")
+.size = $ - text_play
 
-text4ea7:
-    #d $64, largetext("ED")
+text_editor:
+    #d $64, largetext("EDITOR")
+.size = $ - text_editor
 
-text4eaa:
-    #d largetext("I")
+text_eplay:
+    #d $64, largetext("E"), $65, largetext("PLAY")
+.size = $ - text_eplay
 
-text4eab:
-    #d largetext("TOR")
-
-text4eae:
-    #d $64, largetext("E"), $65
-
-text4eb1:
-    #d largetext("PLAY")
-
-text4eb5:
+text_start:
     #d largetext("START")
+.size = $ - text_start
 
-text4eba:
+text_no:
     #d largetext("NO"), $66
+.size = $ - text_no
 
-text4ebd:
-    #d $67, largetext("NO")
-    #d $68000069
+text_no2:
+    #d $67, largetext("NO"), $68, $00, $00, $69
+.size = $ - text_no2
 
-text4ec4:
+text_challenge:
     #d largetext("CHALLENGE")
+.size = $ - text_challenge
 
-text4ecd:
+text_good:
     #d largetext("GOOD!")
+.size = $ - text_good
 
-text4ed2:
+text_game:
     #d largetext("GAME")
-text4ed6:
+.size = $ - text_game
+
+text_over:
     #d largetext("OVER")
+.size = $ - text_over
 
-text4eda:
-    #d largetext("G")
-text4edb:
-    #d largetext("I")
-text4edc:
-    #d largetext("VE")
-text4ede:
+text_give:
+    #d largetext("GIVE")
+.size = $ - text_give
+
+text_up:
     #d largetext("UP?")
+.size = $ - text_up
 
-text4ee1:
+text_e2:
     #d $67, largetext("E"), $65
+.size = $ - text_e2
 
-text4ee4:
+text_play3:
     #d largetext("PLAY"), $69
+.size = $ - text_play3
 
-text4ee9:
+text_dis:
     #d largetext("DIS")
+.size = $ - text_dis
 
 tiles1:
     #d incbin("sokoban/tiles1.1bpp")
@@ -2167,7 +2174,7 @@ tiles1:
 tiles2:
     #d incbin("sokoban/tiles2.1bpp")
 
-music4f3c:
+music_start:
     db PITCH.GS4, 8
     db PITCH.A4, 20
     db PITCH.GS4, 8
@@ -2186,7 +2193,7 @@ music4f3c:
     db PITCH.GS4, 10
     db $ff
 
-music4f5d:
+music_win:
     db PITCH.C4, 10
     db PITCH.C4, 10
     db PITCH.E4, 10
@@ -2204,7 +2211,7 @@ music4f5d:
     db PITCH.C5, 30
     db $ff
 
-music4f7c:
+music_lose:
     db PITCH.C4, 10
     db PITCH.D4, 10
     db PITCH.E4, 10
@@ -2223,7 +2230,7 @@ music4f7c:
     db PITCH.F4, 40
     db $ff
 
-music4f9d:
+music_undo:
     db PITCH.E4, 10
     db PITCH.D4, 10
     db PITCH.C4, 10
@@ -2232,7 +2239,7 @@ music4f9d:
     db PITCH.C4, 10
     db $ff
 
-music4faa:
+music_step:
     db PITCH.C5, 2
     db PITCH.E5, 0
     db PITCH.NONE, 15
