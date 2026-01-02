@@ -96,7 +96,7 @@ start:
 call409e:
     calt OBJCLR
     staw [$ffd2]
-    lxi hl, data4efc
+    lxi hl, tiles2
     lxi de, OBJ.BEGIN
     mvi c, $0f
 .jr40a9:
@@ -1808,7 +1808,7 @@ call4add:
     ret
 
 call4b18:
-    lxi hl, data4eec
+    lxi hl, tiles1
     mvi e, $04
     mvi b, $03
 .jr4b1f:
@@ -2161,15 +2161,11 @@ text4ee4:
 text4ee9:
     #d largetext("DIS")
 
-data4eec:
-    #d $0f0f0f0f
-    #d $000606000000000006090906
+tiles1:
+    #d incbin("sokoban/tiles1.1bpp")
 
-data4efc:
-    #d $000000000a07070a00000000020f0f02
-    #d $00000000020f0f0200000000020f0f02
-    #d $00000000020f0f020006060006090906
-    #d $0f0f0f0f090606090f0f0f0f00000000
+tiles2:
+    #d incbin("sokoban/tiles2.1bpp")
 
 music4f3c:
     db PITCH.GS4, 8

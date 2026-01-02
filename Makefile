@@ -48,3 +48,5 @@ gamepock/pokedemo.bin: pokedemo/font.1bpp
 gamepock/pokedemo.bin: pokedemo/marspr.1bpp
 gamepock/pokedemo.bin: $(wildcard pokedemo/*.bin)
 gamepock/sokoban.bin: sokoban/font.1bpp
+gamepock/sokoban.bin: sokoban/tiles1.1bpp
+gamepock/sokoban.bin: sokoban/tiles2.1bpp
