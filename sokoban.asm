@@ -271,7 +271,7 @@ call4197:
     call call491c
     call call4920
     oriw [$ffd0], $80
-    lxi hl, data4fb8
+    lxi hl, demo
     ldax [hl+]
     staw [$ffea]
     shld [$ffe7]
@@ -2244,10 +2244,35 @@ music4fb1:
     db PITCH.NONE, 1
     db $ff
 
-data4fb8:
-    #d $7c5fd55a82a89ffd
-    #d $7f0aaabff27f02a5daa6327fc276a27f
-    #d $c00d957f02895daa
+#fn demo_reducer(out, ch) => {
+    suffix = (
+        (ch == "R"`8) ? %00 :
+        (ch == "L"`8) ? %01 :
+        (ch == "D"`8) ? %10 :
+        (ch == "U"`8) ? %11 :
+        ""
+    )
+    assert(sizeof(suffix) == 2)
+    out @ suffix
+}
+
+demo:
+    db (.end - .start) * 4
+.start:
+    #d reduce(
+        "LLUUULLLLLDDDRRD" @
+        "DDDRDLUUUUULLUUU" @
+        "RRDDDDDDDUUUUURD" @
+        "LUUURRRDDDLLULDD" @
+        "DDLDRURDLUUUURRD" @
+        "LULDDDRDLUUUURRR" @
+        "RRULDLLLLUUURRRD" @
+        "DRDLLLULDDDD",
+        8,
+        "",
+        demo_reducer
+    )
+.end:
 
 levels:
     dw level00
