@@ -357,7 +357,7 @@ call4236:
     call call491c
     call call493d
     calt SNDPLAY
-    db $0f, $06
+    db PITCH.A4, 6
 .jr4247:
     call call46b7
     call call4a2d
@@ -604,7 +604,7 @@ call436a:
     call call4a2d
     call call48ff
     calt SNDPLAY
-    db $0f, $06
+    db PITCH.A4, 6
     ret
 
 call43f5:
@@ -750,7 +750,7 @@ call44e7:
     ret
 .jr44f8:
     calt SNDPLAY
-    db $0d, $14
+    db PITCH.G4, 20
     rets
 
 call44fc:
@@ -788,7 +788,7 @@ call44fc:
 
 call452c:
     calt SNDPLAY
-    db $0f, $06
+    db PITCH.A4, 6
     call call492e
     call call493d
     call call42f6
@@ -796,7 +796,7 @@ call452c:
 
 call4539:
     calt SNDPLAY
-    db $0f, $06
+    db PITCH.A4, 6
     call call492e
 .jr453f:
     mvi a, $02
@@ -985,7 +985,7 @@ call4664:
     offiw [$ffd0], $20
     jr .jr4679
     calt SNDPLAY
-    db $0a, $06
+    db PITCH.E4, 6
 .jr4679:
     call call49bf
     aniw [$ffd0], $fb
@@ -1006,7 +1006,7 @@ call4664:
 
 call4694:
     calt SNDPLAY
-    db $12, $14
+    db PITCH.C5, 20
     call call40b9
     ret
 
@@ -1418,7 +1418,7 @@ call4907:
     jr .jr491b
 .jr4918:
     calt SNDPLAY
-    db $01, $ff
+    db PITCH.G3, 255
 .jr491b:
     ret
 
@@ -2166,36 +2166,87 @@ data4eec:
     #d $000606000000000006090906
 
 data4efc:
-    #d $00000000
-    #d $0a07070a00000000020f0f0200000000
-    #d $020f0f0200000000020f0f0200000000
-    #d $020f0f0200060600060909060f0f0f0f
-    #d $090606090f0f0f0f00000000
+    #d $000000000a07070a00000000020f0f02
+    #d $00000000020f0f0200000000020f0f02
+    #d $00000000020f0f020006060006090906
+    #d $0f0f0f0f090606090f0f0f0f00000000
 
 music4f3c:
-    #d $0e080f14
-    #d $0e080f1403140d080e140c080e140314
-    #d $0a080a140a080c140d140e0aff
+    db PITCH.GS4, 8
+    db PITCH.A4, 20
+    db PITCH.GS4, 8
+    db PITCH.A4, 20
+    db PITCH.A3, 20
+    db PITCH.G4, 8
+    db PITCH.GS4, 20
+    db PITCH.FS4, 8
+    db PITCH.GS4, 20
+    db PITCH.A3, 20
+    db PITCH.E4, 8
+    db PITCH.E4, 20
+    db PITCH.E4, 8
+    db PITCH.FS4, 20
+    db PITCH.G4, 20
+    db PITCH.GS4, 10
+    db $ff
 
 music4f5d:
-    #d $060a06
-    #d $0a0a0a0d1e080a080a0b0a0f1e110a11
-    #d $0a110a110a0f0a110a121eff
+    db PITCH.C4, 10
+    db PITCH.C4, 10
+    db PITCH.E4, 10
+    db PITCH.G4, 30
+    db PITCH.D4, 10
+    db PITCH.D4, 10
+    db PITCH.F4, 10
+    db PITCH.A4, 30
+    db PITCH.B4, 10
+    db PITCH.B4, 10
+    db PITCH.B4, 10
+    db PITCH.B4, 10
+    db PITCH.A4, 10
+    db PITCH.B4, 10
+    db PITCH.C5, 30
+    db $ff
 
 music4f7c:
-    #d $060a080a
-    #d $0a0a0b140f0a0b140f0a1214100a0f14
-    #d $0d0a0b0a080a060a0a140b28ff
+    db PITCH.C4, 10
+    db PITCH.D4, 10
+    db PITCH.E4, 10
+    db PITCH.F4, 20
+    db PITCH.A4, 10
+    db PITCH.F4, 20
+    db PITCH.A4, 10
+    db PITCH.C5, 20
+    db PITCH.AS4, 10
+    db PITCH.A4, 20
+    db PITCH.G4, 10
+    db PITCH.F4, 10
+    db PITCH.D4, 10
+    db PITCH.C4, 10
+    db PITCH.E4, 20
+    db PITCH.F4, 40
+    db $ff
 
 music4f9d:
-    #d $0a0a08
-    #d $0a060a0a0a080a060aff
+    db PITCH.E4, 10
+    db PITCH.D4, 10
+    db PITCH.C4, 10
+    db PITCH.E4, 10
+    db PITCH.D4, 10
+    db PITCH.C4, 10
+    db $ff
 
 music4faa:
-    #d $12021600000fff
+    db PITCH.C5, 2
+    db PITCH.E5, 0
+    db PITCH.NONE, 15
+    db $ff
 
 music4fb1:
-    #d $0a080d010001ff
+    db PITCH.E4, 8
+    db PITCH.G4, 1
+    db PITCH.NONE, 1
+    db $ff
 
 data4fb8:
     #d $7c5fd55a82a89ffd
