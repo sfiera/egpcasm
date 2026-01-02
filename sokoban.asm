@@ -59,35 +59,35 @@ setup:
     call call409e
 
 start:
-    call call40e3
+    call clear_mem
     ei
 .jr4062:
-    call call40f0
+    call draw_title
 .jr4065:
     call call491c
     call call4928
 .jr406b:
     call call4924
-    call call4158
+    call show_title
 .jr4071:
     calt JOYREAD
     eqiw [JOY.BTN.CURR], JOY.BTN.SEL
     jr .jr407e
     oniw [JOY.BTN.EDGE], JOY.BTN.SEL
     jr .jr4094
-    call call4175
+    call cycle_menu
     jr .jr4065
 .jr407e:
     eqiw [JOY.BTN.CURR], JOY.BTN.STA
     jr .jr408b
     oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr4094
-    call call4184
+    call invoke_menu
     jre .jr4062
 .jr408b:
     eqiw [$ff89], $0a
     jr .jr4097
-    call call4197
+    call run_demo
     jre .jr4062
 .jr4094:
     call call4928
@@ -143,7 +143,8 @@ call40b9:
     jr .jr40d9
     ret
 
-call40e3:
+clear_mem:
+    ; Clear $ffd0 to $ffff, but preserve $ffd2
     ldaw [$ffd2]
     mov c, a
     lxi hl, $ffd0
@@ -153,7 +154,7 @@ call40e3:
     staw [$ffd2]
     ret
 
-call40f0:
+draw_title:
     calt SCR2CLR
 
     lxi hl, text_logo_top
@@ -217,7 +218,7 @@ call40f0:
 
     ret
 
-call4158:
+show_title:
     calt SCR2COPY
     oniw [$ffd0], $04
     jr .jr4170
@@ -238,7 +239,7 @@ call4158:
     call call498b
     ret
 
-call4175:
+cycle_menu:
     lxi hl, music_step
     calt MUSPLAY
     ldaw [$ffd2]
@@ -251,21 +252,21 @@ call4175:
     staw [$ffd2]
     ret
 
-call4184:
+invoke_menu:
     eqiw [$ffd2], $00
     jr .jr418c
-    call call4236
+    call invoke_game
     jr .jr4196
 .jr418c:
     eqiw [$ffd2], $01
     jr .jr4193
-    call call4539
+    call invoke_editor
 .jr4193:
-    call call452c
+    call invoke_eplay
 .jr4196:
     ret
 
-call4197:
+run_demo:
     ldaw [$ffd3]
     push va
     calt ACCCLR
@@ -274,7 +275,7 @@ call4197:
     call call491c
     call call4920
     oriw [$ffd0], $80
-    lxi hl, demo
+    lxi hl, demo_input
     ldax [hl+]
     staw [$ffea]
     shld [$ffe7]
@@ -340,18 +341,18 @@ call4197:
 .jr4220:
     dcrw [$ffea]
     nop
-    call call43f5
+    call try43f5
     nop
     jre .jr41d7
 .jr4229:
-    call call4892
+    call win_level
     mvi b, $03
     call call4967
     pop va
     staw [$ffd3]
     ret
 
-call4236:
+invoke_game:
     offiw [$ffd1], $40
     jr .jr423e
     mvi a, $01
@@ -389,21 +390,21 @@ call4236:
     jr .jr4288
     oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr4274
-    call call42f6
+    call play_level
     jre .jr42a7
 .jr4288:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT1
     jr .jr4294
     oniw [JOY.BTN.EDGE], JOY.BTN.BT1
     jr .jr4274
-    call call42c6
+    call inc_level10
     jr .jr42a1
 .jr4294:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT2
     jre .jr4274
     oniw [JOY.BTN.EDGE], JOY.BTN.BT2
     jre .jr4274
-    call call42a8
+    call inc_level1
 .jr42a1:
     lxi hl, music_step
     calt MUSPLAY
@@ -411,7 +412,7 @@ call4236:
 .jr42a7:
     ret
 
-call42a8:
+inc_level1:
     call call42e4
     inr b
     nop
@@ -436,7 +437,7 @@ call42a8:
     call call42ef
     ret
 
-call42c6:
+inc_level10:
     call call42e4
     inr c
     nop
@@ -475,11 +476,11 @@ call42ef:
     rrd
     ret
 
-call42f6:
+play_level:
     mvi a, $01
     staw [$ffd4]
 .jr42fa:
-    call call436a
+    call begin_level
     call call491c
     call call4920
 .jr4303:
@@ -500,7 +501,7 @@ call42f6:
     oniw [$ffd1], $80
     jre .jr4359
 .jr4325:
-    call call44bf
+    call try_undo
     jre .jr4359
     jre .jr434d
 .jr432c:
@@ -508,7 +509,7 @@ call42f6:
     jr .jr433b
     oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr434d
-    call call44e4
+    call try_forfeit
     jre .jr4369
     jre .jr42fa
 .jr433b:
@@ -516,9 +517,9 @@ call42f6:
     jr .jr4354
     oniw [JOY.DIR.CURR], JOY.DIR.ANY
     jr .jr434d
-    call call4a0d
+    call try_move
     jr .jr434d
-    call call43f5
+    call try43f5
     jr .jr4359
     jre .jr4303
 .jr434d:
@@ -534,13 +535,13 @@ call42f6:
     call call48fc
     jre .jr4311
 .jr4363:
-    call call44fc
+    call try44fc
     jr .jr4369
     jre .jr42fa
 .jr4369:
     ret
 
-call436a:
+begin_level:
     call call491c
     neiw [$ffd2], $00
     jr .jr437e
@@ -610,8 +611,8 @@ call436a:
     db PITCH.A4, 6
     ret
 
-call43f5:
-    call call448d
+try43f5:
+    call try448d
     jre .jr4488
     aniw [$ffd0], $fb
     oriw [$ffd0], $08
@@ -687,17 +688,17 @@ call43f5:
     aniw [$ffd0], $f7
     jre .jr4413
 .jr4488:
-    call call4907
+    call play_err_beep
     ret
 .jr448c:
     rets
 
-call448d:
+try448d:
     call call4992
-    call call49c8
+    call try49c8
     jre .jr44be
     call call49f2
-    call call49c8
+    call try49c8
     jre .jr44be
     call call484e
     offi a, $01
@@ -706,7 +707,7 @@ call448d:
     jr .jr44ba
     call call49ad
     call call49f2
-    call call49c8
+    call try49c8
     jr .jr44be
     call call484e
     offi a, $01
@@ -721,7 +722,7 @@ call448d:
 .jr44be:
     ret
 
-call44bf:
+try_undo:
     oniw [$ffd0], $10
     jr .jr44e0
     lxi hl, music_undo
@@ -737,18 +738,17 @@ call44bf:
     call call48ff
     rets
 .jr44e0:
-    call call4907
+    call play_err_beep
     ret
 
-call44e4:
+try_forfeit:
     inrw [$ffd4]
     nop
-call44e7:
     gtiw [$ffd4], $05
     jr .jr44f8
     neiw [$ffd2], $00
     oriw [$ffd1], $40
-    call call48b0
+    call lose_level
     call call4970
     ret
 .jr44f8:
@@ -756,7 +756,7 @@ call44e7:
     db PITCH.G4, 20
     rets
 
-call44fc:
+try44fc:
     eqiw [$ffd2], $00
     jr .jr4518
     call call42e4
@@ -778,26 +778,26 @@ call44fc:
     gti a, $05
     jr .jr451f
 .jr4518:
-    call call4892
+    call win_level
     call call4970
     ret
 .jr451f:
-    call call4892
+    call win_level
     mvi b, $03
     call call4967
     mvi a, $01
     staw [$ffd4]
     rets
 
-call452c:
+invoke_eplay:
     calt SNDPLAY
     db PITCH.A4, 6
     call call492e
     call call493d
-    call call42f6
+    call play_level
     ret
 
-call4539:
+invoke_editor:
     calt SNDPLAY
     db PITCH.A4, 6
     call call492e
@@ -845,19 +845,19 @@ call4539:
     jr .jr459f
     oniw [JOY.BTN.EDGE], JOY.BTN.BT2 | JOY.BTN.STA
     jr .jr45b7
-    call call4694
+    call clear_editor
     jre .jr453f
 .jr459f:
     offiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jr .jr45be
     oniw [JOY.BTN.CURR], JOY.BTN.BT1 | JOY.BTN.BT2 | JOY.BTN.BT3 | JOY.BTN.BT4
     jr .jr45ab
-    call call45d2
+    call try_apply_edit
     jr .jr45be
 .jr45ab:
     oniw [JOY.DIR.CURR], JOY.DIR.ANY
     jr .jr45b7
-    call call4a0d
+    call try_move
     jr .jr45be
     call call4664
     jr .jr45c3
@@ -874,11 +874,11 @@ call4539:
     call call48fc
     jre .jr456e
 .jr45cd:
-    call call469b
+    call try_chk_start
     jr .jr45c3
     ret
 
-call45d2:
+try_apply_edit:
     neiw [JOY.BTN.CURR], JOY.BTN.BT1
     jr .jr45e2
     neiw [JOY.BTN.CURR], JOY.BTN.BT3
@@ -894,23 +894,23 @@ call45d2:
     call call484e
     eqiw [JOY.BTN.CURR], JOY.BTN.BT1
     jr .jr45f7
-    call call4632
+    call try_place_wall
     jre .jr462e
     jr .jr460f
 .jr45f7:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT3
     jr .jr4601
-    call call463e
+    call try_place_target
     jre .jr462e
     jr .jr460f
 .jr4601:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT4
     jr .jr460b
-    call call464a
+    call try_place_crate
     jre .jr462e
     jr .jr460f
 .jr460b:
-    call call4659
+    call try_erase_object
     jr .jr462e
 .jr460f:
     push va
@@ -931,7 +931,7 @@ call45d2:
 .jr4631:
     rets
 
-call4632:
+try_place_wall:
     offi a, $01
     ret
     oni a, $08
@@ -942,7 +942,7 @@ call4632:
     mvi a, $01
     rets
 
-call463e:
+try_place_target:
     offi a, $02
     ret
     oni a, $08
@@ -954,7 +954,7 @@ call463e:
 .jr4649:
     rets
 
-call464a:
+try_place_crate:
     offi a, $08
     ret
     oni a, $02
@@ -968,7 +968,7 @@ call464a:
     nop
     rets
 
-call4659:
+try_erase_object:
     oni a, $0f
     ret
     oni a, $08
@@ -982,7 +982,7 @@ call4659:
 call4664:
     call call49b6
     call call49f2
-    call call49c8
+    call try49c8
     jre .jr4690
     aniw [$ffd1], $7f
     offiw [$ffd0], $20
@@ -1003,17 +1003,17 @@ call4664:
     jr .jr468a
     jr .jr4693
 .jr4690:
-    call call4907
+    call play_err_beep
 .jr4693:
     ret
 
-call4694:
+clear_editor:
     calt SNDPLAY
     db PITCH.C5, 20
     call call40b9
     ret
 
-call469b:
+try_chk_start:
     call call49b6
     call call484e
     offi a, $09
@@ -1026,7 +1026,7 @@ call469b:
     calt MEMCOPY
     rets
 .jr46b3:
-    call call4907
+    call play_err_beep
     ret
 
 call46b7:
@@ -1092,9 +1092,9 @@ call46b7:
     inr a
     nop
     staw [$ffef]  ; [$ffef] = (a & %0011) + 1
-    call call4740
+    call try4740
     jr ..done
-    call call4760
+    call try4760
     jr ..done
     ldaw [$ffd1]
     xri a, $01
@@ -1115,7 +1115,7 @@ call46b7:
 .done:
     ret
 
-call4740:
+try4740:
     eqiw [$ffee], $03
     jr .jr475f
     eqiw [$fff0], $00
@@ -1136,7 +1136,7 @@ call4740:
 .jr475f:
     rets
 
-call4760:
+try4760:
     ldaw [$ffef]
     mov b, a
     ldaw [$fff0]
@@ -1170,7 +1170,7 @@ call4760:
 .jr4790:
     call call49d9
     gtiw [$ffe6], $11
-    jre call4760
+    jre try4760
     ret
 .jr4799:
     rets
@@ -1344,7 +1344,7 @@ call4878:
     pop va
     ret
 
-call4892:
+win_level:
     lxi hl, music_win
     calt MUSPLAY
     call call4986
@@ -1360,7 +1360,7 @@ call4892:
     calt SCRN2LCD
     ret
 
-call48b0:
+lose_level:
     lxi hl, music_lose
     calt MUSPLAY
     call call4986
@@ -1409,7 +1409,7 @@ call4902:
     calt SCRN2LCD
     ret
 
-call4907:
+play_err_beep:
     offiw [$ffd1], $80
     jr .jr4914
     oriw [$ffd1], $80
@@ -1578,7 +1578,7 @@ call49bf:
     staw [$ffe1]
     ret
 
-call49c8:
+try49c8:
     gtiw [$ffe5], $01
     jr .jr49d7
     ltiw [$ffe5], $13
@@ -1633,7 +1633,7 @@ call49f2:
 .jr4a0c:
     ret
 
-call4a0d:
+try_move:
     ldaw [$ffd0]
     ani a, $fc
     eqiw [JOY.DIR.CURR], JOY.DIR.UP
@@ -1790,7 +1790,7 @@ call4add:
 .jr4afa:
     oniw [JOY.DIR.CURR], JOY.DIR.ANY
     jr .jr4b17
-    call call4a0d
+    call try_move
     jr .jr4b17
     offiw [$ffd1], $80
     jr .jr4b17
@@ -2266,7 +2266,7 @@ music4fb1:
     out @ suffix
 }
 
-demo:
+demo_input:
     db (.end - .start) * 4
 .start:
     #d reduce(
