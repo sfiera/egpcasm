@@ -19,6 +19,8 @@ LVL_SZ_BYTES    = LVL_W_BYTES * LVL_H      ; = 170
 LVL_FIRST_ROW   = 0
 LVL_SECOND_ROW  = LVL_W_BYTES
 LVL_LAST_ROW    = LVL_SZ_BYTES - LVL_W_BYTES
+LVL_FIRST       = 1
+LVL_LAST        = 65
 
 TILE_EMPTY   = $0
 TILE_WALL    = $1
@@ -29,6 +31,25 @@ TILE_CRATE   = $8
 var_lvlmap   = OBJ.END
 var_backup  = var_lvlmap + LVL_SZ_BYTES
 var_loaded  = var_backup + LVL_SZ_BYTES
+
+FLAG0_0  = $01
+FLAG0_1  = $02
+FLAG0_2  = $04
+FLAG0_3  = $08
+FLAG0_4  = $10
+FLAG0_5  = $20
+FLAG0_6  = $40
+FLAG0_7  = $80
+
+FLAG1_0        = $01
+FLAG1_1        = $02
+FLAG1_FORFEIT  = $40  ; start level select from forfeited level
+FLAG1_7        = $80
+
+MODE_PLAY    = $00
+MODE_EDITOR  = $01
+MODE_EPLAY   = $02
+MODE_MAX     = MODE_EPLAY
 
 var_flags0       = $ffd0
 var_flags1       = $ffd1
@@ -69,7 +90,7 @@ header:
 
 #addr $4030
 interrupt:
-    oniw [var_flags0], $80
+    oniw [var_flags0], FLAG0_7
 .jr4033:
     jmp $0128
     calt JOYREAD
@@ -84,7 +105,7 @@ interrupt:
     ; fall through
 
 reset:
-    oniw [var_flags1], $80
+    oniw [var_flags1], FLAG1_7
     jr .jr4050
     offiw [$ff80], $03
     calf $0e4d
@@ -260,7 +281,7 @@ draw_title:
 
 show_title:
     calt SCR2COPY
-    oniw [var_flags0], $04
+    oniw [var_flags0], FLAG0_2
     jr .jr4170
     ldaw [var_mode]
     mov b, a
@@ -285,20 +306,20 @@ cycle_menu:
     ldaw [var_mode]
     inr a
     nop
-    gti a, $02
-    jr .jr4181
+    gti a, MODE_MAX
+    jr .save
     calt ACCCLR
-.jr4181:
+.save:
     staw [var_mode]
     ret
 
 invoke_menu:
-    eqiw [var_mode], $00
+    eqiw [var_mode], MODE_PLAY
     jr .jr418c
     call invoke_game
     jr .jr4196
 .jr418c:
-    eqiw [var_mode], $01
+    eqiw [var_mode], MODE_EDITOR
     jr .jr4193
     call invoke_editor
 .jr4193:
@@ -314,7 +335,7 @@ run_demo:
     call call493d
     call call491c
     call call4920
-    oriw [var_flags0], $80
+    oriw [var_flags0], FLAG0_7
     lxi hl, demo_input
     ldax [hl+]
     staw [var_demo2]
@@ -366,10 +387,10 @@ run_demo:
     rar
     jr .jr4201
 .jr4209:
-    ani a, $03
+    ani a, FLAG0_0 | FLAG0_1
     mov b, a
     ldaw [var_flags0]
-    ani a, $fc
+    ani a, !(FLAG0_0 | FLAG0_1)
     ora a, b
     staw [var_flags0]
     dcrw [var_demo1]
@@ -393,16 +414,18 @@ run_demo:
     ret
 
 invoke_game:
-    offiw [var_flags1], $40
-    jr .jr423e
-    mvi a, $01
+    offiw [var_flags1], FLAG1_FORFEIT
+    jr .start
+    mvi a, LVL_FIRST
     staw [var_level]
-.jr423e:
+
+.start:
     call call491c
     call call493d
     calt SNDPLAY
     db PITCH.A4, 6
-.jr4247:
+
+.load:
     call call46b7
     call call4a2d
     call call4a9a
@@ -422,85 +445,112 @@ invoke_game:
     calt DRAWHEX
     db $3a, $01, $99
     calt SCRN2LCD
-.jr4274:
+
+.change:
     calt JOYREAD
+
     neiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jmp reset
     eqiw [JOY.BTN.CURR], JOY.BTN.STA
-    jr .jr4288
+    jr ..by10
     oniw [JOY.BTN.EDGE], JOY.BTN.STA
-    jr .jr4274
+    jr .change
+
     call play_level
-    jre .jr42a7
-.jr4288:
+    jre .done
+
+..by10:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT1
-    jr .jr4294
+    jr ..by1
     oniw [JOY.BTN.EDGE], JOY.BTN.BT1
-    jr .jr4274
+    jr .change
     call inc_level10
-    jr .jr42a1
-.jr4294:
+    jr ..modified
+
+..by1:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT2
-    jre .jr4274
+    jre .change
     oniw [JOY.BTN.EDGE], JOY.BTN.BT2
-    jre .jr4274
+    jre .change
     call inc_level1
-.jr42a1:
+
+..modified:
     lxi hl, music_step
     calt MUSPLAY
-    jre .jr4247
-.jr42a7:
+    jre .load
+
+.done:
     ret
 
+; Increase [var_level] by 1 and handle boundary conditions:
+;
+; * if level == 65, then level = 60
+; * else if level == 9, then level = 1
+; * else if level % 10 == 9, then level -= 9
+; * else level += 1
 inc_level1:
-    call call42e4
-    inr b
+    call set_cb_from_level  ; a = c = tens, b = ones
+    inr b                   ; ones += 1
     nop
-    gti a, $05
-    jr .jr42b7
-    mov a, b
-    gti a, $05
-    jr .jr42c2
-    mvi b, $00
-    jr .jr42c2
-.jr42b7:
-    mov a, b
-    gti a, $09
-    jr .jr42c2
-    mvi b, $00
-    mov a, c
-    dcr a
-    jr .jr42c2
-    inr b
-    nop
-.jr42c2:
-    call call42ef
+
+    gti a, (LVL_LAST / 10) - 1  ; test tens >= 6
+    jr .not_sixty               ; else goto .not_sixty
+    mov a, b                    ;
+    gti a, LVL_LAST % 10        ; test ones >= 5
+    jr .done                    ; else goto .done
+    mvi b, 0                    ; ones = 0
+    jr .done                    ; goto .done
+
+.not_sixty:
+    mov a, b  ;
+    gti a, 9  ; test ones >= 9
+    jr .done  ; else goto .done
+    mvi b, 0  ; ones = 0
+    mov a, c  ;
+    dcr a     ; test tens > 0
+    jr .done  ; else goto .done
+    inr b     ; ones += 1
+    nop       ;
+
+.done:
+    call set_level_from_cb
     ret
 
+; Increase [var_level] by 10 and handle boundary conditions:
+;
+; * if level == 60, then level = 1
+; * else if level > 60, then level = level - 60
+; * else if level > 55, then level = level - 50
+; * else level = level + 10
 inc_level10:
-    call call42e4
-    inr c
+    call set_cb_from_level  ; c = tens, b = ones
+    inr c                   ; tens += 1
     nop
     mov a, c
-    gti a, $06
-    jr .jr42d7
-    mvi c, $00
-    mov a, b
-    nei a, $00
-    mvi b, $01
-    jr .jr42e0
-.jr42d7:
-    eqi a, $06
-    jr .jr42e0
-    mov a, b
-    gti a, $05
-    jr .jr42e0
-    mvi c, $00
-.jr42e0:
-    call call42ef
+
+    gti a, LVL_LAST / 10  ; test tens > 6
+    jr .not_sixty         ; else goto .not_sixty
+    mvi c, 0              ; tens = 0
+    mov a, b              ;
+    nei a, 0              ; test ones != 0
+    mvi b, 1              ; else ones = 1
+    jr .done              ; goto .done
+
+.not_sixty:
+    eqi a, LVL_LAST / 10  ; test tens != 6
+    jr .done              ; else goto .done
+    mov a, b              ;
+    gti a, LVL_LAST % 10  ; test ones > 5
+    jr .done              ; else goto .done
+    mvi c, 0              ; tens = 0
+
+.done:
+    call set_level_from_cb
     ret
 
-call42e4:
+; a = c = [var_level] / 10
+; b = [var_level] % 10
+set_cb_from_level:
     lxi hl, var_level
     calt ACCCLR
     rrd
@@ -509,7 +559,8 @@ call42e4:
     mov c, a
     ret
 
-call42ef:
+; [var_level] = c*10 + b
+set_level_from_cb:
     mov a, b
     rrd
     mov a, c
@@ -538,7 +589,7 @@ play_level:
     jr .jr432c
     offiw [JOY.BTN.EDGE], JOY.BTN.BT3
     jr .jr4325
-    oniw [var_flags1], $80
+    oniw [var_flags1], FLAG1_7
     jre .jr4359
 .jr4325:
     call try_undo
@@ -563,9 +614,9 @@ play_level:
     jr .jr4359
     jre .jr4303
 .jr434d:
-    oniw [var_flags1], $80
+    oniw [var_flags1], FLAG1_7
     jr .jr4359
-    aniw [var_flags1], $7f
+    aniw [var_flags1], !FLAG1_7`8
 .jr4354:
     offiw [$ff80], $03
     calf $0e4d
@@ -583,7 +634,7 @@ play_level:
 
 begin_level:
     call call491c
-    neiw [var_mode], $00
+    neiw [var_mode], MODE_PLAY
     jr .jr437e
     lxi hl, var_loaded
     lxi de, var_lvlmap
@@ -596,7 +647,7 @@ begin_level:
 .jr4381:
     call call4a2d
     call call4a9a
-    neiw [var_mode], $00
+    neiw [var_mode], MODE_PLAY
     jr .jr43a8
     mvi b, $0f
     mvi c, $08
@@ -644,7 +695,7 @@ begin_level:
     lxi hl, music_start
     calt MUSPLAY
     call call4986
-    oriw [var_flags0], $40
+    oriw [var_flags0], FLAG0_6
     call call4a2d
     call call48ff
     calt SNDPLAY
@@ -654,8 +705,8 @@ begin_level:
 try43f5:
     call try448d
     jre .jr4488
-    aniw [var_flags0], $fb
-    oriw [var_flags0], $08
+    aniw [var_flags0], !FLAG0_2
+    oriw [var_flags0], FLAG0_3
     neiw [var_player_x2], $00
     jr .jr4413
     call call49a4
@@ -665,11 +716,11 @@ try43f5:
     mvi a, $02
     call call4b18
 .jr4413:
-    offiw [var_flags0], $80
+    offiw [var_flags0], FLAG0_7
     jr .jr441f
     oniw [JOY.DIR.EDGE], JOY.DIR.ANY
     jr .jr441f
-    offiw [var_flags0], $08
+    offiw [var_flags0], FLAG0_3
     jr .jr442c
 .jr441f:
     neiw [var_player_x2], $00
@@ -681,13 +732,13 @@ try43f5:
     gta a, b
     jr .jr4427
 .jr442c:
-    oniw [var_flags0], $08
+    oniw [var_flags0], FLAG0_3
     jr .jr4434
     lxi hl, music4fb1
     calt MUSPLAY
 .jr4434:
     call call48ff
-    oniw [var_flags0], $08
+    oniw [var_flags0], FLAG0_3
     jre .jr448c
     lxi hl, var_lvlmap
     lxi de, var_backup
@@ -724,8 +775,8 @@ try43f5:
     mvi a, $08
     call call4b18
 .jr4480:
-    oriw [var_flags0], $10
-    aniw [var_flags0], $f7
+    oriw [var_flags0], FLAG0_4
+    aniw [var_flags0], !FLAG0_3
     jre .jr4413
 .jr4488:
     call play_err_beep
@@ -763,7 +814,7 @@ try448d:
     ret
 
 try_undo:
-    oniw [var_flags0], $10
+    oniw [var_flags0], FLAG0_4
     jr .jr44e0
     lxi hl, music_undo
     calt MUSPLAY
@@ -786,8 +837,8 @@ try_forfeit:
     nop
     gtiw [var_attempts], $05
     jr .jr44f8
-    neiw [var_mode], $00
-    oriw [var_flags1], $40
+    neiw [var_mode], MODE_PLAY
+    oriw [var_flags1], FLAG1_FORFEIT
     call lose_level
     call call4970
     ret
@@ -797,9 +848,9 @@ try_forfeit:
     rets
 
 try44fc:
-    eqiw [var_mode], $00
+    eqiw [var_mode], MODE_PLAY
     jr .jr4518
-    call call42e4
+    call set_cb_from_level
     mov a, b
     inr a
     nop
@@ -810,7 +861,7 @@ try44fc:
     nop
 .jr450c:
     mov b, a
-    call call42ef
+    call set_level_from_cb
     mov a, c
     gti a, $05
     jr .jr451f
@@ -863,7 +914,7 @@ invoke_editor:
     call call4a2d
     call call48ff
 .jr456e:
-    aniw [var_flags0], $cf
+    aniw [var_flags0], !(FLAG0_4 | FLAG0_5)
     calt JOYREAD
     eqiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jr .jr4582
@@ -877,7 +928,7 @@ invoke_editor:
     jr .jr4592
     offiw [JOY.BTN.EDGE], JOY.BTN.STA
     jre .jr45cd
-    offiw [var_flags1], $80
+    offiw [var_flags1], FLAG1_7
     jre .jr45cd
     jre .jr45c3
 .jr4592:
@@ -902,9 +953,9 @@ invoke_editor:
     call call4664
     jr .jr45c3
 .jr45b7:
-    oniw [var_flags1], $80
+    oniw [var_flags1], FLAG1_7
     jr .jr45c3
-    aniw [var_flags1], $7f
+    aniw [var_flags1], !FLAG1_7`8
 .jr45be:
     offiw [$ff80], $03
     calf $0e4d
@@ -928,7 +979,7 @@ try_apply_edit:
     eqiw [JOY.BTN.CURR], JOY.BTN.BT2
     ret
 .jr45e2:
-    offiw [var_flags1], $80
+    offiw [var_flags1], FLAG1_7
     jre .jr4631
     call call49b6
     call call484e
@@ -963,11 +1014,11 @@ try_apply_edit:
     call call4b18
     lxi hl, music_step
     calt MUSPLAY
-    aniw [var_flags0], $fb
+    aniw [var_flags0], !FLAG0_2
     call call48ff
-    oriw [var_flags0], $20
+    oriw [var_flags0], FLAG0_5
 .jr462e:
-    oriw [var_flags0], $10
+    oriw [var_flags0], FLAG0_4
 .jr4631:
     rets
 
@@ -1024,14 +1075,14 @@ call4664:
     call call49f2
     call try49c8
     jre .jr4690
-    aniw [var_flags1], $7f
-    offiw [var_flags0], $20
+    aniw [var_flags1], !FLAG1_7`8
+    offiw [var_flags0], FLAG0_5
     jr .jr4679
     calt SNDPLAY
     db PITCH.E4, 6
 .jr4679:
     call call49bf
-    aniw [var_flags0], $fb
+    aniw [var_flags0], !FLAG0_2
     call call48ff
     offiw [JOY.DIR.EDGE], JOY.DIR.ANY
     mvi a, $13
@@ -1083,7 +1134,7 @@ call46b7:
     call call495e
     add a, b
     add a, c
-    lti a, $42
+    lti a, LVL_LAST + 1
     jre .done
     call call4962
     mov e, a
@@ -1112,10 +1163,10 @@ call46b7:
     jre .done
     staw [var_unknown2]
     call call49e5
-    oriw [var_flags1], $01
+    oriw [var_flags1], FLAG1_0
 .nibble:
     ldax [de]
-    oniw [var_flags1], $01
+    oniw [var_flags1], FLAG1_0
     jr ..lower
     calt ACC4RAR
 ..lower:
@@ -1137,7 +1188,7 @@ call46b7:
     call try4760
     jr ..done
     ldaw [var_flags1]
-    xri a, $01
+    xri a, FLAG1_0
     staw [var_flags1]
     pop de
     oni a, $01
@@ -1243,7 +1294,7 @@ call479a:
     push va
     call call4859
     ldaw [var_flags1]
-    xri a, $02
+    xri a, FLAG1_1
     staw [var_flags1]
     offi a, $02
     jr .jr47cb
@@ -1319,9 +1370,9 @@ call482a:
     nop
     clc
     rar
-    aniw [var_flags1], $fd
+    aniw [var_flags1], !FLAG1_1
     sknc
-    oriw [var_flags1], $02
+    oriw [var_flags1], FLAG1_1
     mvi d, $00
     mov e, a
     push de
@@ -1339,13 +1390,13 @@ call482a:
 call484e:
     call call482a
     ldax [hl]
-    offiw [var_flags1], $02
+    offiw [var_flags1], FLAG1_1
     calt ACC4RAR
     ani a, $0f
     ret
 
 call4859:
-    oniw [var_flags1], $02
+    oniw [var_flags1], FLAG1_1
     jr .jr486a
     clc
     ral
@@ -1450,9 +1501,9 @@ call4902:
     ret
 
 play_err_beep:
-    offiw [var_flags1], $80
+    offiw [var_flags1], FLAG1_7
     jr .jr4914
-    oriw [var_flags1], $80
+    oriw [var_flags1], FLAG1_7
     offiw [$ff80], $03
     calf $0e4d
     jr .jr4918
@@ -1572,7 +1623,7 @@ call4986:
 
 call498b:
     ldaw [var_flags0]
-    xri a, $04
+    xri a, FLAG0_2
     staw [var_flags0]
     ret
 
@@ -1650,9 +1701,9 @@ call49e5:
 
 call49f2:
     ldaw [var_flags0]
-    oni a, $02
+    oni a, FLAG0_1
     jr .jr4a02
-    oni a, $01
+    oni a, FLAG0_0
     jr .jr49fe
     dcrw [var_player_y1]
     nop
@@ -1675,20 +1726,20 @@ call49f2:
 
 try_move:
     ldaw [var_flags0]
-    ani a, $fc
+    ani a, !(FLAG0_0 | FLAG0_1)
     eqiw [JOY.DIR.CURR], JOY.DIR.UP
     jr .jr4a18
-    ori a, $03
+    ori a, FLAG0_0 | FLAG0_1
     jr .jr4a2a
 .jr4a18:
     eqiw [JOY.DIR.CURR], JOY.DIR.LT
     jr .jr4a1f
-    ori a, $01
+    ori a, FLAG0_0
     jr .jr4a2a
 .jr4a1f:
     eqiw [JOY.DIR.CURR], JOY.DIR.DN
     jr .jr4a26
-    ori a, $02
+    ori a, FLAG0_1
     jr .jr4a2a
 .jr4a26:
     eqiw [JOY.DIR.CURR], JOY.DIR.RT
@@ -1699,7 +1750,7 @@ try_move:
 
 call4a2d:
     calt SCR2CLR
-    oniw [var_flags0], $40
+    oniw [var_flags0], FLAG0_6
     mvi a, $0b
     mvi a, $01
     staw [var_rle_data]
@@ -1721,7 +1772,7 @@ call4a2d:
 .jr4a50:
     gtiw [var_player_y1], $11
     jr .jr4a6a
-    oniw [var_flags0], $40
+    oniw [var_flags0], FLAG0_6
     jr .jr4a65
     push hl
     call call4924
@@ -1737,7 +1788,7 @@ call4a2d:
     jre .jr4a3b
 .jr4a6a:
     ldax [hl]
-    offiw [var_flags1], $02
+    offiw [var_flags1], FLAG1_1
     calt ACC4RAR
     ani a, $0f
     mov b, a
@@ -1757,11 +1808,11 @@ call4a2d:
     calt ADDRHLE
     jre .jr4a50
 .jr4a8c:
-    oniw [var_flags0], $40
+    oniw [var_flags0], FLAG0_6
     jr .jr4a99
     mvi a, $0a
     staw [var_rle_data]
-    aniw [var_flags0], $bf
+    aniw [var_flags0], !FLAG0_6
     jre .jr4a37
 .jr4a99:
     ret
@@ -1774,7 +1825,7 @@ call4a9a:
     ret
 
 call4aa5:
-    oniw [var_flags0], $08
+    oniw [var_flags0], FLAG0_3
     jr .jr4abb
     neiw [var_player_x2], $00
     jr .jr4abb
@@ -1792,15 +1843,15 @@ call4abc:
     neiw [var_player_x0], $00
     jr .jr4adc
     call call4992
-    offiw [var_flags0], $04
+    offiw [var_flags0], FLAG0_2
     jr .jr4adc
     call call4bab
     calt ACCCLR
     stax [hl]
     ldaw [var_flags0]
-    oni a, $08
+    oni a, FLAG0_3
     jr .jr4adb
-    ani a, $03
+    ani a, FLAG0_0 | FLAG0_1
     inr a
     nop
     stax [hl]
@@ -1822,7 +1873,7 @@ call4add:
     pop hl
     nei a, $00
     jr .jr4b0f
-    oniw [var_flags0], $04
+    oniw [var_flags0], FLAG0_2
     jr .jr4afa
     mvi a, $07
     stax [hl]
@@ -1832,15 +1883,15 @@ call4add:
     jr .jr4b17
     call try_move
     jr .jr4b17
-    offiw [var_flags1], $80
+    offiw [var_flags1], FLAG1_7
     jr .jr4b17
     oniw [JOY.BTN.CURR], JOY.BTN.ANY
     jr .jr4b13
-    offiw [var_flags0], $10
+    offiw [var_flags0], FLAG0_4
     jr .jr4b13
     jr .jr4b17
 .jr4b0f:
-    offiw [var_flags0], $04
+    offiw [var_flags0], FLAG0_2
     jr .jr4b17
 .jr4b13:
     mvi a, $06
@@ -1969,12 +2020,12 @@ call4bab:
     ret
 
 call4bc1:
-    oniw [var_flags0], $02
+    oniw [var_flags0], FLAG0_1
     jr .jr4bc6
     inx hl
 .jr4bc6:
     mvi b, $02
-    oniw [var_flags0], $01
+    oniw [var_flags0], FLAG0_0
     jr .jr4bce
     mvi b, $fe
 .jr4bce:
