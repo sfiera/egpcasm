@@ -643,7 +643,7 @@ begin_level:
     calt SCRN2LCD
     lxi hl, music_start
     calt MUSPLAY
-    db $44, $86, $49
+    call call4986
     oriw [var_flags0], $40
     call call4a2d
     call call48ff
