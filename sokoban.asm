@@ -12,11 +12,23 @@ VERSION = VERSION_FINAL
     outp = 0
 }
 
-WRAMC594 = OBJ.END
-WRAMC63E = WRAMC594 + 170
-WRAMC6E8 = WRAMC63E + 170
-WRAMC6F2 = WRAMC6E8 + 10
-WRAMC788 = WRAMC6F2 + 150
+LVL_W_NIBBLES   = 19                       ;
+LVL_W_BYTES     = (LVL_W_NIBBLES + 1) / 2  ; = 10
+LVL_H           = 17                       ;
+LVL_SZ_BYTES    = LVL_W_BYTES * LVL_H      ; = 170
+LVL_FIRST_ROW   = 0
+LVL_SECOND_ROW  = LVL_W_BYTES
+LVL_LAST_ROW    = LVL_SZ_BYTES - LVL_W_BYTES
+
+TILE_EMPTY   = $0
+TILE_WALL    = $1
+TILE_TARGET  = $2
+TILE_PLAYER  = $4
+TILE_CRATE   = $8
+
+var_level   = OBJ.END
+var_backup  = var_level + LVL_SZ_BYTES
+var_loaded  = var_backup + LVL_SZ_BYTES
 
 header:
     db CART.MAGIC
@@ -111,30 +123,30 @@ call409e:
     inx de
     dcr c
     jr .jr40a9
-    call call4ba2
-    call call40b9
+    call clear_obj
+    call place_border
     ret
 
-call40b9:
-    lxi hl, WRAMC6E8
+place_border:
+    lxi hl, var_loaded
     mvi b, $a9
     calt MEMCLR
     mvi c, $01
 .jr40c1:
     mov a, c
     eqi a, $01
-    lxi hl, WRAMC788
-    lxi hl, WRAMC6E8
-    mvi a, $11
-    mvi b, $09
+    lxi hl, var_loaded + LVL_LAST_ROW
+    lxi hl, var_loaded + LVL_FIRST_ROW
+    mvi a, TILE_WALL @ TILE_WALL
+    mvi b, LVL_W_BYTES - 1
     calt MEMSET
     dcr c
     jr .jr40c1
-    lxi hl, WRAMC6F2
-    lxi de, $0009
-    mvi b, $0e
+    lxi hl, var_loaded + LVL_SECOND_ROW  ; second row, first column
+    lxi de, LVL_W_BYTES - 1              ; offset first to last column
+    mvi b, LVL_H - 3
 .jr40d9:
-    mvi a, $01
+    mvi a, TILE_EMPTY @ TILE_WALL
     stax [hl]
     calt ADDRHLDE
     mvi a, $01
@@ -545,8 +557,8 @@ begin_level:
     call call491c
     neiw [$ffd2], $00
     jr .jr437e
-    lxi hl, WRAMC6E8
-    lxi de, WRAMC594
+    lxi hl, var_loaded
+    lxi de, var_level
     mvi b, $a9
     calt MEMCOPY
     call call4bd3
@@ -649,8 +661,8 @@ try43f5:
     call call48ff
     oniw [$ffd0], $08
     jre .jr448c
-    lxi hl, WRAMC594
-    lxi de, WRAMC63E
+    lxi hl, var_level
+    lxi de, var_backup
     mvi b, $a9
     calt MEMCOPY
     call call4992
@@ -729,8 +741,8 @@ try_undo:
     calt MUSPLAY
     call call4986
     call call491c
-    lxi hl, WRAMC63E
-    lxi de, WRAMC594
+    lxi hl, var_backup
+    lxi de, var_level
     mvi b, $a9
     calt MEMCOPY
     call call4bd3
@@ -806,8 +818,8 @@ invoke_editor:
     staw [$ffe0]
     mvi a, $10
     staw [$ffe1]
-    lxi hl, WRAMC6E8
-    lxi de, WRAMC594
+    lxi hl, var_loaded
+    lxi de, var_level
     mvi b, $a9
     calt MEMCOPY
     call call4bd3
@@ -827,8 +839,8 @@ invoke_editor:
     calt JOYREAD
     eqiw [JOY.BTN.CURR], JOY.BTN.STA | JOY.BTN.SEL
     jr .jr4582
-    lxi hl, WRAMC594
-    lxi de, WRAMC6E8
+    lxi hl, var_level
+    lxi de, var_loaded
     mvi b, $a9
     calt MEMCOPY
     jmp reset
@@ -1010,7 +1022,7 @@ call4664:
 clear_editor:
     calt SNDPLAY
     db PITCH.C5, 20
-    call call40b9
+    call place_border
     ret
 
 try_chk_start:
@@ -1020,8 +1032,8 @@ try_chk_start:
     jr .jr46b3
     mvi a, $04
     call call4878
-    lxi hl, WRAMC594
-    lxi de, WRAMC6E8
+    lxi hl, var_level
+    lxi de, var_loaded
     mvi b, $a9
     calt MEMCOPY
     rets
@@ -1292,7 +1304,7 @@ call482a:
     calt MULTIPLY
     pop de
     calt ADDRHLDE
-    lxi de, WRAMC594
+    lxi de, var_level
     calt ADDRHLDE
     ret
 
@@ -1906,10 +1918,10 @@ call4b18:
 .jr4ba1:
     ret
 
-call4ba2:
+clear_obj:
     lxi hl, OBJ.O0.X
     mvi a, $80
-    mvi b, $23
+    mvi b, OBJ.END - OBJ.O0.X - 1
     calt MEMSET
     ret
 
@@ -1997,7 +2009,7 @@ call4bd3:
     ret
 
 call4c1c:
-    lxi hl, WRAMC594
+    lxi hl, var_level
     mvi b, $a9
     calt MEMCLR
     staw [$ffd1]
