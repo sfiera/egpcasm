@@ -12,6 +12,10 @@ VERSION = VERSION_FINAL
     outp = 0
 }
 
+; The playfield is 19x17, or 76x68 pixels on a 75x64 screen.
+; The level must be surrounded by walls, so they may be cut off.
+; Each cell is stored in a nibble, so a 19-cell row is 10 bytes.
+; The entire playfield fits into 170 bytes.
 LVL_W_NIBBLES   = 19                       ;
 LVL_W_BYTES     = (LVL_W_NIBBLES + 1) / 2  ; = 10
 LVL_H           = 17                       ;
@@ -36,14 +40,14 @@ var_lvlmap   = OBJ.END
 var_backup  = var_lvlmap + LVL_SZ_BYTES
 var_loaded  = var_backup + LVL_SZ_BYTES
 
-FLAG0_0  = $01
-FLAG0_1  = $02
-FLAG0_2  = $04
-FLAG0_3  = $08
-FLAG0_4  = $10
-FLAG0_5  = $20
-FLAG0_6  = $40
-FLAG0_7  = $80
+FLAG0_0      = $01
+FLAG0_1      = $02
+FLAG0_FLASH  = $04
+FLAG0_3      = $08
+FLAG0_4      = $10
+FLAG0_5      = $20
+FLAG0_6      = $40
+FLAG0_7      = $80
 
 FLAG1_0        = $01
 FLAG1_1        = $02
@@ -126,40 +130,44 @@ setup:
 start:
     call clear_mem
     ei
-.jr4062:
+.draw:
     call draw_title
-.jr4065:
+.select:
     call clear_flags0
-    call call4928
-.jr406b:
+    call reset_timer
+.redisplay:
     call call4924
     call show_title
-.jr4071:
+
+.check_select:
     calt JOYREAD
     eqiw [JOY.BTN.CURR], JOY.BTN.SEL
-    jr .jr407e
+    jr .check_start
     oniw [JOY.BTN.EDGE], JOY.BTN.SEL
-    jr .jr4094
+    jr .reset_timer
     call cycle_menu
-    jr .jr4065
-.jr407e:
+    jr .select
+
+.check_start:
     eqiw [JOY.BTN.CURR], JOY.BTN.STA
-    jr .jr408b
+    jr .check_timeout
     oniw [JOY.BTN.EDGE], JOY.BTN.STA
-    jr .jr4094
+    jr .reset_timer
     call invoke_menu
-    jre .jr4062
-.jr408b:
-    eqiw [$ff89], $0a
-    jr .jr4097
-    call run_demo
-    jre .jr4062
-.jr4094:
-    call call4928
-.jr4097:
-    ltiw [$ff8b], $1e
-    jre .jr406b
-    jre .jr4071
+    jre .draw
+
+.check_timeout:
+    eqiw [$ff89], 10  ; check 10s since last input
+    jr .continue      ; else continue with menu
+    call run_demo     ; if timed out, show demo
+    jre .draw         ; then return to the menu and re-draw
+
+.reset_timer:
+    call reset_timer
+.continue:
+    ltiw [$ff8b], 30   ; check less than 300ms since last flash
+    jre .redisplay     ; else redisplay menu
+    jre .check_select  ; continue waiting to flash or time out
 
 load_obj_tiles:
     calt OBJCLR
@@ -286,23 +294,26 @@ draw_title:
 
 show_title:
     calt SCR2COPY
-    oniw [var_flags0], FLAG0_2
-    jr .jr4170
+    oniw [var_flags0], FLAG0_FLASH
+    jr .no_flash
+
     ldaw [var_mode]
     mov b, a
-    mvi a, $17
-    mvi c, $0a
-.jr4164:
+    mvi a, 33 - 10  ; first menu item is at y=33
+    mvi c, 10       ; spacing between menu items
+.next:
     add a, c
     dcr b
-    jr .jr4164
+    jr .next
+
     mov c, a
-    mvi b, $11
-    mvi a, $28
-    call call4c36
-.jr4170:
+    mvi b, 17
+    mvi a, 40
+    call clear_strip  ; clear menu row in y=[17, 57)
+
+.no_flash:
     calt SCRN2LCD
-    call call498b
+    call toggle_flash
     ret
 
 cycle_menu:
@@ -437,9 +448,9 @@ invoke_game:
     mvi b, $04
     mvi c, $00
     mvi a, $43
-    call call4c36
+    call clear_strip
     mvi c, $01
-    call call4c36
+    call clear_strip
     lxi hl, text_start
     calt DRAWTEXT
     db $06, $01, $90 | text_start.size
@@ -657,9 +668,9 @@ begin_level:
     mvi b, $0f
     mvi c, $08
     mvi a, $2e
-    call call4c36
+    call clear_strip
     mvi c, $0a
-    call call4c36
+    call clear_strip
 
     lxi hl, text_e2
     calt DRAWTEXT
@@ -674,9 +685,9 @@ begin_level:
     mvi b, $11
     mvi c, $08
     mvi a, $29
-    call call4c36
+    call clear_strip
     mvi c, $0a
-    call call4c36
+    call clear_strip
     lxi hl, text_no2
     calt DRAWTEXT
     db $11, $0a, $90 | text_no2.size
@@ -687,9 +698,9 @@ begin_level:
     mvi b, $04
     mvi c, $18
     mvi a, $43
-    call call4c36
+    call clear_strip
     mvi c, $1a
-    call call4c36
+    call clear_strip
     lxi hl, text_challenge
     calt DRAWTEXT
     db $06, $1a, $90 | text_challenge.size
@@ -710,7 +721,7 @@ begin_level:
 try43f5:
     call try448d
     jre .jr4488
-    aniw [var_flags0], !FLAG0_2
+    aniw [var_flags0], !FLAG0_FLASH
     oriw [var_flags0], FLAG0_3
     neiw [var_player_x2], $00
     jr .jr4413
@@ -1019,7 +1030,7 @@ try_apply_edit:
     call call4b18
     lxi hl, music_step
     calt MUSPLAY
-    aniw [var_flags0], !FLAG0_2
+    aniw [var_flags0], !FLAG0_FLASH
     call call48ff
     oriw [var_flags0], FLAG0_5
 .jr462e:
@@ -1087,7 +1098,7 @@ call4664:
     db PITCH.E4, 6
 .jr4679:
     call call49bf
-    aniw [var_flags0], !FLAG0_2
+    aniw [var_flags0], !FLAG0_FLASH
     call call48ff
     offiw [JOY.DIR.EDGE], JOY.DIR.ANY
     mvi a, $13
@@ -1447,9 +1458,9 @@ win_level:
     mvi b, $16
     mvi c, $1a
     mvi a, $21
-    call call4c36
+    call clear_strip
     mvi c, $1c
-    call call4c36
+    call clear_strip
     lxi hl, text_good
     calt DRAWTEXT
     db $18, $1c, $90 | text_good.size
@@ -1464,9 +1475,9 @@ lose_level:
     mvi b, $0f
     mvi c, $22
     mvi a, $2f
-    call call4c36
+    call clear_strip
     mvi c, $24
-    call call4c36
+    call clear_strip
     lxi hl, text_give
     calt DRAWTEXT
     db $11, $24, $80 | 2
@@ -1483,9 +1494,9 @@ call48df:
     mvi b, $0a
     mvi c, $08
     mvi a, $37
-    call call4c36
+    call clear_strip
     mvi c, $0a
-    call call4c36
+    call clear_strip
     lxi hl, text_game
     calt DRAWTEXT
     db $0c, $0a, $90 | text_game.size
@@ -1495,7 +1506,7 @@ call48df:
     ret
 
 call48fc:
-    call call498b
+    call toggle_flash
 
 call48ff:
     call call4924
@@ -1536,7 +1547,7 @@ call4924:
     staw [$ff8b]
     ret
 
-call4928:
+reset_timer:
     calt ACCCLR
     staw [$ff88]
     staw [$ff89]
@@ -1594,7 +1605,7 @@ shift_l1:
     ret
 
 call4967:
-    call call4928
+    call reset_timer
 .jr496a:
     ldaw [$ff89]
     eqa a, b
@@ -1602,7 +1613,7 @@ call4967:
     ret
 
 await_confirm:
-    call call4928
+    call reset_timer
 .loop:
     calt JOYREAD
     neiw [JOY.BTN.CURR], JOY.BTN.STA
@@ -1623,9 +1634,9 @@ call4986:
     jr call4986
     ret
 
-call498b:
+toggle_flash:
     ldaw [var_flags0]
-    xri a, FLAG0_2
+    xri a, FLAG0_FLASH
     staw [var_flags0]
     ret
 
@@ -1845,7 +1856,7 @@ call4abc:
     neiw [var_player_x0], $00
     jr .jr4adc
     call call4992
-    offiw [var_flags0], FLAG0_2
+    offiw [var_flags0], FLAG0_FLASH
     jr .jr4adc
     call call4bab
     calt ACCCLR
@@ -1875,7 +1886,7 @@ call4add:
     pop hl
     nei a, $00
     jr .jr4b0f
-    oniw [var_flags0], FLAG0_2
+    oniw [var_flags0], FLAG0_FLASH
     jr .jr4afa
     mvi a, $07
     stax [hl]
@@ -1893,7 +1904,7 @@ call4add:
     jr .jr4b13
     jr .jr4b17
 .jr4b0f:
-    offiw [var_flags0], FLAG0_2
+    offiw [var_flags0], FLAG0_FLASH
     jr .jr4b17
 .jr4b13:
     mvi a, $06
@@ -2108,13 +2119,15 @@ call4c2a:
     staw [var_unknown5]
     ret
 
-call4c36:
+; Clear screen 1 in rect x=[b, b+a), y=[c, c+7).
+clear_strip:
     push va
     push bc
     dcr a
-    jr .jr4c3e
-    jre .jr4c8a
-.jr4c3e:
+    jr .start
+    jre .done
+
+.start:
     push va
     push bc
     mov a, c
@@ -2128,27 +2141,30 @@ call4c36:
     inr c
     nop
     calt ACCCLR
-.jr4c52:
+
+.loop_b:
     dcr b
-    jr .jr4c55
-    jr .jr4c5a
-.jr4c55:
+    jr ..next
+    jr ..break
+..next:
     stc
     ral
-    jr .jr4c52
-.jr4c5a:
+    jr .loop_b
+..break:
     mov d, a
+
     mvi a, $ff
-.jr4c5d:
+.loop_c:
     dcr c
-    jr .jr4c60
-    jr .jr4c65
-.jr4c60:
+    jr ..next
+    jr ..break
+..next:
     clc
     ral
-    jr .jr4c5d
-.jr4c65:
+    jr .loop_c
+..break:
     mov e, a
+
     pop bc
     push de
     calt SCR1LOC
@@ -2159,28 +2175,29 @@ call4c36:
     mov b, a
     push va
     push hl
-    call call4c8f
+    call mask_mem
     pop hl
     push de
-    mvi e, $4b
+    mvi e, SCRN.WIDTH
     calt ADDRHLE
     pop de
     pop va
     mov b, a
     mov a, e
     mov c, a
-    call call4c8f
-.jr4c8a:
+    call mask_mem
+.done:
     pop bc
     pop va
     ret
 
-call4c8f:
+; Mask hl..hl+b with the bits in c.
+mask_mem:
     ldax [hl]
     ana a, c
     stax [hl+]
     dcr b
-    jr call4c8f
+    jr mask_mem
     ret
 
 #addr $4e00
