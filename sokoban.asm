@@ -22,6 +22,10 @@ LVL_LAST_ROW    = LVL_SZ_BYTES - LVL_W_BYTES
 LVL_FIRST       = 1
 LVL_LAST        = 65
 
+GFX_SIZE       = 4
+GFX_BKG_COUNT  = 4
+GFX_OBJ_COUNT  = 8
+
 TILE_EMPTY   = $0
 TILE_WALL    = $1
 TILE_TARGET  = $2
@@ -70,9 +74,9 @@ var_demo1        = $ffe9
 var_demo2        = $ffea
 var_rle_data     = $ffee
 var_rle_len      = $ffef
-var_unknown0     = $ffd9
-var_unknown1     = $ffda
-var_unknown2     = $ffdb
+var_xoff         = $ffd9
+var_yoff         = $ffda
+var_width        = $ffdb
 var_unknown3     = $fff0
 var_unknown4     = $ffe3
 var_unknown5     = $ffe4
@@ -117,7 +121,7 @@ setup:
     di
     calt WRAMCLR
     lxi sp, $c800
-    call call409e
+    call load_obj_tiles
 
 start:
     call clear_mem
@@ -125,7 +129,7 @@ start:
 .jr4062:
     call draw_title
 .jr4065:
-    call call491c
+    call clear_flags0
     call call4928
 .jr406b:
     call call4924
@@ -157,22 +161,23 @@ start:
     jre .jr406b
     jre .jr4071
 
-call409e:
+load_obj_tiles:
     calt OBJCLR
     staw [var_mode]
-    lxi hl, tiles2
+    lxi hl, gfx_objects
     lxi de, OBJ.BEGIN
-    mvi c, $0f
-.jr40a9:
-    mvi b, $03
+    mvi c, (GFX_OBJ_COUNT * 2) - 1
+.loop:
+    mvi b, GFX_SIZE - 1
     calt MEMCOPY
     inx de
     inx de
     inx de
     inx de
     dcr c
-    jr .jr40a9
-    call clear_obj
+    jr .loop
+
+    call hide_all_obj
     call place_border
     ret
 
@@ -332,9 +337,9 @@ run_demo:
     push va
     calt ACCCLR
     staw [var_level]
-    call call493d
-    call call491c
-    call call4920
+    call clear_edit_cursor
+    call clear_flags0
+    call clear_flags1
     oriw [var_flags0], FLAG0_7
     lxi hl, demo_input
     ldax [hl+]
@@ -342,7 +347,7 @@ run_demo:
     shld [var_demo0]
     mvi a, $03
     staw [var_demo1]
-    call call46b7
+    call load_level
     call call4a2d
     lxi hl, text_dis
     calt DRAWTEXT
@@ -420,13 +425,13 @@ invoke_game:
     staw [var_level]
 
 .start:
-    call call491c
-    call call493d
+    call clear_flags0
+    call clear_edit_cursor
     calt SNDPLAY
     db PITCH.A4, 6
 
 .load:
-    call call46b7
+    call load_level
     call call4a2d
     call call4a9a
     mvi b, $04
@@ -572,8 +577,8 @@ play_level:
     staw [var_attempts]
 .jr42fa:
     call begin_level
-    call call491c
-    call call4920
+    call clear_flags0
+    call clear_flags1
 .jr4303:
     neiw [var_player_x0], $00
     jr .jr4311
@@ -633,7 +638,7 @@ play_level:
     ret
 
 begin_level:
-    call call491c
+    call clear_flags0
     neiw [var_mode], MODE_PLAY
     jr .jr437e
     lxi hl, var_loaded
@@ -643,7 +648,7 @@ begin_level:
     call call4bd3
     jr .jr4381
 .jr437e:
-    call call46b7
+    call load_level
 .jr4381:
     call call4a2d
     call call4a9a
@@ -807,7 +812,7 @@ try448d:
     jr .jr44be
     jr .jr44bd
 .jr44ba:
-    call call4941
+    call clear_player_loc2
 .jr44bd:
     rets
 .jr44be:
@@ -819,7 +824,7 @@ try_undo:
     lxi hl, music_undo
     calt MUSPLAY
     call call4986
-    call call491c
+    call clear_flags0
     lxi hl, var_backup
     lxi de, var_lvlmap
     mvi b, $a9
@@ -840,7 +845,7 @@ try_forfeit:
     neiw [var_mode], MODE_PLAY
     oriw [var_flags1], FLAG1_FORFEIT
     call lose_level
-    call call4970
+    call await_confirm
     ret
 .jr44f8:
     calt SNDPLAY
@@ -870,7 +875,7 @@ try44fc:
     jr .jr451f
 .jr4518:
     call win_level
-    call call4970
+    call await_confirm
     ret
 .jr451f:
     call win_level
@@ -883,15 +888,15 @@ try44fc:
 invoke_eplay:
     calt SNDPLAY
     db PITCH.A4, 6
-    call call492e
-    call call493d
+    call maximize_level
+    call clear_edit_cursor
     call play_level
     ret
 
 invoke_editor:
     calt SNDPLAY
     db PITCH.A4, 6
-    call call492e
+    call maximize_level
 .jr453f:
     mvi a, $02
     staw [var_edit_x]
@@ -907,10 +912,10 @@ invoke_editor:
     call call4992
     mvi a, $8b
     call call4878
-    call call4939
+    call clear_player_loc0
 .jr4562:
-    call call491c
-    call call4920
+    call clear_flags0
+    call clear_flags1
     call call4a2d
     call call48ff
 .jr456e:
@@ -1120,7 +1125,7 @@ try_chk_start:
     call play_err_beep
     ret
 
-call46b7:
+load_level:
     call call4c1c
     ldaw [var_level]
     mov b, a
@@ -1129,14 +1134,14 @@ call46b7:
     mov a, b
     calt ACC4RAR
     ani a, $0f
-    call call4962
+    call shift_l1
     mov b, a
-    call call495e
+    call shift_l2
     add a, b
     add a, c
     lti a, LVL_LAST + 1
     jre .done
-    call call4962
+    call shift_l1
     mov e, a
     lxi hl, levels
     calt ADDRHLE
@@ -1149,19 +1154,19 @@ call46b7:
     jre .done
     lti a, $12
     jre .done
-    staw [var_unknown0]
+    staw [var_xoff]
     ldax [de+]
     gti a, $00
     jre .done
     lti a, $10
     jre .done
-    staw [var_unknown1]
+    staw [var_yoff]
     ldax [de+]
     gti a, $02
     jre .done
     lti a, $14
     jre .done
-    staw [var_unknown2]
+    staw [var_width]
     call call49e5
     oriw [var_flags1], FLAG1_0
 .nibble:
@@ -1184,9 +1189,9 @@ call46b7:
     nop
     staw [var_rle_len]  ; rle_len = (a & %0011) + 1
     call try4740
-    jr ..done
+    jr ..pop
     call try4760
-    jr ..done
+    jr ..pop
     ldaw [var_flags1]
     xri a, FLAG1_0
     staw [var_flags1]
@@ -1200,7 +1205,7 @@ call46b7:
     inx de
     call call47db
     jr .done
-..done:
+..pop:
     pop de
 
 .done:
@@ -1516,12 +1521,12 @@ play_err_beep:
 .jr491b:
     ret
 
-call491c:
+clear_flags0:
     calt ACCCLR
     staw [var_flags0]
     ret
 
-call4920:
+clear_flags1:
     calt ACCCLR
     staw [var_flags1]
     ret
@@ -1537,56 +1542,53 @@ call4928:
     staw [$ff89]
     ret
 
-call492e:
+maximize_level:
     mvi a, $01
-    staw [var_unknown0]
-    staw [var_unknown1]
+    staw [var_xoff]
+    staw [var_yoff]
     mvi a, $13
-    staw [var_unknown2]
+    staw [var_width]
     ret
 
-call4939:
+clear_player_loc0:
     calt ACCCLR
     staw [var_player_x0]
     ret
 
-call493d:
+clear_edit_cursor:
     calt ACCCLR
     staw [var_edit_x]
     ret
 
-call4941:
+clear_player_loc2:
     calt ACCCLR
     staw [var_player_x2]
     ret
 
-call4945:
+shift_r4:
     clc
     rar
-
-call4949:
+shift_r3:
     clc
     rar
+shift_r2:
     clc
     rar
-call4951:
+shift_r1:
     clc
     rar
     ret
 
-call4956:
+shift_l4:
     clc
     ral
-
-call495a:
+shift_l3:
     clc
     ral
-
-call495e:
+shift_l2:
     clc
     ral
-
-call4962:
+shift_l1:
     clc
     ral
     ret
@@ -1599,21 +1601,21 @@ call4967:
     jr .jr496a
     ret
 
-call4970:
+await_confirm:
     call call4928
-.jr4973:
+.loop:
     calt JOYREAD
     neiw [JOY.BTN.CURR], JOY.BTN.STA
-    jr .jr4985
+    jr .done
     eqiw [JOY.BTN.CURR], JOY.BTN.SEL
     jr .jr4981
     lxi hl, music_step
     calt MUSPLAY
-    jr .jr4985
+    jr .done
 .jr4981:
     gtiw [$ff89], $09
-    jr .jr4973
-.jr4985:
+    jr .loop
+.done:
     ret
 
 call4986:
@@ -1682,20 +1684,20 @@ try49c8:
     rets
 
 call49d9:
-    ldaw [var_unknown2]
+    ldaw [var_width]
     staw [var_unknown3]
-    ldaw [var_unknown0]
+    ldaw [var_xoff]
     staw [var_player_x1]
     inrw [var_player_y1]
     nop
     ret
 
 call49e5:
-    ldaw [var_unknown2]
+    ldaw [var_width]
     staw [var_unknown3]
-    ldaw [var_unknown0]
+    ldaw [var_xoff]
     staw [var_player_x1]
-    ldaw [var_unknown1]
+    ldaw [var_yoff]
     staw [var_player_y1]
     ret
 
@@ -1755,18 +1757,18 @@ call4a2d:
     mvi a, $01
     staw [var_rle_data]
 .jr4a37:
-    ldaw [var_unknown0]
+    ldaw [var_xoff]
     staw [var_player_x1]
 .jr4a3b:
     ldaw [var_player_x1]
     mov c, a
-    ldaw [var_unknown0]
+    ldaw [var_xoff]
     mov b, a
-    ldaw [var_unknown2]
+    ldaw [var_width]
     add a, b
     gta a, c
     jre .jr4a8c
-    ldaw [var_unknown1]
+    ldaw [var_yoff]
     staw [var_player_y1]
     call call482a
 .jr4a50:
@@ -1902,9 +1904,9 @@ call4add:
     ret
 
 call4b18:
-    lxi hl, tiles1
-    mvi e, $04
-    mvi b, $03
+    lxi hl, gfx_background
+    mvi e, GFX_SIZE
+    mvi b, GFX_BKG_COUNT - 1
 .jr4b1f:
     rar
     sknc
@@ -1918,24 +1920,24 @@ call4b18:
 .jr4b2d:
     push hl
     ldaw [var_player_y1]
-    call call4951
+    call shift_r1
     dcr a
     jr .jr4b3a
     lxi hl, $ffb5
     jr .jr4b3d
 .jr4b3a:
     mvi e, $4b
-    calt $a6
+    calt MULTIPLY
 .jr4b3d:
     ldaw [var_player_x1]
     mov b, a
     dcr a
     nop
-    call call495e
+    call shift_l2
     mov e, a
-    calt $9a
+    calt ADDRHLE
     lxi de, SCR2.BEGIN
-    calt $96
+    calt ADDRHLDE
     pop de
     mov a, b
     lti a, $13
@@ -1967,7 +1969,7 @@ call4b18:
     push hl
     push de
     mvi e, $4b
-    calt $9a
+    calt ADDRHLE
     ldax [hl]
     ani a, $fc
     mov b, a
@@ -1997,7 +1999,8 @@ call4b18:
 .jr4ba1:
     ret
 
-clear_obj:
+; mark all objects as off-screen
+hide_all_obj:
     lxi hl, OBJ.O0.X
     mvi a, $80
     mvi b, OBJ.END - OBJ.O0.X - 1
@@ -2009,12 +2012,12 @@ call4bab:
     ldaw [var_player_x1]
     dcr a
     nop
-    call call495e
+    call shift_l2
     stax [hl+]
     ldaw [var_player_y1]
     dcr a
     nop
-    call call495e
+    call shift_l2
     sui a, $02
     stax [hl+]
     ret
@@ -2036,18 +2039,18 @@ call4bc1:
 
 call4bd3:
     call call4c2a
-    ldaw [var_unknown0]
+    ldaw [var_xoff]
     staw [var_player_x1]
 .jr4bda:
     ldaw [var_player_x1]
     mov c, a
-    ldaw [var_unknown0]
+    ldaw [var_xoff]
     mov b, a
-    ldaw [var_unknown2]
+    ldaw [var_width]
     add a, b
     gta a, c
     jre .jr4c1b
-    ldaw [var_unknown1]
+    ldaw [var_yoff]
     staw [var_player_y1]
 .jr4bec:
     gtiw [var_player_y1], $11
@@ -2092,9 +2095,9 @@ call4c1c:
     mvi b, $a9
     calt MEMCLR
     staw [var_flags1]
-    staw [var_unknown0]
-    staw [var_unknown1]
-    staw [var_unknown2]
+    staw [var_xoff]
+    staw [var_yoff]
+    staw [var_width]
 
 call4c2a:
     calt ACCCLR
@@ -2115,8 +2118,8 @@ call4c36:
     push va
     push bc
     mov a, c
-    call call4949
-    call call495a
+    call shift_r3
+    call shift_l3
     mov b, a
     mov a, c
     sub a, b
@@ -2262,11 +2265,26 @@ text_dis:
     #d largetext("DIS")
 .size = $ - text_dis
 
-tiles1:
-    #d incbin("sokoban/tiles1.1bpp")
+#fn transpose_reducer(out, data) => {
+    out_len = sizeof(out)
+    data_len = sizeof(data)
+    d = data[data_len-1:data_len/2]
+    b = data[data_len/2-1:0]
+    (out_len == 0) ? (b @ d) : {
+        a = out[out_len-1:out_len/2]
+        c = out[out_len/2-1:0]
+        a @ b @ c @ d
+    }
+}
 
-tiles2:
-    #d incbin("sokoban/tiles2.1bpp")
+#fn transpose_bytes(data, chunk) => reduce(data, chunk, "", transpose_reducer)
+#fn obj_tile_reducer(out, data) => out @ transpose_bytes(data, 16)
+#fn obj_tiles(data, chunk) => reduce(data, chunk * 16, "", obj_tile_reducer)
+
+gfx_background:
+    #d incbin("sokoban/background.1bpp")
+gfx_objects:
+    #d obj_tiles(incbin("sokoban/objects.2bpp"), 4)
 
 music_start:
     db PITCH.GS4, 8
