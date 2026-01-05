@@ -5,6 +5,7 @@ MAMEDEBUG ?= -debug
 MAMEFLAGS ?= -window -resolution 375x320 -nofilter $(MAMEDEBUG)
 
 BIN = gamepock/astrobom.bin \
+      gamepock/blockmaz.bin \
       gamepock/egpcboot.bin \
 	  gamepock/hellowd.bin \
 	  gamepock/boing.bin \
