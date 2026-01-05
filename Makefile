@@ -47,6 +47,7 @@ gamepock/sokoban-pre0125.bin: sokoban.asm gamepock.asm pd7806.asm
 	rgbgfx -Zd2 -o $@ $<
 
 gamepock/egpcboot.bin: font.1bpp
+gamepock/astrobom.bin: astrobom/title.1bpp
 gamepock/boing.bin: ball.2bpp
 gamepock/pokedemo.bin: pokedemo/font.1bpp
 gamepock/pokedemo.bin: pokedemo/marspr.1bpp
