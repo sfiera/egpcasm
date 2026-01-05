@@ -21,7 +21,7 @@ main:
     ; Draw greeting text to screen 1 and send to LCD
     lxi hl, str_greeting
     calt DRAWTEXT
-    db 3, 28, %1001 @ str_greeting.len`4
+    db 3, 28, TEXT.SCR1 | TEXT.SPC1 | str_greeting.len`4
     calt SCRN2LCD
 
     ; Loop forever

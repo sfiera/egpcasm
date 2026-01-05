@@ -233,19 +233,19 @@ draw_title:
 
     lxi hl, text_logo_top
     calt DRAWTEXT
-    db $0c, $01, text_logo_top.size
+    db $0c, $01, TEXT.SPC0 | text_logo_top.size
 
     lxi hl, text_logo_bottom
     calt DRAWTEXT
-    db $0c, $09, text_logo_bottom.size
+    db $0c, $09, TEXT.SPC0 | text_logo_bottom.size
 
     lxi hl, text_store
     calt DRAWTEXT
-    db $17, $12, $10 | text_store.size
+    db $17, $12, TEXT.SPC1 | text_store.size
 
     lxi hl, text_keepers
     calt DRAWTEXT
-    db $11, $19, $10 | text_keepers.size
+    db $11, $19, TEXT.SPC1 | text_keepers.size
 
     lxi hl, SCR2.BEGIN + 2*75 + 13
     mvi a, $f8
@@ -268,27 +268,27 @@ draw_title:
 
     lxi hl, text_play
     calt DRAWTEXT
-    db $11, $22, $10 | text_play.size
+    db $11, $22, TEXT.SPC1 | text_play.size
 
     lxi hl, text_editor
     calt DRAWTEXT
-    db $11, $2c, $10 | 3
+    db $11, $2c, TEXT.SPC1 | 3
 
     lxi hl, text_editor + 3
     calt DRAWTEXT
-    db $22, $2c, 1
+    db $22, $2c, TEXT.SPC0 | 1
 
     lxi hl, text_editor + 4
     calt DRAWTEXT
-    db $27, $2c, $10 | (text_editor.size - 4)
+    db $27, $2c, TEXT.SPC1 | (text_editor.size - 4)
 
     lxi hl, text_eplay
     calt DRAWTEXT
-    db $11, $36, $10 | 3
+    db $11, $36, TEXT.SPC1 | 3
 
     lxi hl, text_eplay + 3
     calt DRAWTEXT
-    db $22, $36, $10 | (text_eplay.size - 3)
+    db $22, $36, TEXT.SPC1 | (text_eplay.size - 3)
 
     ret
 
@@ -362,10 +362,10 @@ run_demo:
     call call4a2d
     lxi hl, text_dis
     calt DRAWTEXT
-    db $12, $04, text_dis.size
+    db $12, $04, TEXT.SPC0 | text_dis.size
     lxi hl, text_play3
     calt DRAWTEXT
-    db $22, $04, $10 | 4
+    db $22, $04, TEXT.SPC1 | 4
     call call4902
     mvi b, $05
     call call4967
@@ -453,10 +453,10 @@ invoke_game:
     call clear_strip
     lxi hl, text_start
     calt DRAWTEXT
-    db $06, $01, $90 | text_start.size
+    db $06, $01, TEXT.SCR1 | TEXT.SPC1 | text_start.size
     lxi hl, text_no
     calt DRAWTEXT
-    db $28, $01, $90 | text_no.size
+    db $28, $01, TEXT.SCR1 | TEXT.SPC1 | text_no.size
     lxi hl, var_level
     calt DRAWHEX
     db $3a, $01, $99
@@ -674,11 +674,11 @@ begin_level:
 
     lxi hl, text_e2
     calt DRAWTEXT
-    db $0f, $0a, $90 | text_e2.size
+    db $0f, $0a, TEXT.SCR1 | TEXT.SPC1 | text_e2.size
 
     lxi hl, text_play3
     calt DRAWTEXT
-    db $20, $0a, $90 | text_play3.size
+    db $20, $0a, TEXT.SCR1 | TEXT.SPC1 | text_play3.size
 
     jr .jr43c4
 .jr43a8:
@@ -690,7 +690,7 @@ begin_level:
     call clear_strip
     lxi hl, text_no2
     calt DRAWTEXT
-    db $11, $0a, $90 | text_no2.size
+    db $11, $0a, TEXT.SCR1 | TEXT.SPC1 | text_no2.size
     lxi hl, var_level
     calt DRAWHEX
     db $29, $0a, $99
@@ -703,7 +703,7 @@ begin_level:
     call clear_strip
     lxi hl, text_challenge
     calt DRAWTEXT
-    db $06, $1a, $90 | text_challenge.size
+    db $06, $1a, TEXT.SCR1 | TEXT.SPC1 | text_challenge.size
     lxi hl, var_attempts
     calt DRAWHEX
     db $40, $1a, $80
@@ -1463,7 +1463,7 @@ win_level:
     call clear_strip
     lxi hl, text_good
     calt DRAWTEXT
-    db $18, $1c, $90 | text_good.size
+    db $18, $1c, TEXT.SCR1 | TEXT.SPC1 | text_good.size
     calt SCRN2LCD
     ret
 
@@ -1480,13 +1480,13 @@ lose_level:
     call clear_strip
     lxi hl, text_give
     calt DRAWTEXT
-    db $11, $24, $80 | 2
+    db $11, $24, TEXT.SCR1 | 2
     lxi hl, text_give + 2
     calt DRAWTEXT
-    db $1b, $24, $90 | (text_give.size - 2)
+    db $1b, $24, TEXT.SCR1 | TEXT.SPC1 | (text_give.size - 2)
     lxi hl, text_up
     calt DRAWTEXT
-    db $2b, $24, $90 | text_up.size
+    db $2b, $24, TEXT.SCR1 | TEXT.SPC1 | text_up.size
     calt SCRN2LCD
     ret
 
@@ -1499,10 +1499,10 @@ call48df:
     call clear_strip
     lxi hl, text_game
     calt DRAWTEXT
-    db $0c, $0a, $90 | text_game.size
+    db $0c, $0a, TEXT.SCR1 | TEXT.SPC1 | text_game.size
     lxi hl, text_over
     calt DRAWTEXT
-    db $28, $0a, $90 | text_over.size
+    db $28, $0a, TEXT.SCR1 | TEXT.SPC1 | text_over.size
     ret
 
 call48fc:

@@ -193,6 +193,19 @@ USER9     = $00EE
     COUNT = $64
 }
 
+#const TEXT = struct {
+    SCR1 = $80
+    SCR2 = $00
+    SPC0 = $00
+    SPC1 = $10
+    SPC2 = $20
+    SPC3 = $30
+    SPC4 = $40
+    SPC5 = $50
+    SPC6 = $60
+    SPC7 = $70
+}
+
 #const JOY = struct {
     DIR = struct {
         PREV = $FF90

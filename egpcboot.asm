@@ -633,15 +633,15 @@ a04EC:
     ;Text data
 str_cursor:
     #d largetext("GRA. X00,Y00")
-.len = ($ - str_cursor)`4
+.len = $ - str_cursor
 
 str_puzzle:
     #d largetext("PUZZLE")
-.len = ($ - str_puzzle)`4
+.len = $ - str_puzzle
 
 str_time:
     #d largetext("TIME;000.0")
-.len = ($ - str_time)`4
+.len = $ - str_time
 
     ;Grid data, probably
 a055D:
@@ -713,7 +713,7 @@ paint:
     calt OBJCLR                                     ; "Clear C4B0~C593"
     lxi hl, str_cursor                              ;"GRA"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
-    db $02, $00, $1 @ str_cursor.len                ;Parameters for the text routine
+    db $02, $00, TEXT.SPC1 | str_cursor.len
 .clear:
     mvi a, %101                                     ; a=5
     lxi hl, PAINT.CURSOR.TILE + 8
@@ -1015,7 +1015,7 @@ a06EE:
     calt SCR2CLR                                    ; "Clear Screen 2 RAM"
     lxi hl, str_time                                ;"TIME"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
-    db $0E, $00, $1 @ str_time.len
+    db $0E, $00, TEXT.SPC1 | str_time.len
     lxi hl, TIME.BCD.HUN
     mvi b, $02
     calt MEMCLR                                     ; "Clear RAM (HL+)xB"
@@ -2039,7 +2039,7 @@ a0C77:
 a0C7B:
     lxi hl, str_puzzle                              ;"PUZZLE"
     calt DRAWTEXT                                   ; "[PC+3] Print Text on-Screen"
-    db $03, $00, $1 @ str_puzzle.len
+    db $03, $00, TEXT.SPC1 | str_puzzle.len
 a0C82:
     calf a0E67                                      ;(C7F2 -> HL)
     mvi a, $01
