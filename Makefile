@@ -10,6 +10,7 @@ BIN = gamepock/astrobom.bin \
 	  gamepock/hellowd.bin \
 	  gamepock/boing.bin \
 	  gamepock/pokedemo.bin \
+	  gamepock/pokemahj.bin \
 	  gamepock/sokoban.bin
 OUT = $(BIN) \
 	  gamepock/sokoban-pre0125.bin
