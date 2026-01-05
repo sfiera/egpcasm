@@ -30,33 +30,234 @@ header:
 
 #addr CART.BEGIN
 main:
-    #d $04ffc744dc4204ffc78538f138f06901
-    #d $38f644fd40690138f6447b4265f60144
-    #d $aa4065f60244aa4065f60344aa4065f6
-    #d $0444bb4065f60544cc4075f000c844ed
-    #d $424403434fd675f001c544dd404fcd34
-    #d $a0ff24a3ff6a03a324a3ff65f4013492
-    #d $c63495c66a022c3d52fc75f009c54429
-    #d $434f93446f434fa14f8c44924b44de4b
-    #d $44754d44c44365f100f3084421554452
-    #d $5544cf5544c44365f100f30844035744
-    #d $7857448a5744c44365f100f308690120
-    #d $f635f60638f644074375f6010875f401
-    #d $c625f50220f50825f50420f508870589
-    #d $0044944144b9412461c03404426a1e95
-    #d $24a9c03423426a24953449429b101d96
-    #d $34f4ff9a351dc034fdff9a2c24c005de
-    #d $0015df0144c443845595080844cd424f
-    #d $bc25890ff2690138e78538f1b369803d
-    #d $69013d853d3b44034365f60144aa4065
-    #d $f60244aa4065f60344aa4065f60444bb
-    #d $4065f60544cc4075f103ca20f625f605
-    #d $4fc754364075f1014f7328f4160338f4
-    #d $44d54208448c4814504d2466c634db41
-    #d $692538e02d38e1293c30e0c1c530e1f7
-    #d $12f205f20044334c0844c64124b4c534
-    #d $ec416a17950834a0c56a4f859f0844c6
-    #d $4124b4c534f4416a0f9508
+    lxi sp, $c7ff
+    call $42dc
+
+start:
+    lxi sp, $c7ff
+    calt ACCCLR
+    staw [$fff1]
+    staw [$fff0]
+    mvi a, $01
+    staw [$fff6]
+    call call40fd
+    mvi a, $01
+    staw [$fff6]
+.jr4049:
+    call $427b
+.jr404c:
+    neiw [$fff6], $01
+    call call40aa
+    neiw [$fff6], $02
+    call call40aa
+    neiw [$fff6], $03
+    call call40aa
+    neiw [$fff6], $04
+    call call40bb
+    neiw [$fff6], $05
+    call call40cc
+    eqiw [$fff0], $00
+    jr .jr4076
+    call $42ed
+    call $4303
+    jre .jr404c
+.jr4076:
+    eqiw [$fff0], $01
+    jr .jr407f
+    call call40dd
+    jre .jr404c
+.jr407f:
+    lxi hl, $ffa0
+    lxi de, $ffa3
+    mvi b, $03
+    calt MEMCCPY
+    lxi de, $ffa3
+    neiw [$fff4], $01
+    lxi hl, $c692
+    lxi hl, $c695
+    mvi b, $02
+.jr4096:
+    ldax [de+]
+    stax [hl+]
+    dcr b
+    jr .jr4096
+    eqiw [$fff0], $09
+    jr .jr40a3
+    call $4329
+    jre start
+.jr40a3:
+    call $436f
+    jre .jr4049
+    jre start
+
+call40aa:
+    call $4b92
+.jr40ad:
+    call $4bde
+    call $4d75
+    call $43c4
+    neiw [$fff1], $00
+    jr .jr40ad
+    ret
+
+call40bb:
+    call $5521
+.jr40be:
+    call $5552
+    call $55cf
+    call $43c4
+    neiw [$fff1], $00
+    jr .jr40be
+    ret
+
+call40cc:
+    call $5703
+.jr40cf:
+    call $5778
+    call $578a
+    call $43c4
+    neiw [$fff1], $00
+    jr .jr40cf
+    ret
+
+call40dd:
+    mvi a, $01
+    inrw [$fff6]
+    ltiw [$fff6], $06
+    staw [$fff6]
+    call $4307
+    eqiw [$fff6], $01
+    ret
+    eqiw [$fff4], $01
+    jr .jr40f7
+    gtiw [$fff5], $02
+    inrw [$fff5]
+    ret
+.jr40f7:
+    gtiw [$fff5], $04
+    inrw [$fff5]
+    ret
+
+call40fd:
+    calt SCR1CLR
+    aniw [$ff89], $00
+    call call4194
+    call call41b9
+    lxi de, $c061
+    lxi hl, gfx4204
+    mvi b, $1e
+    calt MEMCOPY
+    lxi de, $c0a9
+    lxi hl, $4223
+    mvi b, $24
+    calt MEMCOPY
+    lxi hl, $4249
+    calt DRAWTEXT
+    db $10, $1d, $96
+    lxi hl, $fff4
+    calt DRAWHEX
+    db $35, $1d, $c0
+    lxi hl, $fffd
+    calt DRAWHEX
+    db $2c, $24, $c0
+    aniw [$ffde], $00
+    oriw [$ffdf], $01
+    call $43c4
+.jr4137:
+    calt JOYREAD
+    offiw [$ff95], $08
+    ret
+    call $42cd
+    jre call40fd
+    gtiw [$ff89], $0f
+    jr .jr4137
+    mvi a, $01
+    staw [$ffe7]
+.jr4149:
+    calt ACCCLR
+    staw [$fff1]
+    calt USER5
+    mvi a, $80
+    stax [hl+]
+    mvi a, $01
+    stax [hl+]
+    calt ACCCLR
+    stax [hl+]
+    stax [hl]
+    call $4303
+    neiw [$fff6], $01
+    call call40aa
+    neiw [$fff6], $02
+    call call40aa
+    neiw [$fff6], $03
+    call call40aa
+    neiw [$fff6], $04
+    call call40bb
+    neiw [$fff6], $05
+    call call40cc
+    eqiw [$fff1], $03
+    jr .jr4185
+    inrw [$fff6]
+    gtiw [$fff6], $05
+    jre .jr4149
+    jmp start
+.jr4185:
+    eqiw [$fff1], $01
+    jre call40fd
+    ldaw [$fff4]
+    xri a, $03
+    staw [$fff4]
+    call $42d5
+    ret
+
+call4194:
+    call $488c
+    lxi bc, $4d50
+    lxi de, $c666
+    lxi hl, data41db
+    mvi a, $25
+    staw [$ffe0]
+.jr41a4:
+    ldax [hl+]
+    staw [$ffe1]
+.jr41a7:
+    ldax [bc]
+    stax [de+]
+    dcrw [$ffe0]
+    jr .jr41ad
+    jr .jr41b2
+.jr41ad:
+    dcrw [$ffe1]
+    jr .jr41a7
+    inx bc
+    jr .jr41a4
+.jr41b2:
+    aniw [$fff2], $00
+    call $4c33
+    ret
+
+call41b9:
+    call call41c6
+    lxi de, $c5b4
+    lxi hl, data41ec
+    mvi b, $17
+    calt MEMCOPY
+    ret
+
+call41c6:
+    lxi hl, $c5a0
+    mvi b, $4f
+    calt ACCCLR
+    calt MEMSET
+    ret
+
+call41ce:
+    call call41c6
+    lxi de, $c5b4
+    lxi hl, data41f4
+    mvi b, $0f
+    calt MEMCOPY
+    ret
 
 data41db:
     #d $0500010004000200000300040101000000
