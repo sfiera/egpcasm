@@ -79,7 +79,7 @@ USER9     = $00EE
 }
 
 #fn smallreducer(out, ch) => {
-    is_space = (ch == $20)
+    is_space = (ch`8 == $20)
     is_number = ("0" <= ch) && (ch <= "9")
     is_upper = ("A" <= ch) && (ch <= "Z")
     assert(is_space || is_number || is_upper)
