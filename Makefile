@@ -46,6 +46,11 @@ gamepock/sokoban-pre0125.bin: sokoban.asm gamepock.asm pd7806.asm
 %.2bpp: %.png
 	rgbgfx -Zd2 -o $@ $<
 
+.PHONY: clean
+clean:
+	rm -rf gamepock/
+	find * -name '*.*bpp' | xargs rm -f
+
 gamepock/egpcboot.bin: font.1bpp
 gamepock/astrobom.bin: astrobom/title.1bpp
 gamepock/boing.bin: ball.2bpp
