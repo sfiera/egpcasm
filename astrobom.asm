@@ -167,7 +167,7 @@ call40fd:
     calt JOYREAD
     offiw [$ff95], $08
     ret
-    call call42cd
+    call try42cd
     jre call40fd
     gtiw [$ff89], $0f
     jr .jr4137
@@ -277,78 +277,214 @@ str4249:
     #d smalltext("LEVEL"), largetext("-")
 .len = $ - str4249
 
-data424f:
+str424f:
     #d largetext("HIGH SCORE")
-data4259:
+.len = $ - str424f
+str4259:
     #d largetext("GAME OVER")
-data4262:
+.len = $ - str4259
+str4262:
     #d largetext("[PERFECT]")
-data426b:
+.len = $ - str4262
+str426b:
     #d largetext("VERY GOOD!")
-data4275:
+.len = $ - str426b
+str4275:
     #d largetext("=4800=")
+.len = $ - str4275
 
 call427b:
-    #d $34854a8385
-    #d $38e77079ecc638894400438744944144
-    #d $ce4115df0144c443344f429b08149a44
-    #d $1a4365f4013492c63495c624a3ff6a02
-    #d $9534a3ff9a171e9481758904fc05f100
-    #d $05f00005890044c64144ed42
+    lxi hl, $4a85
+    calt MUSPLAY
+    calt ACCCLR
+    staw [$ffe7]
+    mov [$c6ec], a
+    staw [$ff89]
+    call call4300
+    calt SCR1CLR
+    call call4194
+    call call41ce
+    oriw [$ffdf], $01
+    call call43c4
+    lxi hl, str424f
+    calt DRAWTEXT
+    db $08, $14, TEXT.SCR1 | TEXT.SPC1 | str424f.len
+    call call431a
+    neiw [$fff4], $01
+    lxi hl, $c692
+    lxi hl, $c695
+    lxi de, $ffa3
+    mvi b, $02
+    calt MEMCOPY
+    lxi hl, $ffa3
+    calt DRAWHEX
+    db $17, $1e, $94
+    calt SCRN2LCD
+.jr42b9:
+    eqiw [$ff89], $04
+    jr .jr42b9
+    aniw [$fff1], $00
+    aniw [$fff0], $00
+    aniw [$ff89], $00
+    call call41c6
+    call call42ed
     ret
 
-call42cd:
-    #d $459501
-    #d $18459301
+try42cd:
+    oniw [$ff95], $01
+    rets
+    oniw [$ff93], $01
     rets
 
 call42d5:
-    #d $348d4b8375f401
+    lxi hl, $4b8d
+    calt MUSPLAY
+    eqiw [$fff4], $01
+    ; fall through
 
 call42dc:
-    #d $69016902
-    #d $38f4446b4a
+    mvi a, $01
+    mvi a, $02
+    staw [$fff4]
+    call $4a6b
+    ; fall through
 
 call42e5:
-    #d $34a0ff853d3d3b
+    lxi hl, $ffa0
+    calt ACCCLR
+    stax [hl+]
+    stax [hl+]
+    stax [hl]
     ret
 
 call42ed:
-    #d $34a0c5
-    #d $34d0ff69803d69013d690a3d691c3b
+    lxi hl, $c5a0
+    lxi hl, $ffd0
+    mvi a, $80
+    stax [hl+]
+    mvi a, $01
+    stax [hl+]
+    mvi a, $0a
+    stax [hl+]
+    mvi a, $1c
+    stax [hl]
     ret
 
 call4300:
-    #d $44e542
+    call call42e5
 
 call4303:
-    #d $691e38fc
+    mvi a, $1e
+    staw [$fffc]
 
 call4307:
-    #d $34a4c5856a4b9f8538
-    #d $fe38ff69047079a8c608
+    lxi hl, $c5a4
+    calt ACCCLR
+    mvi b, $4b
+    calt MEMSET
+    calt ACCCLR
+    staw [$fffe]
+    staw [$ffff]
+    mvi a, $04
+    mov [$c6a8], a
+    ret
 
 call431a:
-    #d $3449429b0500
-    #d $9634f4ff9a2800c0
+    lxi hl, str4249
+    calt DRAWTEXT
+    db $05, $00, TEXT.SCR1 | TEXT.SPC1 | str4249.len
+    lxi hl, $fff4
+    calt DRAWHEX
+    db $28, $00, $c0
     ret
 
 call4329:
-    #d $15e70134f84a83
-    #d $446b4a558007fc872461c03404426a1e
-    #d $9524a9c03423426a24953462429b0b1c
-    #d $99346b429b0b299a75f402cb258840c7
-    #d $3475429b14369681844595094fc9
+    oriw [$ffe7], $01
+    lxi hl, music4af8
+    calt MUSPLAY
+    call $4a6b
+.jr4333:
+    offiw [$ff80], $07
+    jr .jr4333
+.jr4337:
+    calt SCR1CLR
+    lxi de, $c061
+    lxi hl, gfx_astro
+    mvi b, $1e
+    calt MEMCOPY
+    lxi de, $c0a9
+    lxi hl, gfx_bomber
+    mvi b, $24
+    calt MEMCOPY
+    lxi hl, str4262
+    calt DRAWTEXT
+    db $0b, $1c, TEXT.SCR1 | TEXT.SPC1 | str4262.len
+    lxi hl, str426b
+    calt DRAWTEXT
+    db $0b, $29, TEXT.SCR1 | TEXT.SPC1 | str426b.len
+    eqiw [$fff4], $02
+    jr .jr4367
+    gtiw [$ff88], $40
+    jr .jr4367
+    lxi hl, str4275
+    calt DRAWTEXT
+    db $14, $36, TEXT.SCR1 | TEXT.SPC1 | str4275.len
+.jr4367:
+    calt SCRN2LCD
+    calt JOYREAD
+    oniw [$ff95], $09
+    jre .jr4337
     ret
 
 call436f:
-    #d $44
-    #d $6b4a558840c975e401cd05e400a6c875
-    #d $e400c415e401a681258905e675e401a6
-    #d $15e70134d34a8315de0144c44334eac0
-    #d $856a379f258840c73459429b0a189981
-    #d $84459508c525890a0818559301182589
-    #d $144fd4
+    call $4a6b
+.jr4372:
+    offiw [$ff88], $40
+    jr .jr437f
+    eqiw [$ffe4], $01
+    jr .jr4387
+    aniw [$ffe4], $00
+    calt SCR1INV
+    jr .jr4387
+.jr437f:
+    eqiw [$ffe4], $00
+    jr .jr4387
+    oriw [$ffe4], $01
+    calt SCR1INV
+.jr4387:
+    calt SCRN2LCD
+    gtiw [$ff89], $05
+    jr .jr4372
+    eqiw [$ffe4], $01
+    calt $cc
+    oriw [$ffe7], $01
+    lxi hl, music4ad3
+    calt MUSPLAY
+.jr4397:
+    oriw [$ffde], $01
+    call call43c4
+    lxi hl, $c0ea
+    calt ACCCLR
+    mvi b, $37
+    calt MEMSET
+    gtiw [$ff88], $40
+    jr .jr43af
+    lxi hl, str4259
+    calt DRAWTEXT
+    db $0a, $18, TEXT.SCR1 | TEXT.SPC1 | str4259.len
+.jr43af:
+    calt SCRN2LCD
+    calt JOYREAD
+    oniw [$ff95], $08
+    jr .jr43ba
+    gtiw [$ff89], $0a
+    ret
+    rets
+.jr43ba:
+    offiw [$ff93], $01
+    rets
+    gtiw [$ff89], $14
+    jre .jr4397
     rets
 
 call43c4:
