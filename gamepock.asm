@@ -59,14 +59,14 @@ USER8     = $00EC
 USER9     = $00EE
 
 #fn reduce(input, chunk, initial, callback) => {
-    len = sizeof(input)
-    assert(len % chunk == 0)
+    len = $sizeof(input)
+    $assert(len % chunk == 0)
     len == chunk ? {
         callback(initial, input)
     } : {
         split = (len / chunk / 2) * chunk
-        assert(split < len)
-        assert(split > 0)
+        $assert(split < len)
+        $assert(split > 0)
         middle = reduce(input[len-1:split], chunk, initial, callback)
         final = reduce(input[split-1:0], chunk, middle, callback)
         final
@@ -74,7 +74,7 @@ USER9     = $00EE
 }
 
 #fn largereducer(out, ch) => {
-    assert((" " <= ch) && (ch <= "_"))
+    $assert((" " <= ch) && (ch <= "_"))
     out @ (ch - $20)`8
 }
 
@@ -82,7 +82,7 @@ USER9     = $00EE
     is_space = (ch`8 == $20)
     is_number = ("0" <= ch) && (ch <= "9")
     is_upper = ("A" <= ch) && (ch <= "Z")
-    assert(is_space || is_number || is_upper)
+    $assert(is_space || is_number || is_upper)
     out @ (is_space ? 0 : is_number ? (ch - "0" + $40) : (ch - "A" + $4A))`8
 }
 

@@ -69,7 +69,7 @@
 
 #subruledef pd7806_wa {
     {addr: i16} => {
-        assert(addr >= $FF00)
+        $assert(addr >= $FF00)
         addr[7:0]
     }
 }
@@ -85,8 +85,8 @@
 #subruledef pd7806_jr_reladdr {
     {addr: i16} => {
         reladdr = addr - $ - 1
-        assert(reladdr <= $3f)
-        assert(reladdr >= -$3f)
+        $assert(reladdr <= $3f)
+        $assert(reladdr >= -$3f)
         reladdr`6
     }
 }
@@ -94,25 +94,25 @@
 #subruledef pd7806_jre_reladdr {
     {addr: i16} => {
         reladdr = addr - $ - 2
-        assert(reladdr <= $ff)
-        assert(reladdr >= -$ff)
+        $assert(reladdr <= $ff)
+        $assert(reladdr >= -$ff)
         (reladdr >= 0 ? %0 : %1) @ reladdr`8
     }
 }
 
 #subruledef pd7806_calf_addr {
     {addr: i16} => {
-        assert(addr >= $0800)
-        assert(addr <= $0FFF)
+        $assert(addr >= $0800)
+        $assert(addr <= $0FFF)
         addr`12
     }
 }
 
 #subruledef pd7806_calt_addr {
     {addr: i16} => {
-        assert(addr[0:0] == 0)
-        assert(addr >= $0080)
-        assert(addr <= $00FE)
+        $assert(addr[0:0] == 0)
+        $assert(addr >= $0080)
+        $assert(addr <= $00FE)
         (addr - $0080)[6:1]
     }
 }
@@ -123,8 +123,8 @@
 }
 
 #subruledef pd7806_dw {
-    {w1: i16} => le(w1)
-    {w1: i16}, {wn: pd7806_dw} => le(w1) @ wn
+    {w1: i16} => $le(w1)
+    {w1: i16}, {wn: pd7806_dw} => $le(w1) @ wn
 }
 
 #ruledef pd7806 {
@@ -133,8 +133,8 @@
     mov a, {reg: pd7806_r1} => $0 @ %1 @ reg
     mov {port: pd7806_sr}, a => $4dc @ port
     mov a, {port: pd7806_sr} => $4cc @ port
-    mov {reg: pd7806_r}, [{addr: i16}] => $706 @ %1 @ reg @ le(addr)
-    mov [{addr: i16}], {reg: pd7806_r} => $707 @ %1 @ reg @ le(addr)
+    mov {reg: pd7806_r}, [{addr: i16}] => $706 @ %1 @ reg @ $le(addr)
+    mov [{addr: i16}], {reg: pd7806_r} => $707 @ %1 @ reg @ $le(addr)
     mvi {reg: pd7806_r}, {value: i8} => $6 @ %1 @ reg @ value
     staw [{addr: pd7806_wa}] => $38 @ addr
     ldaw [{addr: pd7806_wa}] => $28 @ addr
@@ -142,17 +142,17 @@
     ldax [{reg: pd7806_rpa}] => $2 @ %1 @ reg
 
     ; 16-Bit Data Transfer
-    sbcd [{addr: i16}] => $701E @ le(addr)
-    sded [{addr: i16}] => $702E @ le(addr)
-    shld [{addr: i16}] => $703E @ le(addr)
-    sspd [{addr: i16}] => $700E @ le(addr)
-    lbcd [{addr: i16}] => $701F @ le(addr)
-    lded [{addr: i16}] => $702F @ le(addr)
-    lhld [{addr: i16}] => $703F @ le(addr)
-    lspd [{addr: i16}] => $700F @ le(addr)
+    sbcd [{addr: i16}] => $701E @ $le(addr)
+    sded [{addr: i16}] => $702E @ $le(addr)
+    shld [{addr: i16}] => $703E @ $le(addr)
+    sspd [{addr: i16}] => $700E @ $le(addr)
+    lbcd [{addr: i16}] => $701F @ $le(addr)
+    lded [{addr: i16}] => $702F @ $le(addr)
+    lhld [{addr: i16}] => $703F @ $le(addr)
+    lspd [{addr: i16}] => $700F @ $le(addr)
     push {reg: pd7806_rp1} => $48 @ reg @ $e
     pop {reg: pd7806_rp1} => $48 @ reg @ $f
-    lxi {reg: pd7806_rp}, {value: i16} => reg @ $4 @ le(value)
+    lxi {reg: pd7806_rp}, {value: i16} => reg @ $4 @ $le(value)
 
     ; Arithmetic
     add     a, {reg: pd7806_r}   => $60C @ %0 @ reg
@@ -237,13 +237,13 @@
     rar => $4831
 
     ; Jump
-    jmp {addr: i16} => $54 @ le(addr)
+    jmp {addr: i16} => $54 @ $le(addr)
     jb => $73
     jr {reladdr: pd7806_jr_reladdr} => %11 @ reladdr
     jre {reladdr: pd7806_jre_reladdr} => $4E[7:1] @ reladdr
 
     ; Call
-    call {addr: i16} => $44 @ le(addr)
+    call {addr: i16} => $44 @ $le(addr)
     calf {addr: pd7806_calf_addr} => %0111 @ addr
     calt {addr: pd7806_calt_addr} => %10 @ addr
 

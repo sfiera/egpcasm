@@ -2202,9 +2202,9 @@ mask_mem:
 
 #addr $4e00
 font:
-    #d incbin("sokoban/font.1bpp")[447:208]
-    #d incbin("sokoban/font.1bpp")[895:496]
-    #d incbin("sokoban/font.1bpp")[1343:944]
+    #d $incbin("sokoban/font.1bpp")[447:208]
+    #d $incbin("sokoban/font.1bpp")[895:496]
+    #d $incbin("sokoban/font.1bpp")[1343:944]
 
 text_logo_top:
     #d $6a6b6c6d6e6f70717273
@@ -2283,8 +2283,8 @@ text_dis:
 .size = $ - text_dis
 
 #fn transpose_reducer(out, data) => {
-    out_len = sizeof(out)
-    data_len = sizeof(data)
+    out_len = $sizeof(out)
+    data_len = $sizeof(data)
     d = data[data_len-1:data_len/2]
     b = data[data_len/2-1:0]
     (out_len == 0) ? (b @ d) : {
@@ -2299,9 +2299,9 @@ text_dis:
 #fn obj_tiles(data, chunk) => reduce(data, chunk * 16, "", obj_tile_reducer)
 
 gfx_background:
-    #d incbin("sokoban/background.1bpp")
+    #d $incbin("sokoban/background.1bpp")
 gfx_objects:
-    #d obj_tiles(incbin("sokoban/objects.2bpp"), 4)
+    #d obj_tiles($incbin("sokoban/objects.2bpp"), 4)
 
 music_start:
     db PITCH.GS4, 8
@@ -2388,7 +2388,7 @@ music4fb1:
         (ch == "U"`8) ? %11 :
         ""
     )
-    assert(sizeof(suffix) == 2)
+    $assert($sizeof(suffix) == 2)
     out @ suffix
 }
 
@@ -2501,7 +2501,7 @@ levels:
         (VERSION == VERSION_PRE0125)
         ? nibble[2:2] == %1
         : nibble[3:3] == %1
-    len = sizeof(out)
+    len = $sizeof(out)
     extend =
         valid && extensible && (len > 0) &&
         (out[3:2] == nibble`2) && (out[1:0] < %11)
@@ -2515,7 +2515,7 @@ levels:
 }
 
 #fn crate_reducer(out, ch) => {
-    len = sizeof(out)
+    len = $sizeof(out)
     (ch == "*"`8 || ch == "@"`8) ? {
         out @ $01
     } : {
@@ -2524,15 +2524,15 @@ levels:
 }
 
 #fn level(w, h, y_off, grid) => {
-    assert(sizeof(grid) == (w * h * 8))
+    $assert($sizeof(grid) == (w * h * 8))
     x = (21 - w) / 2
     y = (20 - h) / 2 + y_off
 
     raw_tiles = reduce(grid, 8, "", tile_reducer)
-    tiles = raw_tiles @ ((sizeof(raw_tiles) % 8 == 4) ? $f : $f0)
+    tiles = raw_tiles @ (($sizeof(raw_tiles) % 8 == 4) ? $f : $f0)
 
     raw_crates = reduce(grid, 8, $00, crate_reducer)
-    crates = raw_crates[sizeof(raw_crates)-1:8] @ $00
+    crates = raw_crates[$sizeof(raw_crates)-1:8] @ $00
 
     x`8 @ y`8 @ w`8 @ tiles @ crates
 }

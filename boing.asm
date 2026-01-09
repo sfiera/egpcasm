@@ -201,7 +201,7 @@ vars:
 .len = $ - vars
 
 #fn tile2bpp(data, n) => {
-    begin = sizeof(data) - n*128
+    begin = $sizeof(data) - n*128
     tile = data[begin-1:begin-128]
     white = (
         tile[127:120] @
@@ -227,7 +227,7 @@ vars:
 }
 
 tile:
-.ball = incbin("ball.2bpp")
+.ball = $incbin("ball.2bpp")
     #d tile2bpp(.ball, 2)
     #d tile2bpp(.ball, 3)
     #d tile2bpp(.ball, 0)
@@ -243,13 +243,13 @@ obj:
 
 MAX_LIT = $10
 #fn LIT(cols) => {
-    assert(sizeof(cols) % 8 == 0)
-    n = sizeof(cols) / 8
-    assert((n > 0) && (n <= MAX_LIT))
+    $assert($sizeof(cols) % 8 == 0)
+    n = $sizeof(cols) / 8
+    $assert((n > 0) && (n <= MAX_LIT))
     (n - 1)`8 @ cols
 }
 #fn RUN(n, off) => {
-    assert((n > 0) && (n <= $FF - MAX_LIT - 1))
+    $assert((n > 0) && (n <= $FF - MAX_LIT - 1))
     (MAX_LIT + (n - 1))`8 @ off`8
 }
 #const END = 0xFF

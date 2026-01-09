@@ -1,5 +1,5 @@
 ASM ?= customasm
-ASM_FLAGS ?= --color=off
+ASM_FLAGS ?= --color=off --legacy=off
 MAME ?= mame
 MAMEDEBUG ?= -debug
 MAMEFLAGS ?= -window -resolution 375x320 -nofilter $(MAMEDEBUG)

@@ -269,9 +269,9 @@ data41f4:
     #d $800804348007152e80082c2e80073634
 
 gfx_astro:
-    #d incbin("astrobom/title.1bpp")[575:328]
+    #d $incbin("astrobom/title.1bpp")[575:328]
 gfx_bomber:
-    #d incbin("astrobom/title.1bpp")[327:24]
+    #d $incbin("astrobom/title.1bpp")[327:24]
 
 str4249:
     #d smalltext("LEVEL"), largetext("-")
