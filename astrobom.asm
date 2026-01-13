@@ -86,35 +86,35 @@ start:
     call call4329
     jre start
 .jr40a3:
-    call call436f
+    call try436f
     jre .jr4049
     jre start
 
 call40aa:
-    call $4b92
+    call call4b92
 .jr40ad:
-    call $4bde
-    call $4d75
+    call call4bde
+    call call4d75
     call call43c4
     neiw [$fff1], $00
     jr .jr40ad
     ret
 
 call40bb:
-    call $5521
+    call call5521
 .jr40be:
-    call $5552
-    call $55cf
+    call call5552
+    call call55cf
     call call43c4
     neiw [$fff1], $00
     jr .jr40be
     ret
 
 call40cc:
-    call $5703
+    call call5703
 .jr40cf:
-    call $5778
-    call $578a
+    call call5778
+    call call578a
     call call43c4
     neiw [$fff1], $00
     jr .jr40cf
@@ -211,8 +211,8 @@ call40fd:
     ret
 
 call4194:
-    call $488c
-    lxi bc, $4d50
+    call call488c
+    lxi bc, data4d50
     lxi de, $c666
     lxi hl, data41db
     mvi a, $25
@@ -233,7 +233,7 @@ call4194:
     jr .jr41a4
 .jr41b2:
     aniw [$fff2], $00
-    call $4c33
+    call call4c33
     ret
 
 call41b9:
@@ -294,7 +294,7 @@ str4275:
 .len = $ - str4275
 
 call427b:
-    lxi hl, $4a85
+    lxi hl, music4a85
     calt MUSPLAY
     calt ACCCLR
     staw [$ffe7]
@@ -337,7 +337,7 @@ try42cd:
     rets
 
 call42d5:
-    lxi hl, $4b8d
+    lxi hl, music4b8d
     calt MUSPLAY
     eqiw [$fff4], $01
     ; fall through
@@ -346,7 +346,7 @@ call42dc:
     mvi a, $01
     mvi a, $02
     staw [$fff4]
-    call $4a6b
+    call call4a6b
     ; fall through
 
 call42e5:
@@ -402,7 +402,7 @@ call4329:
     oriw [$ffe7], $01
     lxi hl, music4af8
     calt MUSPLAY
-    call $4a6b
+    call call4a6b
 .jr4333:
     offiw [$ff80], $07
     jr .jr4333
@@ -436,8 +436,8 @@ call4329:
     jre .jr4337
     ret
 
-call436f:
-    call $4a6b
+try436f:
+    call call4a6b
 .jr4372:
     offiw [$ff88], $40
     jr .jr437f
@@ -492,7 +492,7 @@ call43c4:
     mvi a, $13
     staw [$ffd8]
 .jr43c9:
-    call call43e6
+    call try43e6
     jr .jr43d5
     push hl
     call call4424
@@ -507,7 +507,7 @@ call43c4:
     aniw [$ffde], $00
     ret
 
-call43e6:
+try43e6:
     ldax [hl+]
     offi a, $80
     jr .jr43f1
@@ -515,7 +515,7 @@ call43e6:
     mvi a, $03
     calt USER0
     dcrw [$ffd8]
-    jr call43e6
+    jr try43e6
     ret
 .jr43f1:
     offi a, $10
@@ -699,7 +699,7 @@ call44d1:
     lxi hl, str453e
     calt DRAWTEXT
     db $33, $00, $c2
-    call $5f4b
+    call call5f4b
     lxi hl, $c6fb
     calt DRAWHEX
     db $3c, $00, $c2
@@ -1094,53 +1094,425 @@ data47f2:
     #d $000302
 
 call480a:
-    #d $b46700086a02
-    #d $34a8c52b5780cf69a03d69063db5460c
-    #d $3db646023bc66904ae52e80834a4c52f
-    #d $5780d124a7c52f46023e2f46053e6904
-    #d $3e69803a34314b83b008b328dcb2322f
-    #d $671fc3853d2b1a481e44c652481f0a67
-    #d $07c6771069006980691944594a340f4b
-    #d $83443e4a088538f238f938fb38f838fa
-    #d $349ac63d3d3d3b34bdc63d3b6a263466
-    #d $c62440c63d3c52fc878608483e481e48
-    #d $2e480e8475e7004e46b447804e38703f
-    #d $92ff702fc8c60c609e1a0d609f1b703e
-    #d $c8c60e5736c6857079fdc6d17069fdc6
-    #d $7700ca69017079e6c67079fdc6289307
-    #d $097709c24e22480f482f481f483f0828
-    #d $931a2895608a4708c5690138f1e84701
-    #d $e5348d4b836902f315e7017e4d857079
-    #d $ecc67079e7c68428937700fa543040
+    calt USER6
+    nei a, $00
+    ret
+    mvi b, $02
+    lxi hl, $c5a8
+.jr4813:
+    ldax [hl]
+    offi a, $80
+    jr .jr4826
+    mvi a, $a0
+    stax [hl+]
+    mvi a, $06
+    stax [hl+]
+    calt USER7
+    adi a, $0c
+    stax [hl+]
+    calt USER8
+    adi a, $02
+    stax [hl]
+    jr .jr482c
+.jr4826:
+    mvi a, $04
+    calt USER0
+    dcr b
+    jr .jr4813
+    ret
+.jr482c:
+    lxi hl, $c5a4
+    ldax [hl-]
+    offi a, $80
+    jr .jr4844
+    lxi de, $c5a7
+    ldax [hl-]
+    adi a, $02
+    stax [de-]
+    ldax [hl-]
+    adi a, $05
+    stax [de-]
+    mvi a, $04
+    stax [de-]
+    mvi a, $80
+    stax [de]
+.jr4844:
+    lxi hl, music4b31
+    calt MUSPLAY
+    calt USER2
+    ret
+    calt USER5
+    ldaw [$ffdc]
+    calt USER4
+    inx hl
+    ldax [hl-]
+    nei a, $1f
+    jr .jr4856
+    calt ACCCLR
+    stax [hl+]
+    ldax [hl]
+.jr4856:
+    mov b, a
+    push bc
+    call call52c6
+    pop bc
+    mov a, b
+    nei a, $07
+    jr .jr4868
+    eqi a, $10
+    mvi a, $00
+    mvi a, $80
+.jr4868:
+    mvi a, $19
+    call call4a59
+    lxi hl, music4b0f
+    calt MUSPLAY
+    call call4a3e
+    ret
+    calt ACCCLR
+    staw [$fff2]
+    staw [$fff9]
+    staw [$fffb]
+    staw [$fff8]
+    staw [$fffa]
+    lxi hl, $c69a
+    stax [hl+]
+    stax [hl+]
+    stax [hl+]
+    stax [hl]
+    lxi hl, $c6bd
+    stax [hl+]
+    stax [hl]
+    ; fall through
+
+call488c:
+    mvi b, $26
+    lxi hl, $c666
+    lxi de, $c640
+.jr4894:
+    stax [hl+]
+    stax [de+]
+    dcr b
+    jr .jr4894
+    calt SCR1CLR
+    calt SCR2CLR
+    ret
+
+call489b:
+    push hl
+    push bc
+    push de
+    push va
+    calt JOYREAD
+    eqiw [$ffe7], $00
+    jre .jr48ef
+    calt USER6
+    oni a, $80
+    jre .jr48e6
+    lhld [$ff92]
+    lded [$c6c8]
+    mov a, d
+    ora a, h
+    mov b, a
+    mov a, e
+    ora a, l
+    mov c, a
+    shld [$c6c8]
+    mov a, h
+    offi a, $36
+    jr .jr48cc
+    calt ACCCLR
+    mov [$c6fd], a
+    jr .jr48dd
+.jr48cc:
+    mov a, [$c6fd]
+    eqi a, $00
+    jr .jr48dd
+    mvi a, $01
+    mov [$c6e6], a
+    mov [$c6fd], a
+.jr48dd:
+    ldaw [$ff93]
+    ani a, $09
+    eqi a, $09
+    jr .jr48e6
+    jre .jr4908
+.jr48e6:
+    pop va
+    pop de
+    pop bc
+    pop hl
+    ret
+.jr48ef:
+    ldaw [$ff93]
+    mov b, a
+    ldaw [$ff95]
+    ana a, b
+    oni a, $08
+    jr .jr48fe
+    mvi a, $01
+.jr48fb:
+    staw [$fff1]
+    jr .jr48e6
+.jr48fe:
+    oni a, $01
+    jr .jr48e6
+    lxi hl, music4b8d
+    calt MUSPLAY
+    mvi a, $02
+    jr .jr48fb
+.jr4908:
+    oriw [$ffe7], $01
+    calf $0e4d
+    calt ACCCLR
+    mov [$c6ec], a
+    mov [$c6e7], a
+.jr4916:
+    calt JOYREAD
+    ldaw [$ff93]
+    eqi a, $00
+    jr .jr4916
+    jmp main
 
 interrupt:
-    #d $48
-    #d $3e481e482e480e7069e8c677004e21b4
-    #d $4780dd7069ecc66700c534654b83d175
-    #d $e700cdb32d4780c82b6703c4347a4b83
-    #d $480f482f481f483f54690128da1a28d0
-    #d $60aac11828d91a28d160aac11828d71a
-    #d $28d360bac11828d61a28d460ba081828
-    #d $d060acc11828d460bcc11828d160adc1
-    #d $1828d360bd0818
+    push hl
+    push bc
+    push de
+    push va
+    mov a, [$c6e8]
+    eqi a, $00
+    jre .jr4950
+    calt USER6
+    oni a, $80
+    jr .jr4950
+    mov a, [$c6ec]
+    nei a, $00
+    jr .jr493f
+    lxi hl, music4b65
+    calt MUSPLAY
+    jr .jr4950
+.jr493f:
+    eqiw [$ffe7], $00
+    jr .jr4950
+    calt USER5
+    ldax [hl+]
+    oni a, $80
+    jr .jr4950
+    ldax [hl]
+    nei a, $03
+    jr .jr4950
+    lxi hl, music4b7a
+    calt MUSPLAY
+.jr4950:
+    pop va
+    pop de
+    pop bc
+    pop hl
+    jmp $0169
+
+try495b:
+    ldaw [$ffda]
+    mov b, a
+    ldaw [$ffd0]
+    gta a, b
+    jr .jr4964
+    rets
+.jr4964:
+    ldaw [$ffd9]
+    mov b, a
+    ldaw [$ffd1]
+    gta a, b
+    jr .jr496d
+    rets
+.jr496d:
+    ldaw [$ffd7]
+    mov b, a
+    ldaw [$ffd3]
+    lta a, b
+    jr .jr4976
+    rets
+.jr4976:
+    ldaw [$ffd6]
+    mov b, a
+    ldaw [$ffd4]
+    lta a, b
+    ret
+    rets
+    ldaw [$ffd0]
+    gta a, d
+    jr .jr4985
+    rets
+.jr4985:
+    ldaw [$ffd4]
+    lta a, d
+    jr .jr498b
+    rets
+.jr498b:
+    ldaw [$ffd1]
+    gta a, e
+    jr .jr4991
+    rets
+.jr4991:
+    ldaw [$ffd3]
+    lta a, e
+    ret
+    rets
 
 call4997:
-    #d $483e481e34fec62b48
-    #d $313d2b48303d2b48314831481a17403b
-    #d $24fec66a0234fec6482b2d70d570d33c
-    #d $52f334fec62d70d570d3481f483f0867
-    #d $01ca67024e236703cb6e000834b4c569
-    #d $0d38e0c734c8c5690838e0698070cb08
-    #d $6904ae30e0f56e000834b4c5690d38e0
-    #d $698070cbc96904ae30e0f56e00086904
-    #d $ae30e0c36e0008698070cbca6904ae30
-    #d $e04fdd6e00086904442c4a08481e1b0f
-    #d $482a60e31f0e6e0060f61e481f0828a0
-    #d $270908690138f1690938f038a0699938
-    #d $a138a2857079ecc608481e482e483e1f
-    #d $6e00a427483f482f481f0875f4026906
-    #d $690438fd058900690138e475f4026900
-    #d $690238f508
+    push hl
+    push bc
+    lxi hl, $c6fe
+    ldax [hl]
+    rar
+    stax [hl+]
+    ldax [hl]
+    ral
+    stax [hl+]
+    ldax [hl]
+    rar
+    rar
+    sknc
+    ori a, $40
+    stax [hl]
+    lxi de, $c6fe
+    mvi b, $02
+.jr49b5:
+    lxi hl, $c6fe
+    stc
+    ldax [hl+]
+    adcx [hl+]
+    adcx [hl]
+    stax [de+]
+    dcr b
+    jr .jr49b5
+    lxi hl, $c6fe
+    ldax [hl+]
+    adcx [hl+]
+    adcx [hl]
+    pop bc
+    pop hl
+    ret
+
+call49cf:
+    nei a, $01
+    jr .jr49dc
+    nei a, $02
+    jre .jr49f9
+    nei a, $03
+    jr .jr49e4
+    mvi h, $00
+    ret
+.jr49dc:
+    lxi hl, $c5b4
+    mvi a, $0d
+    staw [$ffe0]
+    jr .jr49eb
+.jr49e4:
+    lxi hl, $c5c8
+    mvi a, $08
+    staw [$ffe0]
+.jr49eb:
+    mvi a, $80
+    onax [hl]
+    ret
+    mvi a, $04
+    calt USER0
+    dcrw [$ffe0]
+    jr .jr49eb
+    mvi h, $00
+    ret
+.jr49f9:
+    lxi hl, $c5b4
+    mvi a, $0d
+    staw [$ffe0]
+.jr4a00:
+    mvi a, $80
+    onax [hl]
+    jr .jr4a0e
+    mvi a, $04
+    calt USER0
+    dcrw [$ffe0]
+    jr .jr4a00
+    mvi h, $00
+    ret
+.jr4a0e:
+    mvi a, $04
+    calt USER0
+    dcrw [$ffe0]
+    jr .jr4a17
+    mvi h, $00
+    ret
+.jr4a17:
+    mvi a, $80
+    onax [hl]
+    jr .jr4a26
+    mvi a, $04
+    calt USER0
+    dcrw [$ffe0]
+    jre .jr4a00
+    mvi h, $00
+    ret
+.jr4a26:
+    mvi a, $04
+    call call4a2c
+    ret
+
+call4a2c:
+    push bc
+    mov c, a
+    mov a, l
+    clc
+    sub a, c
+    mov l, a
+    mov a, h
+    mvi h, $00
+    sbb a, h
+    mov h, a
+    pop bc
+    ret
+
+call4a3e:
+    ldaw [$ffa0]
+    gti a, $09
+    ret
+    mvi a, $01
+    staw [$fff1]
+    mvi a, $09
+    staw [$fff0]
+    staw [$ffa0]
+    mvi a, $99
+    staw [$ffa1]
+    staw [$ffa2]
+    calt ACCCLR
+    mov [$c6ec], a
+    ret
+
+call4a59:
+    push bc
+    push de
+    push hl
+    mov l, a
+    mvi h, $00
+    calt ARITHMTC
+    gti a, $48
+    stax [hl-]
+    pop de
+    pop bc
+    ret
+
+call4a6b:
+    eqiw [$fff4], $02
+    mvi a, $06
+    mvi a, $04
+    staw [$fffd]
+    aniw [$ff89], $00
+    mvi a, $01
+    staw [$ffe4]
+    eqiw [$fff4], $02
+    mvi a, $00
+    mvi a, $02
+    staw [$fff5]
+    ret
 
 music4a85:
     #d $061206090b360f090d090b
@@ -1190,21 +1562,30 @@ music4b65:
 music4b7a:
     #d $020101010001ff
 
-music4b81:
-    #d $120216010001120216010001120216
-    #d $01ff
+data4b81:
+    #d $120216010001120216010001
 
+music4b8d:
+    #d $12021601ff
+
+call4b92:
     #d $65f601c775f000c665e700447548
     #d $8538f038f1388928f61a482a48304830
     #d $60c234ca4bae24abc6853c6a032d3c52
     #d $fc2b65f402c775f602690369043a0828
-    #d $0a0409042800020d052314030e04449b
-    #d $48b44780cb34bec62b413702853b7700
+    #d $0a0409042800020d052314030e04
+
+call4bde:
+    call call489b
+    #d $b44780cb34bec62b413702853b7700
     #d $54f34c75f800c444f54cc230f875f603
     #d $dd75fa00c444274dc230fa358937c865
     #d $e700cb258915c7690438f98538fb3466
     #d $c628f2ae28f93b3440c628f2ae28fb3b
-    #d $44185534a3c2856a066b4a3d53fd52f9
+    #d $441855
+
+call4c33:
+    #d $34a3c2856a066b4a3d53fd52f9
     #d $3465c4703ea9c6694a38e0690138e124
     #d $66c628f2af2a1b0b67004e236701d767
     #d $02d66703d56704d41a66041a69ff3b69
@@ -1222,9 +1603,14 @@ music4b81:
     #d $6904690038f808349cc62b41070f3b34
     #d $4e4dae2b38fb349dc62b4107033b2702
     #d $c8b027c8c269046903690138fa080201
+
+data4d50:
     #d $02030405060708070605040304030405
     #d $060708090a0b0c0e0f0f0e0d0c0b0a09
-    #d $0807060504b44780d344e04fb44780cc
+    #d $0807060504
+
+call4d75:
+    #d $b44780d344e04fb44780cc
     #d $44ac4d445447441d4e447b4e446f4f34
     #d $bdc625f503c469003b0825f501c72b41
     #d $3702853b082b413703853b08449b4869
@@ -1290,7 +1676,8 @@ music4b81:
     #d $2a4b83483f3369c03d69203b1834a6c5
     #d $2d38d6460238da2b38d7460238d90822
     #d $222c660238d6460438da2e38d738d923
-    #d $2308
+    #d $23
+    ret
 
 call5192:
     #d $6607482a4830482e24c151af2c1a
@@ -1312,7 +1699,11 @@ call5192:
     #d $e238d1693f38d323230822222a38d01a
     #d $460238d40a482a48311a28f260c23726
     #d $66263440c6ae2b482a4830460738d369
-    #d $0838d1232308b369003d322d1a2b1b34
+    #d $0838d12323
+    ret
+
+call52c6:
+    #d $b369003d322d1a2b1b34
     #d $ecc569c13d69153d0a46043d0b66023b
     #d $08332b4720cd16203d322b413d2b4602
     #d $3f33083269053d2b413d2b46033f3308
@@ -1350,17 +1741,27 @@ call5192:
     #d $051a322b60e23d45f50169006906240c
     #d $55af0baf2a1a2b60c23f3308ffffff01
     #d $0101fefefe02020228f24137268538f2
-    #d $088538f138f0388970799ec638dd690a
+    ret
+
+call5521:
+    #d $8538f138f0388970799ec638dd690a
     #d $70799fc634b0c46a0b69409f690235f5
     #d $03690165e70169017079d1c6857079e7
-    #d $c608449b48b447804e7120dd706ad1c6
+    #d $c6
+    ret
+
+call5552:
+    #d $449b48b447804e7120dd706ad1c6
     #d $28dd60fa4e6505dd0070699ec677034e
     #d $5470699fc6770accb007077079f3c685
     #d $70799fc670699fc64170799fc6857079
     #d $9ec6690a706df3c69370699fc660c734
     #d $aa5fae483e34b1c424b0c46a0b95483f
     #d $2b75f000857079bbc48570799ec665f0
-    #d $0044c15ac6349ec62b413b8754345a44
+    #d $0044c15ac6349ec62b413b8754345a
+
+call55cf:
+    #d $44
     #d $9b48b4478054e75644715f65dd004419
     #d $5b445447b6773acb6a00445748693770
     #d $79efc5449b4869017079cbc6b7b22d47
@@ -1380,15 +1781,26 @@ call5192:
     #d $c67702c8258950cb15f101c7258946c3
     #d $15f10144bc4f087069edc5671ec64170
     #d $79edc5ce690030fd65fd00690238f015
-    #d $f101088538f038f138897079ebc67079
+    #d $f101
+    ret
+
+call5703:
+    #d $8538f038f138897079ebc67079
     #d $edc67079e5c67079ecc67079e8c634b4
     #d $c569883d69113d69403d69123b7069e7
     #d $c667007079f0c634c0c3856aef9f340f
     #d $c76a089f28f5482a48316700c76701c2
     #d $6912692469327079d7c67069e7c66700
     #d $d0706a98c6693c60e2388946027079a8
-    #d $c669017079e7c608449b4844505e7069
-    #d $d2c67700517079d2c608449b48b44780
+    #d $c669017079e7c6
+    ret
+
+call5778:
+    #d $449b4844505e7069
+    #d $d2c67700517079d2c608
+
+call578a:
+    #d $449b48b44780
     #d $540a5a65f001cfb007617761c97069d2
     #d $c6670044635b448c5c448c5c448c5c44
     #d $a15b44715f44225d445447b6773acb6a
@@ -1520,7 +1932,11 @@ data5a09:
     #d $1f483f52eec7483f483f6a00086a0018
 
 call5f40:
-    #d $482a4830483034a0c5ae08706998c634
+    #d $482a4830483034a0c5ae
+    ret
+
+call5f4b:
+    #d $706998c634
     #d $00002709ca660a480e0e411e480ff31a
     #d $6700c6526910ae52fb24fbc60e3c0f3a
     #d $08690138dc28dcb22d4780d42b6704d8
