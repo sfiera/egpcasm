@@ -8,6 +8,17 @@
     outp = 0
 }
 
+ASTRO0 = USER0
+ASTRO1 = USER1
+ASTRO2 = USER2
+ASTRO3 = USER3
+ASTRO4 = USER4
+ASTRO5 = USER5
+ASTRO6 = USER6
+ASTRO7 = USER7
+ASTRO8 = USER8
+ASTRO9 = USER9
+
 header:
     db CART.MAGIC
     dw main
@@ -17,16 +28,16 @@ header:
     jmp interrupt
 
 #addr CART.USER0
-    jmp call469b
-    jmp call46a3
-    jmp call4997
-    jmp call5192
-    jmp call5f40
-    jmp call46b2
-    jmp call46b6
-    jmp call46ba
-    jmp call46c0
-    jmp call46c5
+    jmp astro0
+    jmp astro1
+    jmp astro2
+    jmp astro3
+    jmp astro4
+    jmp astro5
+    jmp astro6
+    jmp astro7
+    jmp astro8
+    jmp astro9
 
 #addr CART.BEGIN
 main:
@@ -156,10 +167,10 @@ call40fd:
     db $10, $1d, TEXT.SCR1 | TEXT.SPC1 | str4249.len
     lxi hl, $fff4
     calt DRAWHEX
-    db $35, $1d, $c0
+    db $35, $1d, TEXT.SCR1 | TEXT.SMALL
     lxi hl, $fffd
     calt DRAWHEX
-    db $2c, $24, $c0
+    db $2c, $24, TEXT.SCR1 | TEXT.SMALL
     aniw [$ffde], $00
     oriw [$ffdf], $01
     call call43c4
@@ -176,7 +187,7 @@ call40fd:
 .jr4149:
     calt ACCCLR
     staw [$fff1]
-    calt USER5
+    calt ASTRO5
     mvi a, $80
     stax [hl+]
     mvi a, $01
@@ -318,7 +329,7 @@ call427b:
     calt MEMCOPY
     lxi hl, $ffa3
     calt DRAWHEX
-    db $17, $1e, $94
+    db $17, $1e, TEXT.SCR1 | TEXT.SPC1 | 4
     calt SCRN2LCD
 .jr42b9:
     eqiw [$ff89], $04
@@ -395,7 +406,7 @@ call431a:
     db $05, $00, TEXT.SCR1 | TEXT.SPC1 | str4249.len
     lxi hl, $fff4
     calt DRAWHEX
-    db $28, $00, $c0
+    db $28, $00, TEXT.SCR1 | TEXT.SMALL
     ret
 
 call4329:
@@ -488,7 +499,7 @@ try436f:
     rets
 
 call43c4:
-    calt USER5
+    calt ASTRO5
     mvi a, $13
     staw [$ffd8]
 .jr43c9:
@@ -513,7 +524,7 @@ try43e6:
     jr .jr43f1
 .jr43ea:
     mvi a, $03
-    calt USER0
+    calt ASTRO0
     dcrw [$ffd8]
     jr try43e6
     ret
@@ -556,7 +567,7 @@ call4424:
     ldaw [$ffd1]
     dcr a
     lxi de, data4540
-    calt USER1
+    calt ASTRO1
     ldaw [$ffd1]
     dcr a
     clc
@@ -573,7 +584,7 @@ call4424:
     staw [$ffd4]
     mov a, b
     lxi de, data4564
-    calt USER1
+    calt ASTRO1
     ldax [de+]
     mov [$c68e], a
     ldax [de]
@@ -638,7 +649,7 @@ call4424:
     jr .jr44d0
     lhld [$c68e]
     ldaw [$ffd4]
-    calt USER0
+    calt ASTRO0
     shld [$c68e]
     ldaw [$ffd5]
     sui a, $08
@@ -659,10 +670,10 @@ call44d1:
 .jr44e1:
     lxi hl, $fffd
     calt DRAWHEX
-    db $00, $00, $c0
+    db $00, $00, TEXT.SCR1 | TEXT.SMALL
     lxi hl, str453d
     calt DRAWTEXT
-    db $0d, $00, $c1
+    db $0d, $00, TEXT.SCR1 | TEXT.SPC4 | str453d.len
     lxi de, $c6a8
     ldax [de]
     mov b, [$ff89]
@@ -693,16 +704,16 @@ call44d1:
 .jr451c:
     lxi hl, $ffa0
     calt DRAWHEX
-    db $32, $00, $c5
+    db $32, $00, TEXT.SCR1 | TEXT.SMALL | 5
     jr .jr453c
 .jr4524:
     lxi hl, str453e
     calt DRAWTEXT
-    db $33, $00, $c2
+    db $33, $00, TEXT.SCR1 | TEXT.SPC4 | str453e.len
     call call5f4b
     lxi hl, $c6fb
     calt DRAWHEX
-    db $3c, $00, $c2
+    db $3c, $00, TEXT.SCR1 | TEXT.SMALL | 2
     lxi hl, $c039
     mvi a, $04
     stax [hl+]
@@ -712,9 +723,11 @@ call44d1:
 
 str453d:
     #d smalltext("E")
+.len = $ - str453d
 
 str453e:
     #d smalltext("T"), largetext(".")
+.len = $ - str453e
 
 data4540:
     #d $b3b3b33333217658d7b7a69577593563
@@ -865,7 +878,7 @@ call468d:
     rar
     jr .jr4691
 
-call469b:
+astro0:
     add a, l
     mov l, a
     mov a, h
@@ -873,7 +886,7 @@ call469b:
     mov h, a
     ret
 
-call46a3:
+astro1:
     add a, e
     mov e, a
     mov a, d
@@ -888,23 +901,23 @@ call46ab:
     inr b
     ret
 
-call46b2:
+astro5:
     lxi hl, $c5a0
     ret
 
-call46b6:
+astro6:
     mov a, [$c5a0]
     ret
 
-call46ba:
+astro7:
     mov a, [$c5a2]
     ret
 
-call46c0:
+astro8:
     mov a, [$c5a3]
     ret
 
-call46c5:
+astro9:
     mov a, [$c6cb]
     ret
 
@@ -925,11 +938,11 @@ call46ca:
     dcr c
     jr .jr46e2
     mov a, b
-    calt USER0
+    calt ASTRO0
     ret
 .jr46e2:
     mvi a, $4b
-    calt USER0
+    calt ASTRO0
     jr .jr46dd
 .jr46e6:
     lxi hl, $0000
@@ -1003,7 +1016,7 @@ call470a:
     ret
 
 call4754:
-    calt USER2
+    calt ASTRO2
     eqiw [$ffe7], $00
     ret
     eqiw [$fffc], $00
@@ -1018,7 +1031,7 @@ call4754:
     jr .jr477f
     calt ACCCLR
     mov [$c6f2], a
-    calt USER8
+    calt ASTRO8
     inr a
     mov [$c5a3], a
     mvi b, $00
@@ -1048,7 +1061,7 @@ call4754:
     clc
     ral
     lxi hl, data47f2
-    calt USER0
+    calt ASTRO0
     lxi de, $c5a2
     ldax [hl+]
     addx [de]
@@ -1057,7 +1070,7 @@ call4754:
     addx [de]
     stax [de]
 .jr47c1:
-    calt USER7
+    calt ASTRO7
     oni a, $80
     jr .jr47c7
     calt ACCCLR
@@ -1069,13 +1082,13 @@ call4754:
 .jr47cc:
     mov [$c5a2], a
 .jr47d0:
-    calt USER8
+    calt ASTRO8
     lti a, $08
     jr .jr47da
     mvi a, $08
     mov [$c5a3], a
 .jr47da:
-    calt USER8
+    calt ASTRO8
     lti a, $3c
     mvi a, $3c
     mov [$c5a3], a
@@ -1097,7 +1110,7 @@ data47f2:
     #d $000302
 
 call480a:
-    calt USER6
+    calt ASTRO6
     nei a, $00
     ret
     mvi b, $02
@@ -1110,16 +1123,16 @@ call480a:
     stax [hl+]
     mvi a, $06
     stax [hl+]
-    calt USER7
+    calt ASTRO7
     adi a, $0c
     stax [hl+]
-    calt USER8
+    calt ASTRO8
     adi a, $02
     stax [hl]
     jr .jr482c
 .jr4826:
     mvi a, $04
-    calt USER0
+    calt ASTRO0
     dcr b
     jr .jr4813
     ret
@@ -1142,13 +1155,13 @@ call480a:
 .jr4844:
     lxi hl, music4b31
     calt MUSPLAY
-    calt USER2
+    calt ASTRO2
     ret
 
 call484a:
-    calt USER5
+    calt ASTRO5
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     inx hl
     ldax [hl-]
     nei a, $1f
@@ -1216,7 +1229,7 @@ call489b:
     calt JOYREAD
     eqiw [$ffe7], $00
     jre .jr48ef
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jre .jr48e6
     lhld [$ff92]
@@ -1292,7 +1305,7 @@ interrupt:
     mov a, [$c6e8]
     eqi a, $00
     jre .jr4950
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jr .jr4950
     mov a, [$c6ec]
@@ -1304,7 +1317,7 @@ interrupt:
 .jr493f:
     eqiw [$ffe7], $00
     jr .jr4950
-    calt USER5
+    calt ASTRO5
     ldax [hl+]
     oni a, $80
     jr .jr4950
@@ -1370,7 +1383,7 @@ try497f:
     ret
     rets
 
-call4997:
+astro2:
     push hl
     push bc
     lxi hl, $c6fe
@@ -1428,7 +1441,7 @@ call49cf:
     onax [hl]
     ret
     mvi a, $04
-    calt USER0
+    calt ASTRO0
     dcrw [$ffe0]
     jr .jr49eb
     mvi h, $00
@@ -1442,14 +1455,14 @@ call49cf:
     onax [hl]
     jr .jr4a0e
     mvi a, $04
-    calt USER0
+    calt ASTRO0
     dcrw [$ffe0]
     jr .jr4a00
     mvi h, $00
     ret
 .jr4a0e:
     mvi a, $04
-    calt USER0
+    calt ASTRO0
     dcrw [$ffe0]
     jr .jr4a17
     mvi h, $00
@@ -1459,7 +1472,7 @@ call49cf:
     onax [hl]
     jr .jr4a26
     mvi a, $04
-    calt USER0
+    calt ASTRO0
     dcrw [$ffe0]
     jre .jr4a00
     mvi h, $00
@@ -1506,7 +1519,7 @@ call4a59:
     mov l, a
     mvi h, $00
     calt ARITHMTC
-    db $27
+    db ARITH.BCD | ARITH.HL3 | ARITH.HLW | ARITH.DE2 | ARITH.DEW
     pop hl
     pop de
     pop bc
@@ -1527,61 +1540,175 @@ call4a6b:
     ret
 
 music4a85:
-    #d $061206090b360f090d090b
-    #d $090d1b0f091236120914090f09121b10
-    #d $1b0f1b0f090b090f090d36ff
+    db PITCH.C4, $12
+    db PITCH.C4, $09
+    db PITCH.F4, $36
+    db PITCH.A4, $09
+    db PITCH.G4, $09
+    db PITCH.F4, $09
+    db PITCH.G4, $1b
+    db PITCH.A4, $09
+    db PITCH.C5, $36
+    db PITCH.C5, $09
+    db PITCH.D5, $09
+    db PITCH.A4, $09
+    db PITCH.C5, $1b
+    db PITCH.AS4, $1b
+    db PITCH.A4, $1b
+    db PITCH.A4, $09
+    db PITCH.F4, $09
+    db PITCH.A4, $09
+    db PITCH.G4, $36
+    db $ff
 
 music4aac:
-    #d $06120609
-    #d $0b2d0b090d240e0910090e36061b0612
-    #d $06090b2d0d090e120b090e090b091209
-    #d $1036ff
+    db PITCH.C4, $12
+    db PITCH.C4, $09
+    db PITCH.F4, $2d
+    db PITCH.F4, $09
+    db PITCH.G4, $24
+    db PITCH.GS4, $09
+    db PITCH.AS4, $09
+    db PITCH.GS4, $36
+    db PITCH.C4, $1b
+    db PITCH.C4, $12
+    db PITCH.C4, $09
+    db PITCH.F4, $2d
+    db PITCH.G4, $09
+    db PITCH.GS4, $12
+    db PITCH.F4, $09
+    db PITCH.GS4, $09
+    db PITCH.F4, $09
+    db PITCH.C5, $09
+    db PITCH.AS4, $36
+    db $ff
 
 music4ad3:
-    #d $0b0906090b090f240b120f090b
-    #d $090f0912240f1212090f09120916240a
-    #d $120a120a090f36ff
+    db PITCH.F4, $09
+    db PITCH.C4, $09
+    db PITCH.F4, $09
+    db PITCH.A4, $24
+    db PITCH.F4, $12
+    db PITCH.A4, $09
+    db PITCH.F4, $09
+    db PITCH.A4, $09
+    db PITCH.C5, $24
+    db PITCH.A4, $12
+    db PITCH.C5, $09
+    db PITCH.A4, $09
+    db PITCH.C5, $09
+    db PITCH.E5, $24
+    db PITCH.E4, $12
+    db PITCH.E4, $12
+    db PITCH.E4, $09
+    db PITCH.A4, $36
+    db $ff
 
 music4af8:
-    #d $061206090b2d0b09
-    #d $0f1b0f090d090b090d1212091236ff
+    db PITCH.C4, $12
+    db PITCH.C4, $09
+    db PITCH.F4, $2d
+    db PITCH.F4, $09
+    db PITCH.A4, $1b
+    db PITCH.A4, $09
+    db PITCH.G4, $09
+    db PITCH.F4, $09
+    db PITCH.G4, $12
+    db PITCH.C5, $09
+    db PITCH.C5, $36
+    db $ff
 
 music4b0f:
-    #d $03
-    #d $01020100010301020100050a04000304
-    #d $030003020300020105ff
+    db PITCH.A3, $01
+    db PITCH.GS3, $01
+    db PITCH.NONE, $01
+    db PITCH.A3, $01
+    db PITCH.GS3, $01
+    db PITCH.NONE, $05
+    db PITCH.E4, $04
+    db PITCH.NONE, $03
+    db PITCH.AS3, $03
+    db PITCH.NONE, $03
+    db PITCH.GS3, $03
+    db PITCH.NONE, $02
+    db PITCH.G3, $05
+    db $ff
 
 music4b2a:
-    #d $040103010101ff
+    db PITCH.AS3, $01
+    db PITCH.A3, $01
+    db PITCH.G3, $01
+    db $ff
 
 music4b31:
-    #d $1402000114030001ff
+    db PITCH.D5, $02
+    db PITCH.NONE, $01
+    db PITCH.D5, $03
+    db PITCH.NONE, $01
+    db $ff
 
 music4b3a:
-    #d $010500030305
-    #d $0003050500030606000308070003ff
+    db PITCH.G3, $05
+    db PITCH.NONE, $03
+    db PITCH.A3, $05
+    db PITCH.NONE, $03
+    db PITCH.B3, $05
+    db PITCH.NONE, $03
+    db PITCH.C4, $06
+    db PITCH.NONE, $03
+    db PITCH.D4, $07
+    db PITCH.NONE, $03
+    db $ff
 
 music4b4f:
-    #d $1205130414031502130411051006ff
+    db PITCH.C5, $05
+    db PITCH.CS5, $04
+    db PITCH.D5, $03
+    db PITCH.DS5, $02
+    db PITCH.CS5, $04
+    db PITCH.B4, $05
+    db PITCH.AS4, $06
+    db $ff
 
 music4b5e:
-    #d $12000f001600ff
+    db PITCH.C5, $00
+    db PITCH.A4, $00
+    db PITCH.E5, $00
+    db $ff
 
 music4b65:
-    #d $0604050306040703080409
-    #d $030804070306040503ff
+    db PITCH.C4, $04
+    db PITCH.B3, $03
+    db PITCH.C4, $04
+    db PITCH.CS4, $03
+    db PITCH.D4, $04
+    db PITCH.DS4, $03
+    db PITCH.D4, $04
+    db PITCH.CS4, $03
+    db PITCH.C4, $04
+    db PITCH.B3, $03
+    db $ff
 
 music4b7a:
-    #d $020101010001ff
+    db PITCH.GS3, $01
+    db PITCH.G3, $01
+    db PITCH.NONE, $01
+    db $ff
 
 music4b81:
-    #d $120216010001
+    db PITCH.C5, $02
+    db PITCH.E5, $01
+    db PITCH.NONE, $01
 
 music4b87:
-    #d $120216010001
+    db PITCH.C5, $02
+    db PITCH.E5, $01
+    db PITCH.NONE, $01
 
 music4b8d:
-    #d $12021601ff
+    db PITCH.C5, $02
+    db PITCH.E5, $01
+    db $ff
 
 call4b92:
     neiw [$fff6], $01
@@ -1603,7 +1730,7 @@ call4b92:
     ral
     add a, b
     lxi hl, data4bcf - 5
-    calt USER0
+    calt ASTRO0
     lxi de, $c6ab
     calt ACCCLR
     stax [de+]
@@ -1628,7 +1755,7 @@ data4bcf:
 
 call4bde:
     call call489b
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jr .jr4bf0
     lxi hl, $c6be
@@ -1670,12 +1797,12 @@ call4bde:
 .jr4c1e:
     lxi hl, $c666
     ldaw [$fff2]
-    calt USER0
+    calt ASTRO0
     ldaw [$fff9]
     stax [hl]
     lxi hl, $c640
     ldaw [$fff2]
-    calt USER0
+    calt ASTRO0
     ldaw [$fffb]
     stax [hl]
     call call5518
@@ -1701,7 +1828,7 @@ call4c33:
     staw [$ffe1]
     lxi de, $c666
     ldaw [$fff2]
-    calt USER1
+    calt ASTRO1
     ldax [de]
     mov c, a
 .jr4c57:
@@ -1760,7 +1887,7 @@ call4c33:
     staw [$ffe1]
     lxi de, $c640
     ldaw [$fff2]
-    calt USER1
+    calt ASTRO1
     ldax [de]
     mov c, a
 .jr4cb4:
@@ -1782,7 +1909,7 @@ call4c33:
     mvi a, $ff
     stax [hl]
     mvi a, $4b
-    calt USER0
+    calt ASTRO0
     mov a, b
     jr .jr4cb5
 .jr4cd1:
@@ -1822,7 +1949,7 @@ call4cf5:
     calt ACCCLR
     stax [hl]
     lxi hl, data4d4e
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     staw [$fff9]
     lxi hl, $c69b
@@ -1835,7 +1962,7 @@ call4cf5:
     jr .jr4d22
     ltiw [$fff9], $0c
     jr .jr4d20
-    calt USER2
+    calt ASTRO2
     gti a, $55
     jr .jr4d20
     gti a, $aa
@@ -1857,7 +1984,7 @@ call4d27:
     ani a, $0f
     stax [hl]
     lxi hl, data4d4e
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     staw [$fffb]
     lxi hl, $c69d
@@ -1867,7 +1994,7 @@ call4d27:
     stax [hl]
     gti a, $02
     jr .jr4d49
-    calt USER2
+    calt ASTRO2
     gti a, $c8
     jr .jr4d47
     mvi a, $04
@@ -1887,11 +2014,11 @@ data4d50:
     #d $0807060504
 
 call4d75:
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jr .jr4d8c
     call call4fe0
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jr .jr4d8c
     call call4dac
@@ -2064,7 +2191,7 @@ call4e1d:
     ret
 
 call4e7b:
-    calt USER6
+    calt ASTRO6
     oni a, $80
     ret
     neiw [$ffe7], $00
@@ -2094,7 +2221,7 @@ call4e7b:
     stax [bc]
     jre .jr4f1c
 .jr4eb2:
-    calt USER2
+    calt ASTRO2
     ani a, $7f
     eqiw [$ffe7], $00
     ani a, $3f
@@ -2120,7 +2247,7 @@ call4e7b:
     clc
     rar
     lxi bc, $c701
-    calt USER1
+    calt ASTRO1
     mov a, d
     lti a, $1f
     mvi a, $00
@@ -2177,7 +2304,7 @@ call4e7b:
     staw [$ffff]
     mvi a, $a0
     stax [hl+]
-    calt USER2
+    calt ASTRO2
     lti a, $64
     mvi a, $07
     mvi a, $08
@@ -2225,7 +2352,7 @@ call4f6f:
 .jr4f87:
     call call4a3e
     call call4fbc
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jr .jr4f9d
     gtiw [$ff89], $45
@@ -2307,7 +2434,7 @@ call4fe0:
     ldax [hl]
     eqi a, $07
     jr .jr5016
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr5012
     jre .jr507c
@@ -2317,7 +2444,7 @@ call4fe0:
 .jr5016:
     eqi a, $08
     jr .jr502a
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr5020
     jre .jr507c
@@ -2338,7 +2465,7 @@ call4fe0:
     offi a, $40
     jre .jr507c
     ldax [hl]
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr5040
     jre .jr507c
@@ -2359,7 +2486,7 @@ call4fe0:
 .jr5057:
     eqi a, $0d
     jr .jr5064
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr5060
     jr .jr507c
@@ -2369,7 +2496,7 @@ call4fe0:
 .jr5064:
     eqi a, $0e
     jr .jr5070
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr506d
     jr .jr507c
@@ -2379,7 +2506,7 @@ call4fe0:
 .jr5070:
     eqi a, $0f
     jr .jr507c
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr5079
     jr .jr507c
@@ -2429,7 +2556,7 @@ try50a9:
     ldax [hl]
     eqi a, $07
     jr .jr50d2
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr50c4
     jre .jr5152
@@ -2444,7 +2571,7 @@ try50a9:
 .jr50d2:
     eqi a, $08
     jr .jr50e6
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr50dc
     jre .jr5152
@@ -2458,7 +2585,7 @@ try50a9:
 .jr50e6:
     eqi a, $0d
     jr .jr50f7
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr50f0
     jre .jr5152
@@ -2470,7 +2597,7 @@ try50a9:
 .jr50f7:
     eqi a, $0e
     jre .jr5146
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr5102
     jre .jr5152
@@ -2522,7 +2649,7 @@ try50a9:
 .jr5146:
     eqi a, $0f
     jr .jr5152
-    calt USER3
+    calt ASTRO3
     call try495b
     jr .jr514f
     jr .jr5152
@@ -2576,13 +2703,13 @@ call517f:
     dcx de
     ret
 
-call5192:
+astro3:
     sui a, $07
     clc
     ral
     push de
     lxi de, data51c1
-    calt USER1
+    calt ASTRO1
     ldax [de+]
     mov b, a
     inx hl
@@ -2594,7 +2721,7 @@ call5192:
     add a, c
     staw [$ffd4]
     mvi a, $11
-    calt USER1
+    calt ASTRO1
     ldax [de+]
     mov b, a
     ldax [hl]
@@ -2620,7 +2747,7 @@ call51e5:
     lxi hl, $c640
     shld [$c6a9]
     push va
-    calt USER7
+    calt ASTRO7
     adi a, $04
     staw [$ffd0]
     mov b, a
@@ -2639,7 +2766,7 @@ call51e5:
     lti a, $26
     sui a, $26
     lhld [$c6a9]
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     lta a, d
     mov d, a
@@ -2683,7 +2810,7 @@ call523d:
     lti a, $26
     sui a, $26
     lxi hl, $c666
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     clc
     ral
@@ -2712,7 +2839,7 @@ call526b:
     lti a, $26
     sui a, $26
     lxi hl, $c666
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     clc
     ral
@@ -2743,7 +2870,7 @@ call529a:
     lti a, $26
     sui a, $26
     lxi hl, $c640
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     clc
     ral
@@ -2756,7 +2883,7 @@ call529a:
     ret
 
 call52c6:
-    calt USER5
+    calt ASTRO5
     mvi a, $00
     stax [hl+]
     inx hl
@@ -2822,7 +2949,7 @@ call5300:
     mov a, b
     lti a, $37
     ret
-    calt USER2
+    calt ASTRO2
     lti a, $c8
     jr .jr531e
     mov a, b
@@ -2987,7 +3114,7 @@ call539f:
     stax [hl-]
     dcx hl
     mvi a, $0d
-    calt USER3
+    calt ASTRO3
     inx hl
     ldax [hl-]
     staw [$ffd6]
@@ -3003,7 +3130,7 @@ call539f:
     lti a, $26
     sui a, $26
     lxi de, $c666
-    calt USER1
+    calt ASTRO1
     ldax [de+]
     mov b, a
     ldax [de]
@@ -3050,7 +3177,7 @@ call5435:
     clc
     rar
     lxi de, $c701
-    calt USER1
+    calt ASTRO1
     ldax [de]
     mov b, a
     inr a
@@ -3070,9 +3197,9 @@ call5435:
     mvi a, $00
     mvi a, $06
     lxi de, data54bf
-    calt USER1
+    calt ASTRO1
     mov a, b
-    calt USER1
+    calt ASTRO1
     ldax [de]
     mov b, a
     ldax [hl]
@@ -3124,7 +3251,7 @@ call5435:
     ret
 .jr54b9:
     mvi a, $04
-    calt USER0
+    calt ASTRO0
     dcrw [$ffe0]
     ret
 
@@ -3147,7 +3274,7 @@ call54cb:
     clc
     rar
     lxi de, $c701
-    calt USER1
+    calt ASTRO1
     ldax [de]
     mov c, a
     inr a
@@ -3166,9 +3293,9 @@ call54cb:
     mvi a, $00
     mvi a, $06
     lxi de, data550c
-    calt USER1
+    calt ASTRO1
     mov a, c
-    calt USER1
+    calt ASTRO1
     ldax [de]
     mov b, a
     ldax [hl]
@@ -3216,7 +3343,7 @@ call5521:
 
 call5552:
     call call489b
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jre .jr55cb
     inrw [$ffdd]
@@ -3231,7 +3358,7 @@ call5552:
     mov a, [$c69f]
     eqi a, $0a
     jr .jr5584
-    calt USER2
+    calt ASTRO2
     ani a, $07
     mov [$c6f3], a
     calt ACCCLR
@@ -3248,7 +3375,7 @@ call5552:
     mov a, [$c69f]
     add a, l
     lxi hl, $5faa
-    calt USER0
+    calt ASTRO0
     push hl
     lxi hl, $c4b1
     lxi de, $c4b0
@@ -3275,14 +3402,14 @@ call5552:
 
 call55cf:
     call call489b
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jmp .jr56e7
     call call5f71
     neiw [$ffdd], $00
     call call5b19
     call call4754
-    calt USER8
+    calt ASTRO8
     eqi a, $3a
     jr .jr55f3
     mvi b, $00
@@ -3294,8 +3421,8 @@ call55cf:
     mvi a, $01
     mov [$c6cb], a
 .jr55fc:
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jre .jr5652
@@ -3326,7 +3453,7 @@ call55cf:
     staw [$ffdc]
 .jr562c:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jr .jr564b
@@ -3348,7 +3475,7 @@ call55cf:
     eqiw [$ffdc], $13
     jre .jr562c
 .jr5652:
-    calt USER9
+    calt ASTRO9
     inr a
     mov [$c6cb], a
     eqi a, $05
@@ -3364,12 +3491,12 @@ call55cf:
     mov e, a
     call call5f0b
     call call4857
-    calt USER7
+    calt ASTRO7
     adi a, $04
     staw [$ffd0]
     adi a, $06
     staw [$ffd4]
-    calt USER8
+    calt ASTRO8
     staw [$ffd1]
     adi a, $02
     staw [$ffd3]
@@ -3377,7 +3504,7 @@ call55cf:
     staw [$ffdc]
 .jr5688:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jr .jr56a7
@@ -3511,12 +3638,12 @@ call5778:
 
 call578a:
     call call489b
-    calt USER6
+    calt ASTRO6
     oni a, $80
     jmp .jr5a0a
     neiw [$fff0], $01
     jr .jr57a6
-    calt USER2
+    calt ASTRO2
     ani a, $61
     eqi a, $61
     jr .jr57a6
@@ -3531,7 +3658,7 @@ call578a:
     call call5f71
     call call5d22
     call call4754
-    calt USER8
+    calt ASTRO8
     eqi a, $3a
     jr .jr57ca
     mvi b, $00
@@ -3555,8 +3682,8 @@ call578a:
 .jr57e1:
     mvi a, $07
     staw [$ffdc]
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jre .jr5893
@@ -3578,7 +3705,7 @@ call578a:
     staw [$ffd3]
 .jr5805:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jre .jr588c
@@ -3617,13 +3744,13 @@ call578a:
     jre .jr588c
 .jr5842:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     inx hl
     ldax [hl]
     eqi a, $1f
     jr .jr585e
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     inx hl
     mvi a, $22
     stax [hl+]
@@ -3638,8 +3765,8 @@ call578a:
 .jr585e:
     mvi a, $20
     stax [hl]
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     calt ACCCLR
     stax [hl]
     mov a, [$c6f9]
@@ -3683,8 +3810,8 @@ call578a:
     mvi a, $02
     mov [$c6cb], a
 .jr58b7:
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jr .jr58cb
@@ -3704,12 +3831,12 @@ call578a:
     stax [hl]
     eqi a, $05
     jr .jr58b7
-    calt USER7
+    calt ASTRO7
     adi a, $05
     staw [$ffd0]
     adi a, $05
     staw [$ffd4]
-    calt USER8
+    calt ASTRO8
     staw [$ffd1]
     adi a, $02
     staw [$ffd3]
@@ -3717,7 +3844,7 @@ call578a:
     staw [$ffdc]
 .jr58e8:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jre .jr591b
@@ -3786,7 +3913,7 @@ call578a:
     mov a, [$c6f0]
     eqi a, $05
     jre .jr5a30
-    calt USER6
+    calt ASTRO6
     offi a, $80
     jr .jr5981
     lxi hl, $c5a0
@@ -3836,13 +3963,13 @@ call578a:
     calt SCR1CLR
     lxi hl, .str5a04
     calt DRAWTEXT
-    db $05, $1b, $95
+    db $05, $1b, TEXT.SCR1 | TEXT.SPC1 | .str5a04.len
     lxi hl, $c6fb
     calt DRAWHEX
-    db $2d, $1b, $92
+    db $2d, $1b, TEXT.SCR1 | TEXT.SPC1 | 2
     lxi hl, .str5a09
     calt DRAWTEXT
-    db $3f, $1b, $91
+    db $3f, $1b, TEXT.SCR1 | TEXT.SPC1 | .str5a09.len
     call call43c4
 .jr59d8:
     eqiw [$ff89], $03
@@ -3855,7 +3982,7 @@ call578a:
     push va
     lxi hl, $0100
     calt ARITHMTC
-    db $27
+    db ARITH.BCD | ARITH.HL3 | ARITH.HLW | ARITH.DE2 | ARITH.DEW
     call call4fbc
     pop va
     jr .jr59e0
@@ -3871,8 +3998,11 @@ call578a:
 
 .str5a04:
     #d largetext("BONUS")
+..len = $ - .str5a04
+
 .str5a09:
     #d largetext("0")
+..len = $ - .str5a09
 
 .jr5a0a:
     mov a, [$c5ed]
@@ -3913,7 +4043,7 @@ call5a34:
     mvi a, $0b
     sub a, b
     lxi hl, $c4b0
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     staw [$ffdc]
     nei a, $00
@@ -3967,7 +4097,7 @@ call5a9e:
     jmp call4424
 
 call5ac1:
-    calt USER2
+    calt ASTRO2
     oni a, $80
     jr .jr5ad4
     mov a, [$c4b9]
@@ -4007,7 +4137,7 @@ call5ac1:
 
 call5afb:
     push de
-    calt USER9
+    calt ASTRO9
     eqi a, $01
     jr .jr5b07
     pop de
@@ -4035,7 +4165,7 @@ call5b19:
     staw [$ffdc]
 .jr5b1d:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jr .jr5b34
@@ -4061,12 +4191,12 @@ call5b19:
 
 call5b3b:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     mvi a, $20
     inx hl
     stax [hl]
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     calt ACCCLR
     stax [hl]
     mvi a, $19
@@ -4081,15 +4211,15 @@ call5b3b:
     ret
 
 call5b5a:
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     calt ACCCLR
     stax [hl]
     pop de
     jmp call55cf.jr564b
 
 call5b63:
-    calt USER2
+    calt ASTRO2
     gti a, $40
     ret
     mvi a, $03
@@ -4134,7 +4264,7 @@ call5ba1:
     jre .jr5c0d
     ltiw [$ff89], $3c
     jre .jr5c78
-    calt USER2
+    calt ASTRO2
     gti a, $e0
     jre .jr5c0d
     mov a, [$c6ec]
@@ -4173,7 +4303,7 @@ call5ba1:
     mov [$c6ed], a
     mov a, [$c6eb]
     adi a, $06
-    calt USER4
+    calt ASTRO4
     mvi a, $88
     stax [hl+]
     mvi a, $10
@@ -4233,7 +4363,7 @@ call5ba1:
     stax [hl]
     jr .jr5c66
 .jr5c5e:
-    calt USER2
+    calt ASTRO2
     gti a, $e0
     jr .jr5c66
     ldax [hl]
@@ -4271,7 +4401,7 @@ call5c8c:
     clc
     ral
     lxi hl, $c70f
-    calt USER0
+    calt ASTRO0
     ldax [hl+]
     nei a, $00
     jre .jr5d1a
@@ -4279,7 +4409,7 @@ call5c8c:
     pop bc
     ldaw [$ffdc]
     adi a, $07
-    calt USER4
+    calt ASTRO4
     inx hl
     ldax [hl+]
     eqi a, $10
@@ -4297,11 +4427,11 @@ call5c8c:
     calt MULTIPLY
     mov a, l
     lxi hl, $c3c0
-    calt USER0
+    calt ASTRO0
     pop de
     pop bc
     ldax [bc]
-    calt USER0
+    calt ASTRO0
     mov a, d
     stax [hl+]
     mov a, e
@@ -4314,7 +4444,7 @@ call5c8c:
     stax [bc]
     ldaw [$ffdc]
     adi a, $07
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     inx hl
     oni a, $08
@@ -4347,7 +4477,7 @@ call5c8c:
     stax [hl]
     jr .jr5d0c
 .jr5d04:
-    calt USER2
+    calt ASTRO2
     gti a, $e0
     jr .jr5d0c
     ldax [hl]
@@ -4375,7 +4505,7 @@ call5d22:
     staw [$ffdc]
 .jr5d26:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jre .jr5d55
@@ -4421,7 +4551,7 @@ call5d5d:
     clc
     ral
     lxi hl, $c70f
-    calt USER0
+    calt ASTRO0
     calt ACCCLR
     stax [hl+]
     stax [hl]
@@ -4431,7 +4561,7 @@ call5d5d:
     calt MULTIPLY
     mov a, l
     lxi hl, $c3c0
-    calt USER0
+    calt ASTRO0
     mvi b, $4f
     calt ACCCLR
     calt MEMSET
@@ -4457,8 +4587,8 @@ call5d9c:
     mov a, [$c5b7]
     adi a, $04
     mov b, a
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     inx hl
     inx hl
     inx hl
@@ -4473,8 +4603,8 @@ call5d9c:
     lxi hl, music4b81
     calt MUSPLAY
 .jr5dc4:
-    calt USER9
-    calt USER4
+    calt ASTRO9
+    calt ASTRO4
     calt ACCCLR
     stax [hl]
     ret
@@ -4581,12 +4711,12 @@ call5e50:
 call5e5a:
     calt ACCCLR
     staw [$ffdc]
-    calt USER7
+    calt ASTRO7
     adi a, $04
     staw [$ffd0]
     adi a, $06
     staw [$ffd4]
-    calt USER8
+    calt ASTRO8
     staw [$ffd1]
     adi a, $02
     staw [$ffd3]
@@ -4689,7 +4819,7 @@ call5ed2:
     mov e, a
     mov a, d
     lxi hl, $c4b0
-    calt USER0
+    calt ASTRO0
     ldax [hl]
     push va
     mov a, e
@@ -4745,12 +4875,12 @@ call5f0b:
     mvi b, $00
     rets
 
-call5f40:
+astro4:
     clc
     ral
     ral
     lxi hl, $c5a0
-    calt USER0
+    calt ASTRO0
     ret
 
 call5f4b:
@@ -4773,7 +4903,7 @@ call5f4b:
     dcr b
 .jr5f64:
     mvi a, $10
-    calt USER0
+    calt ASTRO0
     dcr b
     jr .jr5f64
 .jr5f69:
@@ -4789,7 +4919,7 @@ call5f71:
     staw [$ffdc]
 .jr5f75:
     ldaw [$ffdc]
-    calt USER4
+    calt ASTRO4
     ldax [hl+]
     oni a, $80
     jr .jr5f90

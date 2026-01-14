@@ -194,8 +194,11 @@ USER9     = $00EE
 }
 
 #const TEXT = struct {
+    ; Screen: DRAWHEX or DRAWTEXT
     SCR1 = $80
     SCR2 = $00
+
+    ; Spacing: 0-3: DRAWHEX or DRAWTEXT; 4-7: DRAWTEXT only
     SPC0 = $00
     SPC1 = $10
     SPC2 = $20
@@ -204,6 +207,35 @@ USER9     = $00EE
     SPC5 = $50
     SPC6 = $60
     SPC7 = $70
+
+    ; Font: DRAWHEX only
+    LARGE = $00
+    SMALL = $40
+
+    ; Alignment: DRAWHEX only
+    RALIGN = $00
+    LALIGN = $08
+}
+
+#const ARITH = struct {
+    BCD = $00  ; binary-coded decimal
+    BIN = $80  ; binary value
+
+    ADD = $00  ; add [de] to [hl]
+    SUB = $40  ; subtract [de] from [hl]
+
+    HL1 = $00  ; sizeof(hl) = 1
+    HL2 = $10  ; sizeof(hl) = 2
+    HL3 = $20  ; sizeof(hl) = 3
+    HL4 = $30  ; sizeof(hl) = 4
+
+    DE1 = $00  ; sizeof(hl) = 1
+    DE2 = $04  ; sizeof(hl) = 2
+    DE3 = $08  ; sizeof(hl) = 3
+    DE4 = $0c  ; sizeof(hl) = 4
+
+    HLW = $02  ; HL gets bytes from $FFB1
+    DEW = $01  ; DE gets bytes from $FFA2
 }
 
 #const JOY = struct {
