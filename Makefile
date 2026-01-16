@@ -52,6 +52,7 @@ clean:
 	find * -name '*.*bpp' | xargs rm -f
 
 gamepock/egpcboot.bin: font.1bpp
+gamepock/astrobom.bin: astrobom/sprites.1bpp
 gamepock/astrobom.bin: astrobom/title.1bpp
 gamepock/boing.bin: ball.2bpp
 gamepock/pokedemo.bin: pokedemo/font.1bpp

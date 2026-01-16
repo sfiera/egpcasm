@@ -566,7 +566,7 @@ try43e6:
 call4424:
     ldaw [$ffd1]
     dcr a
-    lxi de, data4540
+    lxi de, gfx_size
     calt ASTRO1
     ldaw [$ffd1]
     dcr a
@@ -583,7 +583,7 @@ call4424:
     calt ACC4RAR
     staw [$ffd4]
     mov a, b
-    lxi de, data4564
+    lxi de, gfx_addr
     calt ASTRO1
     ldax [de+]
     mov [$c68e], a
@@ -729,126 +729,174 @@ str453e:
     #d smalltext("T"), largetext(".")
 .len = $ - str453e
 
-data4540:
-    #d $b3b3b33333217658d7b7a69577593563
-    #d $9f8f878755667755667755667777e355
-    #d $66556688
+sprite_data = $incbin("astrobom/sprites.1bpp")
+#fn sprite(addr, w, h, begin) => {
+    end = begin + w * ((h + 7) / 8)
+    first = $sizeof(sprite_data) - 8*begin - 1
+    last = $sizeof(sprite_data) - 8*end
+    struct{
+        addr = addr
+        size = w`4 @ h`4
+        begin = begin
+        end = end
+        data = sprite_data[first:last]
+    }
+}
 
-data4564:
-    dw data45ac
-    dw data45b7
-    dw data45c2
-    dw data45cd
-    dw data45d0
-    dw data45d3
-    dw data45d5
-    dw data45dc
-    dw data45e1
-    dw data45ee
-    dw data45f9
-    dw data4603
-    dw data460c
-    dw data4613
-    dw data461d
-    dw data4620
-    dw data4626
-    dw data4638
-    dw data4648
-    dw data4640
-    dw data4650
-    dw data4655
-    dw data465b
-    dw data4650
-    dw data4655
-    dw data465b
-    dw data4650
-    dw data4655
-    dw data465b
-    dw data4662
-    dw data4669
-    dw data4650
-    dw data4655
-    dw data4650
-    dw data4655
-    dw data4677
+bomber1      = sprite(gfx_data.bomber1,         11,  3,   0)
+bomber2      = sprite(gfx_data.bomber2,         11,  3,   bomber1.end)
+bomber3      = sprite(gfx_data.bomber3,         11,  3,   bomber2.end)
+bomb_rt      = sprite(gfx_data.bomb_rt,         3,   3,   bomber3.end)
+bomb_dn      = sprite(gfx_data.bomb_dn,         3,   3,   bomb_rt.end)
+bullet       = sprite(gfx_data.bullet,          2,   1,   bomb_dn.end)
+depot        = sprite(gfx_data.depot,           7,   6,   bullet.end)
+rocket       = sprite(gfx_data.rocket,          5,   8,   depot.end)
+haze1        = sprite(gfx_data.haze1,           13,  7,   rocket.end)
+haze2        = sprite(gfx_data.haze2,           11,  7,   haze1.end)
+haze3        = sprite(gfx_data.haze3,           10,  6,   haze2.end)
+haze4        = sprite(gfx_data.haze4,           9,   5,   haze3.end)
+bouncer      = sprite(gfx_data.bouncer,         7,   7,   haze4.end)
+ameba_whole  = sprite(gfx_data.ameba_whole,     5,   9,   bouncer.end)
+ameba_split  = sprite(gfx_data.ameba_split,     3,   5,   ameba_whole.end)
+boss_shot    = sprite(gfx_data.boss_bullet,     6,   3,   ameba_split.end)
+boss_armed   = sprite(gfx_data.boss_armed,      9,   15,  boss_shot.end)
+boss_fired   = sprite(gfx_data.boss_fired,      8,   15,  boss_armed.end)
+boss_bottom  = sprite(gfx_data.boss_fired + 8,  8,   7,   boss_fired.begin + 8)
+boss_top     = sprite(gfx_data.boss_top,        8,   7,   boss_fired.end)
+explode1     = sprite(gfx_data.explode1,        5,   5,   boss_top.end)
+explode2     = sprite(gfx_data.explode2,        6,   6,   explode1.end)
+explode3     = sprite(gfx_data.explode3,        7,   7,   explode2.end)
+explode4     = sprite(gfx_data.explode4,        7,   7,   explode3.end)
+shield       = sprite(gfx_data.shield,          14,  3,   explode4.end)
+block        = sprite(gfx_data.block,           8,   8,   shield.end)
 
-data45ac:
-    #d $0500050205070606060604
+gfx_size:
+    db bomber1.size
+    db bomber2.size
+    db bomber3.size
+    db bomb_rt.size
+    db bomb_dn.size
+    db bullet.size
+    db depot.size
+    db rocket.size
+    db haze1.size
+    db haze2.size
+    db haze3.size
+    db haze4.size
+    db bouncer.size
+    db ameba_whole.size
+    db ameba_split.size
+    db boss_shot.size
+    db boss_armed.size
+    db boss_fired.size
+    db boss_top.size
+    db boss_bottom.size
+    db explode1.size
+    db explode2.size
+    db explode3.size
+    db explode1.size
+    db explode2.size
+    db explode3.size
+    db explode1.size
+    db explode2.size
+    db explode3.size
+    db explode4.size
+    db shield.size
+    db explode1.size
+    db explode2.size
+    db explode1.size
+    db explode2.size
+    db block.size
 
-data45b7:
-    #d $0200020507070606060604
+gfx_addr:
+    dw bomber1.addr
+    dw bomber2.addr
+    dw bomber3.addr
+    dw bomb_rt.addr
+    dw bomb_dn.addr
+    dw bullet.addr
+    dw depot.addr
+    dw rocket.addr
+    dw haze1.addr
+    dw haze2.addr
+    dw haze3.addr
+    dw haze4.addr
+    dw bouncer.addr
+    dw ameba_whole.addr
+    dw ameba_split.addr
+    dw boss_shot.addr
+    dw boss_armed.addr
+    dw boss_fired.addr
+    dw boss_top.addr
+    dw boss_bottom.addr
+    dw explode1.addr
+    dw explode2.addr
+    dw explode3.addr
+    dw explode1.addr
+    dw explode2.addr
+    dw explode3.addr
+    dw explode1.addr
+    dw explode2.addr
+    dw explode3.addr
+    dw explode4.addr
+    dw shield.addr
+    dw explode1.addr
+    dw explode2.addr
+    dw explode1.addr
+    dw explode2.addr
+    dw block.addr
 
-data45c2:
-    #d $0000000005070606060604
-
-data45cd:
-    #d $050202
-
-data45d0:
-    #d $010601
-
-data45d3:
-    #d $0101
-
-data45d5:
-    #d $22170d350d1722
-
-data45dc:
-    #d $e0344b34e0
-
-data45e1:
-    #d $14085522082255220822550814
-
-data45ee:
-    #d $000008142a1441142a1408
-
-data45f9:
-    #d $00000008142a142a1408
-
-data4603:
-    #d $000000000814081408
-
-data460c:
-    #d $085c2a3f2a5c08
-
-data4613:
-    #d $54aa45aa540000010000
-
-data461d:
-    #d $0a150a
-
-data4620:
-    #d $050205050202
-
-data4626:
-    #d $8040709bbf537eb0400001076c7e653f0601
-
-data4638:
-    #d $a0b09bbf537eb040
-
-data4640:
-    #d $02066c7e653f0601
-
-data4648:
-    #d $20301b3f537e3040
-
-data4650:
-    #d $0000081408
-
-data4655:
-    #d $002214001422
-
-data465b:
-    #d $08220855082208
-
-data4662:
-    #d $492a006b002a49
-
-data4669:
-    #d $0606070707070707070707070606
-
-data4677:
-    #d $ffffffffffffffff
+gfx_data:
+.bomber1:
+    #d bomber1.data
+.bomber2:
+    #d bomber2.data
+.bomber3:
+    #d bomber3.data
+.bomb_rt:
+    #d bomb_rt.data
+.bomb_dn:
+    #d bomb_dn.data
+.bullet:
+    #d bullet.data
+.depot:
+    #d depot.data
+.rocket:
+    #d rocket.data
+.haze1:
+    #d haze1.data
+.haze2:
+    #d haze2.data
+.haze3:
+    #d haze3.data
+.haze4:
+    #d haze4.data
+.bouncer:
+    #d bouncer.data
+.ameba_whole:
+    #d ameba_whole.data
+.ameba_split:
+    #d ameba_split.data
+.boss_bullet:
+    #d boss_shot.data
+.boss_armed:
+    #d boss_armed.data
+.boss_fired:
+    #d boss_fired.data
+.boss_top:
+    #d boss_top.data
+.explode1:
+    #d explode1.data
+.explode2:
+    #d explode2.data
+.explode3:
+    #d explode3.data
+.explode4:
+    #d explode4.data
+.shield:
+    #d shield.data
+.block:
+    #d block.data
 
 call467f:
     push bc
