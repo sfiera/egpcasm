@@ -19,6 +19,19 @@ ASTRO7 = USER7
 ASTRO8 = USER8
 ASTRO9 = USER9
 
+var_score   = $ffa0
+var_hiscore = $ffa3
+var_level   = $fff4
+var_zone    = $fff6
+var_energy  = $fffc
+var_lives   = $fffd
+
+ZONE_MURK  = 1
+ZONE_CITY  = 2
+ZONE_CAVE  = 3
+ZONE_MAZE  = 4
+ZONE_BOSS  = 5
+
 header:
     db CART.MAGIC
     dw main
@@ -49,23 +62,23 @@ start:
     calt ACCCLR
     staw [$fff1]
     staw [$fff0]
-    mvi a, $01
-    staw [$fff6]
+    mvi a, ZONE_MURK
+    staw [var_zone]
     call call40fd
-    mvi a, $01
-    staw [$fff6]
+    mvi a, ZONE_MURK
+    staw [var_zone]
 .jr4049:
     call call427b
 .jr404c:
-    neiw [$fff6], $01
+    neiw [var_zone], ZONE_MURK
     call call40aa
-    neiw [$fff6], $02
+    neiw [var_zone], ZONE_CITY
     call call40aa
-    neiw [$fff6], $03
+    neiw [var_zone], ZONE_CAVE
     call call40aa
-    neiw [$fff6], $04
+    neiw [var_zone], ZONE_MAZE
     call call40bb
-    neiw [$fff6], $05
+    neiw [var_zone], ZONE_BOSS
     call call40cc
     eqiw [$fff0], $00
     jr .jr4076
@@ -78,12 +91,12 @@ start:
     call call40dd
     jre .jr404c
 .jr407f:
-    lxi hl, $ffa0
-    lxi de, $ffa3
+    lxi hl, var_score
+    lxi de, var_hiscore
     mvi b, $03
     calt MEMCCPY
-    lxi de, $ffa3
-    neiw [$fff4], $01
+    lxi de, var_hiscore
+    neiw [var_level], $01
     lxi hl, $c692
     lxi hl, $c695
     mvi b, $02
@@ -133,13 +146,13 @@ call40cc:
 
 call40dd:
     mvi a, $01
-    inrw [$fff6]
-    ltiw [$fff6], $06
-    staw [$fff6]
+    inrw [var_zone]
+    ltiw [var_zone], ZONE_BOSS + 1
+    staw [var_zone]
     call call4307
-    eqiw [$fff6], $01
+    eqiw [var_zone], ZONE_MURK
     ret
-    eqiw [$fff4], $01
+    eqiw [var_level], $01
     jr .jr40f7
     gtiw [$fff5], $02
     inrw [$fff5]
@@ -162,13 +175,13 @@ call40fd:
     lxi hl, gfx_bomber
     mvi b, $24
     calt MEMCOPY
-    lxi hl, str4249
+    lxi hl, str_level
     calt DRAWTEXT
-    db $10, $1d, TEXT.SCR1 | TEXT.SPC1 | str4249.len
-    lxi hl, $fff4
+    db $10, $1d, TEXT.SCR1 | TEXT.SPC1 | str_level.len
+    lxi hl, var_level
     calt DRAWHEX
     db $35, $1d, TEXT.SCR1 | TEXT.SMALL
-    lxi hl, $fffd
+    lxi hl, var_lives
     calt DRAWHEX
     db $2c, $24, TEXT.SCR1 | TEXT.SMALL
     aniw [$ffde], $00
@@ -196,28 +209,28 @@ call40fd:
     stax [hl+]
     stax [hl]
     call call4303
-    neiw [$fff6], $01
+    neiw [var_zone], ZONE_MURK
     call call40aa
-    neiw [$fff6], $02
+    neiw [var_zone], ZONE_CITY
     call call40aa
-    neiw [$fff6], $03
+    neiw [var_zone], ZONE_CAVE
     call call40aa
-    neiw [$fff6], $04
+    neiw [var_zone], ZONE_MAZE
     call call40bb
-    neiw [$fff6], $05
+    neiw [var_zone], ZONE_BOSS
     call call40cc
     eqiw [$fff1], $03
     jr .jr4185
-    inrw [$fff6]
-    gtiw [$fff6], $05
+    inrw [var_zone]
+    gtiw [var_zone], ZONE_BOSS
     jre .jr4149
     jmp start
 .jr4185:
     eqiw [$fff1], $01
     jre call40fd
-    ldaw [$fff4]
+    ldaw [var_level]
     xri a, $03
-    staw [$fff4]
+    staw [var_level]
     call call42d5
     ret
 
@@ -284,28 +297,28 @@ gfx_astro:
 gfx_bomber:
     #d $incbin("astrobom/title.1bpp")[327:24]
 
-str4249:
+str_level:
     #d smalltext("LEVEL"), largetext("-")
-.len = $ - str4249
+.len = $ - str_level
 
-str424f:
+str_hiscore:
     #d largetext("HIGH SCORE")
-.len = $ - str424f
-str4259:
+.len = $ - str_hiscore
+str_gameover:
     #d largetext("GAME OVER")
-.len = $ - str4259
-str4262:
+.len = $ - str_gameover
+str_perfect:
     #d largetext("[PERFECT]")
-.len = $ - str4262
-str426b:
+.len = $ - str_perfect
+str_verygood:
     #d largetext("VERY GOOD!")
-.len = $ - str426b
-str4275:
+.len = $ - str_verygood
+str_4800:
     #d largetext("=4800=")
-.len = $ - str4275
+.len = $ - str_4800
 
 call427b:
-    lxi hl, music4a85
+    lxi hl, music_start
     calt MUSPLAY
     calt ACCCLR
     staw [$ffe7]
@@ -317,17 +330,17 @@ call427b:
     call call41ce
     oriw [$ffdf], $01
     call call43c4
-    lxi hl, str424f
+    lxi hl, str_hiscore
     calt DRAWTEXT
-    db $08, $14, TEXT.SCR1 | TEXT.SPC1 | str424f.len
+    db $08, $14, TEXT.SCR1 | TEXT.SPC1 | str_hiscore.len
     call call431a
-    neiw [$fff4], $01
+    neiw [var_level], $01
     lxi hl, $c692
     lxi hl, $c695
-    lxi de, $ffa3
+    lxi de, var_hiscore
     mvi b, $02
     calt MEMCOPY
-    lxi hl, $ffa3
+    lxi hl, var_hiscore
     calt DRAWHEX
     db $17, $1e, TEXT.SCR1 | TEXT.SPC1 | 4
     calt SCRN2LCD
@@ -348,20 +361,20 @@ try42cd:
     rets
 
 call42d5:
-    lxi hl, music4b8d
+    lxi hl, music_select
     calt MUSPLAY
-    eqiw [$fff4], $01
+    eqiw [var_level], $01
     ; fall through
 
 call42dc:
     mvi a, $01
     mvi a, $02
-    staw [$fff4]
+    staw [var_level]
     call call4a6b
     ; fall through
 
 call42e5:
-    lxi hl, $ffa0
+    lxi hl, var_score
     calt ACCCLR
     stax [hl+]
     stax [hl+]
@@ -386,7 +399,7 @@ call4300:
 
 call4303:
     mvi a, $1e
-    staw [$fffc]
+    staw [var_energy]
 
 call4307:
     lxi hl, $c5a4
@@ -401,17 +414,17 @@ call4307:
     ret
 
 call431a:
-    lxi hl, str4249
+    lxi hl, str_level
     calt DRAWTEXT
-    db $05, $00, TEXT.SCR1 | TEXT.SPC1 | str4249.len
-    lxi hl, $fff4
+    db $05, $00, TEXT.SCR1 | TEXT.SPC1 | str_level.len
+    lxi hl, var_level
     calt DRAWHEX
     db $28, $00, TEXT.SCR1 | TEXT.SMALL
     ret
 
 call4329:
     oriw [$ffe7], $01
-    lxi hl, music4af8
+    lxi hl, music_perfect
     calt MUSPLAY
     call call4a6b
 .jr4333:
@@ -427,19 +440,19 @@ call4329:
     lxi hl, gfx_bomber
     mvi b, $24
     calt MEMCOPY
-    lxi hl, str4262
+    lxi hl, str_perfect
     calt DRAWTEXT
-    db $0b, $1c, TEXT.SCR1 | TEXT.SPC1 | str4262.len
-    lxi hl, str426b
+    db $0b, $1c, TEXT.SCR1 | TEXT.SPC1 | str_perfect.len
+    lxi hl, str_verygood
     calt DRAWTEXT
-    db $0b, $29, TEXT.SCR1 | TEXT.SPC1 | str426b.len
-    eqiw [$fff4], $02
+    db $0b, $29, TEXT.SCR1 | TEXT.SPC1 | str_verygood.len
+    eqiw [var_level], $02
     jr .jr4367
     gtiw [$ff88], $40
     jr .jr4367
-    lxi hl, str4275
+    lxi hl, str_4800
     calt DRAWTEXT
-    db $14, $36, TEXT.SCR1 | TEXT.SPC1 | str4275.len
+    db $14, $36, TEXT.SCR1 | TEXT.SPC1 | str_4800.len
 .jr4367:
     calt SCRN2LCD
     calt JOYREAD
@@ -469,7 +482,7 @@ try436f:
     eqiw [$ffe4], $01
     calt SCR1INV
     oriw [$ffe7], $01
-    lxi hl, music4ad3
+    lxi hl, music_gameover
     calt MUSPLAY
 .jr4397:
     oriw [$ffde], $01
@@ -480,9 +493,9 @@ try436f:
     calt MEMSET
     gtiw [$ff88], $40
     jr .jr43af
-    lxi hl, str4259
+    lxi hl, str_gameover
     calt DRAWTEXT
-    db $0a, $18, TEXT.SCR1 | TEXT.SPC1 | str4259.len
+    db $0a, $18, TEXT.SCR1 | TEXT.SPC1 | str_gameover.len
 .jr43af:
     calt SCRN2LCD
     calt JOYREAD
@@ -668,12 +681,12 @@ call44d1:
     call call431a
     jre .jr451c
 .jr44e1:
-    lxi hl, $fffd
+    lxi hl, var_lives
     calt DRAWHEX
     db $00, $00, TEXT.SCR1 | TEXT.SMALL
-    lxi hl, str453d
+    lxi hl, str_energy
     calt DRAWTEXT
-    db $0d, $00, TEXT.SCR1 | TEXT.SPC4 | str453d.len
+    db $0d, $00, TEXT.SCR1 | TEXT.SPC4 | str_energy.len
     lxi de, $c6a8
     ldax [de]
     mov b, [$ff89]
@@ -684,32 +697,32 @@ call44d1:
     stax [de]
     ltiw [$ff89], $3c
     jr .jr4506
-    eqiw [$fffc], $00
-    dcrw [$fffc]
+    eqiw [var_energy], $00
+    dcrw [var_energy]
 .jr4506:
-    ltiw [$fffc], $06
+    ltiw [var_energy], $06
     jr .jr450e
     gtiw [$ff88], $50
     jr .jr4518
 .jr450e:
-    ldaw [$fffc]
+    ldaw [var_energy]
     mov b, a
     lxi hl, $c013
     mvi a, $1f
     dcr b
     calt MEMSET
 .jr4518:
-    neiw [$fff6], $05
+    neiw [var_zone], ZONE_BOSS
     jr .jr4524
 .jr451c:
-    lxi hl, $ffa0
+    lxi hl, var_score
     calt DRAWHEX
     db $32, $00, TEXT.SCR1 | TEXT.SMALL | 5
     jr .jr453c
 .jr4524:
-    lxi hl, str453e
+    lxi hl, str_time
     calt DRAWTEXT
-    db $33, $00, TEXT.SCR1 | TEXT.SPC4 | str453e.len
+    db $33, $00, TEXT.SCR1 | TEXT.SPC4 | str_time.len
     call call5f4b
     lxi hl, $c6fb
     calt DRAWHEX
@@ -721,13 +734,13 @@ call44d1:
 .jr453c:
     ret
 
-str453d:
+str_energy:
     #d smalltext("E")
-.len = $ - str453d
+.len = $ - str_energy
 
-str453e:
+str_time:
     #d smalltext("T"), largetext(".")
-.len = $ - str453e
+.len = $ - str_time
 
 sprite_data = $incbin("astrobom/sprites.1bpp")
 #fn sprite(addr, w, h, begin) => {
@@ -1067,7 +1080,7 @@ call4754:
     calt ASTRO2
     eqiw [$ffe7], $00
     ret
-    eqiw [$fffc], $00
+    eqiw [var_energy], $00
     jre .jr4781
     mvi b, $00
     mvi a, $03
@@ -1201,7 +1214,7 @@ call480a:
     mvi a, $80
     stax [de]
 .jr4844:
-    lxi hl, music4b31
+    lxi hl, music_shoot
     calt MUSPLAY
     calt ASTRO2
     ret
@@ -1234,7 +1247,7 @@ call4857:
 .jr4868:
     mvi a, $19
     call call4a59
-    lxi hl, music4b0f
+    lxi hl, music_crash
     calt MUSPLAY
     call call4a3e
     ret
@@ -1328,7 +1341,7 @@ call489b:
 .jr48fe:
     oni a, $01
     jr .jr48e6
-    lxi hl, music4b8d
+    lxi hl, music_select
     calt MUSPLAY
     mvi a, $02
     jr .jr48fb
@@ -1359,7 +1372,7 @@ interrupt:
     mov a, [$c6ec]
     nei a, $00
     jr .jr493f
-    lxi hl, music4b65
+    lxi hl, music_bossgun
     calt MUSPLAY
     jr .jr4950
 .jr493f:
@@ -1372,7 +1385,7 @@ interrupt:
     ldax [hl]
     nei a, $03
     jr .jr4950
-    lxi hl, music4b7a
+    lxi hl, music_engine
     calt MUSPLAY
 .jr4950:
     pop va
@@ -1545,14 +1558,14 @@ call4a2c:
     ret
 
 call4a3e:
-    ldaw [$ffa0]
+    ldaw [var_score]
     gti a, $09
     ret
     mvi a, $01
     staw [$fff1]
     mvi a, $09
     staw [$fff0]
-    staw [$ffa0]
+    staw [var_score]
     mvi a, $99
     staw [$ffa1]
     staw [$ffa2]
@@ -1574,20 +1587,20 @@ call4a59:
     ret
 
 call4a6b:
-    eqiw [$fff4], $02
+    eqiw [var_level], $02
     mvi a, $06
     mvi a, $04
-    staw [$fffd]
+    staw [var_lives]
     aniw [$ff89], $00
     mvi a, $01
     staw [$ffe4]
-    eqiw [$fff4], $02
+    eqiw [var_level], $02
     mvi a, $00
     mvi a, $02
     staw [$fff5]
     ret
 
-music4a85:
+music_start:
     db PITCH.C4, $12
     db PITCH.C4, $09
     db PITCH.F4, $36
@@ -1609,7 +1622,7 @@ music4a85:
     db PITCH.G4, $36
     db $ff
 
-music4aac:
+music_fanfare:
     db PITCH.C4, $12
     db PITCH.C4, $09
     db PITCH.F4, $2d
@@ -1631,7 +1644,7 @@ music4aac:
     db PITCH.AS4, $36
     db $ff
 
-music4ad3:
+music_gameover:
     db PITCH.F4, $09
     db PITCH.C4, $09
     db PITCH.F4, $09
@@ -1652,7 +1665,7 @@ music4ad3:
     db PITCH.A4, $36
     db $ff
 
-music4af8:
+music_perfect:
     db PITCH.C4, $12
     db PITCH.C4, $09
     db PITCH.F4, $2d
@@ -1666,7 +1679,7 @@ music4af8:
     db PITCH.C5, $36
     db $ff
 
-music4b0f:
+music_crash:
     db PITCH.A3, $01
     db PITCH.GS3, $01
     db PITCH.NONE, $01
@@ -1682,20 +1695,20 @@ music4b0f:
     db PITCH.G3, $05
     db $ff
 
-music4b2a:
+music_explode:
     db PITCH.AS3, $01
     db PITCH.A3, $01
     db PITCH.G3, $01
     db $ff
 
-music4b31:
+music_shoot:
     db PITCH.D5, $02
     db PITCH.NONE, $01
     db PITCH.D5, $03
     db PITCH.NONE, $01
     db $ff
 
-music4b3a:
+music_launch:
     db PITCH.G3, $05
     db PITCH.NONE, $03
     db PITCH.A3, $05
@@ -1708,7 +1721,7 @@ music4b3a:
     db PITCH.NONE, $03
     db $ff
 
-music4b4f:
+music_bounce:
     db PITCH.C5, $05
     db PITCH.CS5, $04
     db PITCH.D5, $03
@@ -1718,13 +1731,13 @@ music4b4f:
     db PITCH.AS4, $06
     db $ff
 
-music4b5e:
+music_split:
     db PITCH.C5, $00
     db PITCH.A4, $00
     db PITCH.E5, $00
     db $ff
 
-music4b65:
+music_bossgun:
     db PITCH.C4, $04
     db PITCH.B3, $03
     db PITCH.C4, $04
@@ -1737,29 +1750,29 @@ music4b65:
     db PITCH.B3, $03
     db $ff
 
-music4b7a:
+music_engine:
     db PITCH.GS3, $01
     db PITCH.G3, $01
     db PITCH.NONE, $01
     db $ff
 
-music4b81:
+music_bosshit:
     db PITCH.C5, $02
     db PITCH.E5, $01
     db PITCH.NONE, $01
 
-music4b87:
+music_haze:
     db PITCH.C5, $02
     db PITCH.E5, $01
     db PITCH.NONE, $01
 
-music4b8d:
+music_select:
     db PITCH.C5, $02
     db PITCH.E5, $01
     db $ff
 
 call4b92:
-    neiw [$fff6], $01
+    neiw [var_zone], ZONE_MURK
     jr .jr4b9d
     eqiw [$fff0], $00
     jr .jr4ba0
@@ -1771,7 +1784,7 @@ call4b92:
     staw [$fff0]
     staw [$fff1]
     staw [$ff89]
-    ldaw [$fff6]
+    ldaw [var_zone]
     mov b, a
     clc
     ral
@@ -1789,9 +1802,9 @@ call4b92:
     dcr b
     jr .jr4bbd
     ldax [hl]
-    neiw [$fff4], $02
+    neiw [var_level], $02
     jr .jr4bcd
-    eqiw [$fff6], $02
+    eqiw [var_zone], ZONE_CITY
     mvi a, $03
     mvi a, $04
 .jr4bcd:
@@ -1822,7 +1835,7 @@ call4bde:
 .jr4bfb:
     dcrw [$fff8]
 .jr4bfd:
-    eqiw [$fff6], $03
+    eqiw [var_zone], ZONE_CAVE
     jr .jr4c1e
     eqiw [$fffa], $00
     jr .jr4c09
@@ -1924,7 +1937,7 @@ call4c33:
     jre .jr4c4b
 .jr4c95:
     call call5518
-    eqiw [$fff6], $03
+    eqiw [var_zone], ZONE_CAVE
     jre call4cf3
     lxi hl, $c2a3
     shld [$c6a9]
@@ -2218,7 +2231,7 @@ call4e1d:
     call call526b
     call try495b
     jr .jr4e6c
-    eqiw [$fff6], $03
+    eqiw [var_zone], ZONE_CAVE
     jr .jr4e72
     call call529a
     call try495b
@@ -2281,7 +2294,7 @@ call4e7b:
     jre .jr4f1c
     calt ACCCLR
     stax [bc]
-    eqiw [$fff6], $03
+    eqiw [var_zone], ZONE_CAVE
     jre .jr4eff
     mvi a, $02
     call call49cf
@@ -2356,7 +2369,7 @@ call4e7b:
     lti a, $64
     mvi a, $07
     mvi a, $08
-    gtiw [$fff6], $02
+    gtiw [var_zone], ZONE_CITY
     jr .jr4f53
     eqi a, $08
     jr .jr4f53
@@ -2421,12 +2434,12 @@ call4f6f:
 .jr4fa7:
     mvi a, $01
     staw [$fff1]
-    ldaw [$fffd]
+    ldaw [var_lives]
     dcr a
     jr .jr4fb1
     mvi a, $00
 .jr4fb1:
-    staw [$fffd]
+    staw [var_lives]
     eqi a, $00
     mvi a, $00
     mvi a, $02
@@ -2445,16 +2458,16 @@ call4fbc:
     neax [hl]
     ret
     stax [hl]
-    ldaw [$fff4]
+    ldaw [var_level]
     eqi a, $01
     mvi a, $04
     mvi a, $06
     mov b, a
-    ldaw [$fffd]
+    ldaw [var_lives]
     inr a
     lta a, b
     mov a, b
-    staw [$fffd]
+    staw [var_lives]
     jmp call489b
 
 call4fe0:
@@ -2518,13 +2531,13 @@ call4fe0:
     jr .jr5040
     jre .jr507c
 .jr5040:
-    ldaw [$fffc]
+    ldaw [var_energy]
     sui a, $0a
     offi a, $80
     calt ACCCLR
-    staw [$fffc]
+    staw [var_energy]
     push hl
-    lxi hl, music4b87
+    lxi hl, music_haze
     calt MUSPLAY
     pop hl
     dcx hl
@@ -2575,7 +2588,7 @@ call4fe0:
     stax [hl]
 .jr508a:
     call call52c6
-    lxi hl, music4b0f
+    lxi hl, music_crash
     calt MUSPLAY
     ret
 .jr5092:
@@ -2583,7 +2596,7 @@ call4fe0:
     call call51e5
     call try495b
     jr .jr508a
-    eqiw [$fff6], $03
+    eqiw [var_zone], ZONE_CAVE
     ret
     mvi a, $02
     call call51e5
@@ -2609,11 +2622,11 @@ try50a9:
     jr .jr50c4
     jre .jr5152
 .jr50c4:
-    ldaw [$fffc]
+    ldaw [var_energy]
     adi a, $03
     lti a, $1e
     mvi a, $1e
-    staw [$fffc]
+    staw [var_energy]
     mvi a, $19
     jre .jr515a
 .jr50d2:
@@ -2684,7 +2697,7 @@ try50a9:
     adi a, $0a
     stax [hl-]
     push hl
-    lxi hl, music4b5e
+    lxi hl, music_split
     calt MUSPLAY
     pop hl
     mvi a, $80
@@ -2714,7 +2727,7 @@ try50a9:
 .jr515a:
     call call4a59
     push hl
-    lxi hl, music4b2a
+    lxi hl, music_explode
     calt MUSPLAY
     pop hl
     dcx hl
@@ -3005,7 +3018,7 @@ call5300:
     ret
 .jr531e:
     push hl
-    lxi hl, music4b3a
+    lxi hl, music_launch
     calt MUSPLAY
     pop hl
     dcx hl
@@ -3015,7 +3028,7 @@ call5300:
 .jr532b:
     inx hl
     inx hl
-    eqiw [$fff4], $02
+    eqiw [var_level], $02
     mvi a, $04
     mvi a, $05
     mov b, a
@@ -3198,7 +3211,7 @@ call539f:
     ret
 .jr5420:
     push hl
-    lxi hl, music4b4f
+    lxi hl, music_bounce
     calt MUSPLAY
     pop hl
     dcx hl
@@ -3293,7 +3306,7 @@ call5435:
     stax [hl-]
     dcx hl
     push hl
-    lxi hl, music4b5e
+    lxi hl, music_split
     calt MUSPLAY
     pop hl
     ret
@@ -3422,7 +3435,7 @@ call5552:
     calt MULTIPLY
     mov a, [$c69f]
     add a, l
-    lxi hl, $5faa
+    lxi hl, data5faa
     calt ASTRO0
     push hl
     lxi hl, $c4b1
@@ -3611,8 +3624,8 @@ call55cf:
     jr .jr5702
 .jr56f4:
     mvi a, $00
-    dcrw [$fffd]
-    neiw [$fffd], $00
+    dcrw [var_lives]
+    neiw [var_lives], $00
     mvi a, $02
     staw [$fff0]
     oriw [$fff1], $01
@@ -3807,7 +3820,7 @@ call578a:
     inx hl
     mvi a, $2d
     stax [hl]
-    lxi hl, music4b2a
+    lxi hl, music_explode
     calt MUSPLAY
     jre .jr588c
 .jr585e:
@@ -3822,12 +3835,12 @@ call578a:
     mov a, [$c6f9]
     eqi a, $19
     jr .jr5882
-    ldaw [$fffc]
+    ldaw [var_energy]
     adi a, $03
     lti a, $1f
     mvi a, $1e
-    staw [$fffc]
-    lxi hl, music4b2a
+    staw [var_energy]
+    lxi hl, music_explode
     calt MUSPLAY
     jr .jr588c
 .jr5882:
@@ -3996,7 +4009,7 @@ call578a:
     calt ACCCLR
     mov [$c6ec], a
     oriw [$ffe7], $01
-    lxi hl, music4aac
+    lxi hl, music_fanfare
     calt MUSPLAY
 .jr59ab:
     offiw [$ff80], $07
@@ -4009,15 +4022,15 @@ call578a:
     mvi a, $90
     mov [$c5a0], a
     calt SCR1CLR
-    lxi hl, .str5a04
+    lxi hl, .str_bonus
     calt DRAWTEXT
-    db $05, $1b, TEXT.SCR1 | TEXT.SPC1 | .str5a04.len
+    db $05, $1b, TEXT.SCR1 | TEXT.SPC1 | .str_bonus.len
     lxi hl, $c6fb
     calt DRAWHEX
     db $2d, $1b, TEXT.SCR1 | TEXT.SPC1 | 2
-    lxi hl, .str5a09
+    lxi hl, .str_zero
     calt DRAWTEXT
-    db $3f, $1b, TEXT.SCR1 | TEXT.SPC1 | .str5a09.len
+    db $3f, $1b, TEXT.SCR1 | TEXT.SPC1 | .str_zero.len
     call call43c4
 .jr59d8:
     eqiw [$ff89], $03
@@ -4044,13 +4057,13 @@ call578a:
     mov [$c6e8], a
     ret
 
-.str5a04:
+.str_bonus:
     #d largetext("BONUS")
-..len = $ - .str5a04
+..len = $ - .str_bonus
 
-.str5a09:
+.str_zero:
     #d largetext("0")
-..len = $ - .str5a09
+..len = $ - .str_zero
 
 .jr5a0a:
     mov a, [$c5ed]
@@ -4061,8 +4074,8 @@ call578a:
     jr .jr5a30
 .jr5a17:
     calt ACCCLR
-    dcrw [$fffd]
-    neiw [$fffd], $00
+    dcrw [var_lives]
+    neiw [var_lives], $00
     mvi a, $02
     staw [$fff0]
     oriw [$fff1], $01
@@ -4249,12 +4262,12 @@ call5b3b:
     stax [hl]
     mvi a, $19
     call call4a59
-    ldaw [$fffc]
+    ldaw [var_energy]
     adi a, $03
     lti a, $1e
     mvi a, $1e
-    staw [$fffc]
-    lxi hl, music4b2a
+    staw [var_energy]
+    lxi hl, music_explode
     calt MUSPLAY
     ret
 
@@ -4648,7 +4661,7 @@ call5d9c:
     mov a, [$c6f0]
     inr a
     mov [$c6f0], a
-    lxi hl, music4b81
+    lxi hl, music_bosshit
     calt MUSPLAY
 .jr5dc4:
     calt ASTRO9
@@ -4688,12 +4701,12 @@ call5dc9:
     stax [hl]
     mvi a, $02
     staw [$ffdc]
-    lxi hl, music4b0f
+    lxi hl, music_crash
     calt MUSPLAY
 .jr5e00:
     offiw [$ff80], $07
     jr .jr5e08
-    lxi hl, music4b2a
+    lxi hl, music_explode
     calt MUSPLAY
 .jr5e08:
     lxi hl, $c5b4
