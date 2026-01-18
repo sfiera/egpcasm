@@ -8,23 +8,29 @@
     outp = 0
 }
 
-ASTRO0 = USER0
-ASTRO1 = USER1
+ADD_HL_A = USER0
+ADD_DE_A = USER1
 ASTRO2 = USER2
 ASTRO3 = USER3
 ASTRO4 = USER4
 ASTRO5 = USER5
 ASTRO6 = USER6
-ASTRO7 = USER7
-ASTRO8 = USER8
+GET_BOMBER_X = USER7
+GET_BOMBER_Y = USER8
 ASTRO9 = USER9
 
-var_score   = $ffa0
-var_hiscore = $ffa3
-var_level   = $fff4
-var_zone    = $fff6
-var_energy  = $fffc
-var_lives   = $fffd
+var_score     = $ffa0
+var_hiscore   = $ffa3
+var_mode      = $ffe7
+var_level     = $fff4
+var_zone      = $fff6
+var_energy    = $fffc
+var_lives     = $fffd
+var_bomber_x  = $c5a2
+var_bomber_y  = $c5a3
+
+MODE_PLAYER   = 0
+MODE_ATTRACT  = 1
 
 ZONE_MURK  = 1
 ZONE_CITY  = 2
@@ -41,21 +47,21 @@ header:
     jmp interrupt
 
 #addr CART.USER0
-    jmp astro0
-    jmp astro1
+    jmp add_hl_a
+    jmp add_de_a
     jmp astro2
     jmp astro3
     jmp astro4
     jmp astro5
     jmp astro6
-    jmp astro7
-    jmp astro8
+    jmp get_bomber_x
+    jmp get_bomber_y
     jmp astro9
 
 #addr CART.BEGIN
 main:
     lxi sp, $c7ff
-    call call42dc
+    call init_level
 
 start:
     lxi sp, $c7ff
@@ -64,32 +70,33 @@ start:
     staw [$fff0]
     mvi a, ZONE_MURK
     staw [var_zone]
-    call call40fd
+    call do_title
+
     mvi a, ZONE_MURK
     staw [var_zone]
-.jr4049:
-    call call427b
-.jr404c:
+.next_round:
+    call start_round
+.next_zone:
     neiw [var_zone], ZONE_MURK
-    call call40aa
+    call play_basic
     neiw [var_zone], ZONE_CITY
-    call call40aa
+    call play_basic
     neiw [var_zone], ZONE_CAVE
-    call call40aa
+    call play_basic
     neiw [var_zone], ZONE_MAZE
-    call call40bb
+    call play_maze
     neiw [var_zone], ZONE_BOSS
-    call call40cc
+    call play_boss
     eqiw [$fff0], $00
     jr .jr4076
     call call42ed
     call call4303
-    jre .jr404c
+    jre .next_zone
 .jr4076:
     eqiw [$fff0], $01
     jr .jr407f
     call call40dd
-    jre .jr404c
+    jre .next_zone
 .jr407f:
     lxi hl, var_score
     lxi de, var_hiscore
@@ -111,37 +118,37 @@ start:
     jre start
 .jr40a3:
     call try436f
-    jre .jr4049
+    jre .next_round
     jre start
 
-call40aa:
-    call call4b92
-.jr40ad:
+play_basic:
+    call init_basic
+.loop:
     call call4bde
     call call4d75
-    call call43c4
+    call update_screen
     neiw [$fff1], $00
-    jr .jr40ad
+    jr .loop
     ret
 
-call40bb:
-    call call5521
-.jr40be:
+play_maze:
+    call init_maze
+.loop:
     call call5552
     call call55cf
-    call call43c4
+    call update_screen
     neiw [$fff1], $00
-    jr .jr40be
+    jr .loop
     ret
 
-call40cc:
-    call call5703
-.jr40cf:
+play_boss:
+    call init_boss
+.loop:
     call call5778
     call call578a
-    call call43c4
+    call update_screen
     neiw [$fff1], $00
-    jr .jr40cf
+    jr .loop
     ret
 
 call40dd:
@@ -162,11 +169,13 @@ call40dd:
     inrw [$fff5]
     ret
 
-call40fd:
+do_title:
     calt SCR1CLR
-    aniw [$ff89], $00
+    aniw [TIME.SEC], $00
     call call4194
     call call41b9
+
+    ; Draw ASTRO BOMBER title text
     lxi de, $c061
     lxi hl, gfx_astro
     mvi b, $1e
@@ -175,6 +184,8 @@ call40fd:
     lxi hl, gfx_bomber
     mvi b, $24
     calt MEMCOPY
+
+    ; Draw LEVEL-N and lives text
     lxi hl, str_level
     calt DRAWTEXT
     db $10, $1d, TEXT.SCR1 | TEXT.SPC1 | str_level.len
@@ -184,20 +195,29 @@ call40fd:
     lxi hl, var_lives
     calt DRAWHEX
     db $2c, $24, TEXT.SCR1 | TEXT.SMALL
+
     aniw [$ffde], $00
     oriw [$ffdf], $01
-    call call43c4
-.jr4137:
+    call update_screen
+
+.config:
+    ; Check for Start; return if pressed.
     calt JOYREAD
-    offiw [$ff95], $08
+    offiw [JOY.BTN.EDGE], JOY.BTN.STA
     ret
-    call try42cd
-    jre call40fd
-    gtiw [$ff89], $0f
-    jr .jr4137
-    mvi a, $01
-    staw [$ffe7]
-.jr4149:
+    ; Check for Select; toggle level if pressed
+    ; and then go back to the top to redraw and restart.
+    call try_config
+    jre do_title
+    ; Check for >15 seconds waiting; loop if not.
+    gtiw [TIME.SEC], $0f
+    jr .config
+
+    ; After 15 seconds, start attract mode.
+    ; Cycle through each of the zones.
+    mvi a, MODE_ATTRACT
+    staw [var_mode]
+.attract:
     calt ACCCLR
     staw [$fff1]
     calt ASTRO5
@@ -210,28 +230,28 @@ call40fd:
     stax [hl]
     call call4303
     neiw [var_zone], ZONE_MURK
-    call call40aa
+    call play_basic
     neiw [var_zone], ZONE_CITY
-    call call40aa
+    call play_basic
     neiw [var_zone], ZONE_CAVE
-    call call40aa
+    call play_basic
     neiw [var_zone], ZONE_MAZE
-    call call40bb
+    call play_maze
     neiw [var_zone], ZONE_BOSS
-    call call40cc
+    call play_boss
     eqiw [$fff1], $03
     jr .jr4185
     inrw [var_zone]
     gtiw [var_zone], ZONE_BOSS
-    jre .jr4149
+    jre .attract
     jmp start
 .jr4185:
     eqiw [$fff1], $01
-    jre call40fd
+    jre do_title
     ldaw [var_level]
     xri a, $03
     staw [var_level]
-    call call42d5
+    call toggle_level
     ret
 
 call4194:
@@ -317,19 +337,19 @@ str_4800:
     #d largetext("=4800=")
 .len = $ - str_4800
 
-call427b:
+start_round:
     lxi hl, music_start
     calt MUSPLAY
     calt ACCCLR
-    staw [$ffe7]
+    staw [var_mode]
     mov [$c6ec], a
-    staw [$ff89]
+    staw [TIME.SEC]
     call call4300
     calt SCR1CLR
     call call4194
     call call41ce
     oriw [$ffdf], $01
-    call call43c4
+    call update_screen
     lxi hl, str_hiscore
     calt DRAWTEXT
     db $08, $14, TEXT.SCR1 | TEXT.SPC1 | str_hiscore.len
@@ -345,35 +365,35 @@ call427b:
     db $17, $1e, TEXT.SCR1 | TEXT.SPC1 | 4
     calt SCRN2LCD
 .jr42b9:
-    eqiw [$ff89], $04
+    eqiw [TIME.SEC], $04
     jr .jr42b9
     aniw [$fff1], $00
     aniw [$fff0], $00
-    aniw [$ff89], $00
+    aniw [TIME.SEC], $00
     call call41c6
     call call42ed
     ret
 
-try42cd:
-    oniw [$ff95], $01
+try_config:
+    oniw [JOY.BTN.EDGE], JOY.BTN.SEL
     rets
-    oniw [$ff93], $01
+    oniw [JOY.BTN.CURR], JOY.BTN.SEL
     rets
 
-call42d5:
+toggle_level:
     lxi hl, music_select
     calt MUSPLAY
     eqiw [var_level], $01
     ; fall through
 
-call42dc:
+init_level:
     mvi a, $01
     mvi a, $02
     staw [var_level]
     call call4a6b
     ; fall through
 
-call42e5:
+clear_score:
     lxi hl, var_score
     calt ACCCLR
     stax [hl+]
@@ -395,7 +415,7 @@ call42ed:
     ret
 
 call4300:
-    call call42e5
+    call clear_score
 
 call4303:
     mvi a, $1e
@@ -423,7 +443,7 @@ call431a:
     ret
 
 call4329:
-    oriw [$ffe7], $01
+    oriw [var_mode], MODE_ATTRACT
     lxi hl, music_perfect
     calt MUSPLAY
     call call4a6b
@@ -456,7 +476,7 @@ call4329:
 .jr4367:
     calt SCRN2LCD
     calt JOYREAD
-    oniw [$ff95], $09
+    oniw [JOY.BTN.EDGE], JOY.BTN.SEL | JOY.BTN.STA
     jre .jr4337
     ret
 
@@ -477,16 +497,16 @@ try436f:
     calt SCR1INV
 .jr4387:
     calt SCRN2LCD
-    gtiw [$ff89], $05
+    gtiw [TIME.SEC], $05
     jr .jr4372
     eqiw [$ffe4], $01
     calt SCR1INV
-    oriw [$ffe7], $01
+    oriw [var_mode], MODE_ATTRACT
     lxi hl, music_gameover
     calt MUSPLAY
 .jr4397:
     oriw [$ffde], $01
-    call call43c4
+    call update_screen
     lxi hl, $c0ea
     calt ACCCLR
     mvi b, $37
@@ -499,19 +519,19 @@ try436f:
 .jr43af:
     calt SCRN2LCD
     calt JOYREAD
-    oniw [$ff95], $08
+    oniw [JOY.BTN.EDGE], JOY.BTN.STA
     jr .jr43ba
-    gtiw [$ff89], $0a
+    gtiw [TIME.SEC], $0a
     ret
     rets
 .jr43ba:
-    offiw [$ff93], $01
+    offiw [JOY.BTN.CURR], JOY.BTN.SEL
     rets
-    gtiw [$ff89], $14
+    gtiw [TIME.SEC], $14
     jre .jr4397
     rets
 
-call43c4:
+update_screen:
     calt ASTRO5
     mvi a, $13
     staw [$ffd8]
@@ -524,7 +544,7 @@ call43c4:
     jr .jr43c9
 .jr43d5:
     neiw [$ffdf], $00
-    call call44d1
+    call update_header
     aniw [$ffdf], $00
     neiw [$ffde], $00
     calt SCRN2LCD
@@ -537,7 +557,7 @@ try43e6:
     jr .jr43f1
 .jr43ea:
     mvi a, $03
-    calt ASTRO0
+    calt ADD_HL_A
     dcrw [$ffd8]
     jr try43e6
     ret
@@ -580,7 +600,7 @@ call4424:
     ldaw [$ffd1]
     dcr a
     lxi de, gfx_size
-    calt ASTRO1
+    calt ADD_DE_A
     ldaw [$ffd1]
     dcr a
     clc
@@ -597,7 +617,7 @@ call4424:
     staw [$ffd4]
     mov a, b
     lxi de, gfx_addr
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de+]
     mov [$c68e], a
     ldax [de]
@@ -662,7 +682,7 @@ call4424:
     jr .jr44d0
     lhld [$c68e]
     ldaw [$ffd4]
-    calt ASTRO0
+    calt ADD_HL_A
     shld [$c68e]
     ldaw [$ffd5]
     sui a, $08
@@ -671,12 +691,12 @@ call4424:
 .jr44d0:
     ret
 
-call44d1:
+update_header:
     lxi hl, $c000
     mvi b, $4a
     calt ACCCLR
     calt MEMSET
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
     jr .jr44e1
     call call431a
     jre .jr451c
@@ -689,13 +709,13 @@ call44d1:
     db $0d, $00, TEXT.SCR1 | TEXT.SPC4 | str_energy.len
     lxi de, $c6a8
     ldax [de]
-    mov b, [$ff89]
+    mov b, [TIME.SEC]
     lta a, b
     jr .jr4506
     inr a
     inr a
     stax [de]
-    ltiw [$ff89], $3c
+    ltiw [TIME.SEC], $3c
     jr .jr4506
     eqiw [var_energy], $00
     dcrw [var_energy]
@@ -939,7 +959,7 @@ call468d:
     rar
     jr .jr4691
 
-astro0:
+add_hl_a:
     add a, l
     mov l, a
     mov a, h
@@ -947,7 +967,7 @@ astro0:
     mov h, a
     ret
 
-astro1:
+add_de_a:
     add a, e
     mov e, a
     mov a, d
@@ -970,12 +990,12 @@ astro6:
     mov a, [$c5a0]
     ret
 
-astro7:
-    mov a, [$c5a2]
+get_bomber_x:
+    mov a, [var_bomber_x]
     ret
 
-astro8:
-    mov a, [$c5a3]
+get_bomber_y:
+    mov a, [var_bomber_y]
     ret
 
 astro9:
@@ -999,11 +1019,11 @@ call46ca:
     dcr c
     jr .jr46e2
     mov a, b
-    calt ASTRO0
+    calt ADD_HL_A
     ret
 .jr46e2:
     mvi a, $4b
-    calt ASTRO0
+    calt ADD_HL_A
     jr .jr46dd
 .jr46e6:
     lxi hl, $0000
@@ -1078,7 +1098,7 @@ call470a:
 
 call4754:
     calt ASTRO2
-    eqiw [$ffe7], $00
+    eqiw [var_mode], MODE_PLAYER
     ret
     eqiw [var_energy], $00
     jre .jr4781
@@ -1092,9 +1112,9 @@ call4754:
     jr .jr477f
     calt ACCCLR
     mov [$c6f2], a
-    calt ASTRO8
+    calt GET_BOMBER_Y
     inr a
-    mov [$c5a3], a
+    mov [var_bomber_y], a
     mvi b, $00
 .jr477f:
     jre .jr47c1
@@ -1122,8 +1142,8 @@ call4754:
     clc
     ral
     lxi hl, data47f2
-    calt ASTRO0
-    lxi de, $c5a2
+    calt ADD_HL_A
+    lxi de, var_bomber_x
     ldax [hl+]
     addx [de]
     stax [de+]
@@ -1131,7 +1151,7 @@ call4754:
     addx [de]
     stax [de]
 .jr47c1:
-    calt ASTRO7
+    calt GET_BOMBER_X
     oni a, $80
     jr .jr47c7
     calt ACCCLR
@@ -1141,18 +1161,18 @@ call4754:
     jr .jr47d0
     mvi a, $29
 .jr47cc:
-    mov [$c5a2], a
+    mov [var_bomber_x], a
 .jr47d0:
-    calt ASTRO8
+    calt GET_BOMBER_Y
     lti a, $08
     jr .jr47da
     mvi a, $08
-    mov [$c5a3], a
+    mov [var_bomber_y], a
 .jr47da:
-    calt ASTRO8
+    calt GET_BOMBER_Y
     lti a, $3c
     mvi a, $3c
-    mov [$c5a3], a
+    mov [var_bomber_y], a
     mov a, [$c6e6]
     eqi a, $00
     call call480a
@@ -1184,16 +1204,16 @@ call480a:
     stax [hl+]
     mvi a, $06
     stax [hl+]
-    calt ASTRO7
+    calt GET_BOMBER_X
     adi a, $0c
     stax [hl+]
-    calt ASTRO8
+    calt GET_BOMBER_Y
     adi a, $02
     stax [hl]
     jr .jr482c
 .jr4826:
     mvi a, $04
-    calt ASTRO0
+    calt ADD_HL_A
     dcr b
     jr .jr4813
     ret
@@ -1288,12 +1308,12 @@ call489b:
     push de
     push va
     calt JOYREAD
-    eqiw [$ffe7], $00
+    eqiw [var_mode], MODE_PLAYER
     jre .jr48ef
     calt ASTRO6
     oni a, $80
     jre .jr48e6
-    lhld [$ff92]
+    lhld [JOY.DIR.CURR]
     lded [$c6c8]
     mov a, d
     ora a, h
@@ -1316,9 +1336,9 @@ call489b:
     mov [$c6e6], a
     mov [$c6fd], a
 .jr48dd:
-    ldaw [$ff93]
-    ani a, $09
-    eqi a, $09
+    ldaw [JOY.BTN.CURR]
+    ani a, JOY.BTN.SEL | JOY.BTN.STA
+    eqi a, JOY.BTN.SEL | JOY.BTN.STA
     jr .jr48e6
     jre .jr4908
 .jr48e6:
@@ -1328,11 +1348,11 @@ call489b:
     pop hl
     ret
 .jr48ef:
-    ldaw [$ff93]
+    ldaw [JOY.BTN.CURR]
     mov b, a
-    ldaw [$ff95]
+    ldaw [JOY.BTN.EDGE]
     ana a, b
-    oni a, $08
+    oni a, JOY.BTN.STA
     jr .jr48fe
     mvi a, $01
 .jr48fb:
@@ -1346,14 +1366,14 @@ call489b:
     mvi a, $02
     jr .jr48fb
 .jr4908:
-    oriw [$ffe7], $01
+    oriw [var_mode], MODE_ATTRACT
     calf $0e4d
     calt ACCCLR
     mov [$c6ec], a
     mov [$c6e7], a
 .jr4916:
     calt JOYREAD
-    ldaw [$ff93]
+    ldaw [JOY.BTN.CURR]
     eqi a, $00
     jr .jr4916
     jmp main
@@ -1376,7 +1396,7 @@ interrupt:
     calt MUSPLAY
     jr .jr4950
 .jr493f:
-    eqiw [$ffe7], $00
+    eqiw [var_mode], MODE_PLAYER
     jr .jr4950
     calt ASTRO5
     ldax [hl+]
@@ -1502,7 +1522,7 @@ call49cf:
     onax [hl]
     ret
     mvi a, $04
-    calt ASTRO0
+    calt ADD_HL_A
     dcrw [$ffe0]
     jr .jr49eb
     mvi h, $00
@@ -1516,14 +1536,14 @@ call49cf:
     onax [hl]
     jr .jr4a0e
     mvi a, $04
-    calt ASTRO0
+    calt ADD_HL_A
     dcrw [$ffe0]
     jr .jr4a00
     mvi h, $00
     ret
 .jr4a0e:
     mvi a, $04
-    calt ASTRO0
+    calt ADD_HL_A
     dcrw [$ffe0]
     jr .jr4a17
     mvi h, $00
@@ -1533,7 +1553,7 @@ call49cf:
     onax [hl]
     jr .jr4a26
     mvi a, $04
-    calt ASTRO0
+    calt ADD_HL_A
     dcrw [$ffe0]
     jre .jr4a00
     mvi h, $00
@@ -1591,7 +1611,7 @@ call4a6b:
     mvi a, $06
     mvi a, $04
     staw [var_lives]
-    aniw [$ff89], $00
+    aniw [TIME.SEC], $00
     mvi a, $01
     staw [$ffe4]
     eqiw [var_level], $02
@@ -1771,19 +1791,19 @@ music_select:
     db PITCH.E5, $01
     db $ff
 
-call4b92:
+init_basic:
     neiw [var_zone], ZONE_MURK
     jr .jr4b9d
     eqiw [$fff0], $00
     jr .jr4ba0
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
 .jr4b9d:
     call call4875
 .jr4ba0:
     calt ACCCLR
     staw [$fff0]
     staw [$fff1]
-    staw [$ff89]
+    staw [TIME.SEC]
     ldaw [var_zone]
     mov b, a
     clc
@@ -1791,7 +1811,7 @@ call4b92:
     ral
     add a, b
     lxi hl, data4bcf - 5
-    calt ASTRO0
+    calt ADD_HL_A
     lxi de, $c6ab
     calt ACCCLR
     stax [de+]
@@ -1844,11 +1864,11 @@ call4bde:
 .jr4c09:
     dcrw [$fffa]
 .jr4c0b:
-    ltiw [$ff89], $37
+    ltiw [TIME.SEC], $37
     jr .jr4c17
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
     jr .jr4c1e
-    gtiw [$ff89], $15
+    gtiw [TIME.SEC], $15
     jr .jr4c1e
 .jr4c17:
     mvi a, $04
@@ -1858,12 +1878,12 @@ call4bde:
 .jr4c1e:
     lxi hl, $c666
     ldaw [$fff2]
-    calt ASTRO0
+    calt ADD_HL_A
     ldaw [$fff9]
     stax [hl]
     lxi hl, $c640
     ldaw [$fff2]
-    calt ASTRO0
+    calt ADD_HL_A
     ldaw [$fffb]
     stax [hl]
     call call5518
@@ -1889,7 +1909,7 @@ call4c33:
     staw [$ffe1]
     lxi de, $c666
     ldaw [$fff2]
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de]
     mov c, a
 .jr4c57:
@@ -1948,7 +1968,7 @@ call4c33:
     staw [$ffe1]
     lxi de, $c640
     ldaw [$fff2]
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de]
     mov c, a
 .jr4cb4:
@@ -1970,7 +1990,7 @@ call4c33:
     mvi a, $ff
     stax [hl]
     mvi a, $4b
-    calt ASTRO0
+    calt ADD_HL_A
     mov a, b
     jr .jr4cb5
 .jr4cd1:
@@ -2010,7 +2030,7 @@ call4cf5:
     calt ACCCLR
     stax [hl]
     lxi hl, data4d4e
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     staw [$fff9]
     lxi hl, $c69b
@@ -2045,7 +2065,7 @@ call4d27:
     ani a, $0f
     stax [hl]
     lxi hl, data4d4e
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     staw [$fffb]
     lxi hl, $c69d
@@ -2255,12 +2275,12 @@ call4e7b:
     calt ASTRO6
     oni a, $80
     ret
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
     jr .jr4e87
-    ltiw [$ff89], $13
+    ltiw [TIME.SEC], $13
     ret
 .jr4e87:
-    ltiw [$ff89], $35
+    ltiw [TIME.SEC], $35
     ret
     neiw [$fff9], $00
     ret
@@ -2284,7 +2304,7 @@ call4e7b:
 .jr4eb2:
     calt ASTRO2
     ani a, $7f
-    eqiw [$ffe7], $00
+    eqiw [var_mode], MODE_PLAYER
     ani a, $3f
     mov d, a
     lxi hl, $c6ac
@@ -2308,7 +2328,7 @@ call4e7b:
     clc
     rar
     lxi bc, $c701
-    calt ASTRO1
+    calt ADD_DE_A
     mov a, d
     lti a, $1f
     mvi a, $00
@@ -2399,9 +2419,9 @@ call4e7b:
 
 call4f6f:
     call call489b
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
     jr .jr4f87
-    gtiw [$ff89], $22
+    gtiw [TIME.SEC], $22
     ret
     eqiw [$fff8], $00
     ret
@@ -2416,7 +2436,7 @@ call4f6f:
     calt ASTRO6
     oni a, $80
     jr .jr4f9d
-    gtiw [$ff89], $45
+    gtiw [TIME.SEC], $45
     ret
     mvi a, $01
     staw [$fff1]
@@ -2471,11 +2491,11 @@ call4fbc:
     jmp call489b
 
 call4fe0:
-    eqiw [$ffe7], $00
+    eqiw [var_mode], MODE_PLAYER
     ret
     mvi a, $0d
     staw [$ffe0]
-    lxi hl, $c5a2
+    lxi hl, var_bomber_x
     ldax [hl+]
     adi a, $04
     staw [$ffd6]
@@ -2770,7 +2790,7 @@ astro3:
     ral
     push de
     lxi de, data51c1
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de+]
     mov b, a
     inx hl
@@ -2782,7 +2802,7 @@ astro3:
     add a, c
     staw [$ffd4]
     mvi a, $11
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de+]
     mov b, a
     ldax [hl]
@@ -2808,7 +2828,7 @@ call51e5:
     lxi hl, $c640
     shld [$c6a9]
     push va
-    calt ASTRO7
+    calt GET_BOMBER_X
     adi a, $04
     staw [$ffd0]
     mov b, a
@@ -2827,7 +2847,7 @@ call51e5:
     lti a, $26
     sui a, $26
     lhld [$c6a9]
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     lta a, d
     mov d, a
@@ -2871,7 +2891,7 @@ call523d:
     lti a, $26
     sui a, $26
     lxi hl, $c666
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     clc
     ral
@@ -2900,7 +2920,7 @@ call526b:
     lti a, $26
     sui a, $26
     lxi hl, $c666
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     clc
     ral
@@ -2931,7 +2951,7 @@ call529a:
     lti a, $26
     sui a, $26
     lxi hl, $c640
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     clc
     ral
@@ -3191,7 +3211,7 @@ call539f:
     lti a, $26
     sui a, $26
     lxi de, $c666
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de+]
     mov b, a
     ldax [de]
@@ -3238,7 +3258,7 @@ call5435:
     clc
     rar
     lxi de, $c701
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de]
     mov b, a
     inr a
@@ -3258,9 +3278,9 @@ call5435:
     mvi a, $00
     mvi a, $06
     lxi de, data54bf
-    calt ASTRO1
+    calt ADD_DE_A
     mov a, b
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de]
     mov b, a
     ldax [hl]
@@ -3312,7 +3332,7 @@ call5435:
     ret
 .jr54b9:
     mvi a, $04
-    calt ASTRO0
+    calt ADD_HL_A
     dcrw [$ffe0]
     ret
 
@@ -3335,7 +3355,7 @@ call54cb:
     clc
     rar
     lxi de, $c701
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de]
     mov c, a
     inr a
@@ -3354,9 +3374,9 @@ call54cb:
     mvi a, $00
     mvi a, $06
     lxi de, data550c
-    calt ASTRO1
+    calt ADD_DE_A
     mov a, c
-    calt ASTRO1
+    calt ADD_DE_A
     ldax [de]
     mov b, a
     ldax [hl]
@@ -3379,11 +3399,11 @@ call5518:
     staw [$fff2]
     ret
 
-call5521:
+init_maze:
     calt ACCCLR
     staw [$fff1]
     staw [$fff0]
-    staw [$ff89]
+    staw [TIME.SEC]
     mov [$c69e], a
     staw [$ffdd]
     mvi a, $0a
@@ -3395,7 +3415,7 @@ call5521:
     mvi a, $02
     ltiw [$fff5], $03
     mvi a, $01
-    neiw [$ffe7], $01
+    neiw [var_mode], MODE_ATTRACT
     mvi a, $01
     mov [$c6d1], a
     calt ACCCLR
@@ -3436,7 +3456,7 @@ call5552:
     mov a, [$c69f]
     add a, l
     lxi hl, data5faa
-    calt ASTRO0
+    calt ADD_HL_A
     push hl
     lxi hl, $c4b1
     lxi de, $c4b0
@@ -3470,7 +3490,7 @@ call55cf:
     neiw [$ffdd], $00
     call call5b19
     call call4754
-    calt ASTRO8
+    calt GET_BOMBER_Y
     eqi a, $3a
     jr .jr55f3
     mvi b, $00
@@ -3541,23 +3561,23 @@ call55cf:
     mov [$c6cb], a
     eqi a, $05
     jre .jr55fc
-    mov a, [$c5a2]
+    mov a, [var_bomber_x]
     adi a, $06
     mov b, a
     adi a, $05
     mov d, a
-    mov a, [$c5a3]
+    mov a, [var_bomber_y]
     mov c, a
     adi a, $02
     mov e, a
     call call5f0b
     call call4857
-    calt ASTRO7
+    calt GET_BOMBER_X
     adi a, $04
     staw [$ffd0]
     adi a, $06
     staw [$ffd4]
-    calt ASTRO8
+    calt GET_BOMBER_Y
     staw [$ffd1]
     adi a, $02
     staw [$ffd3]
@@ -3587,29 +3607,29 @@ call55cf:
     eqiw [$ffdc], $13
     jre .jr5688
     call call4a3e
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
     jr .jr56c6
-    gtiw [$ff89], $14
+    gtiw [TIME.SEC], $14
     jre .jr56e3
     mvi a, $01
     staw [$fff0]
-    gtiw [$ff89], $1e
+    gtiw [TIME.SEC], $1e
     jr .jr56c6
     mvi a, $03
     staw [$fff1]
 .jr56c6:
-    gtiw [$ff89], $3c
+    gtiw [TIME.SEC], $3c
     jr .jr56e3
     oriw [$fff0], $01
     mov a, [$c6d1]
     eqi a, $02
     jr .jr56dc
-    gtiw [$ff89], $50
+    gtiw [TIME.SEC], $50
     jr .jr56e3
     oriw [$fff1], $01
     jr .jr56e3
 .jr56dc:
-    gtiw [$ff89], $46
+    gtiw [TIME.SEC], $46
     jr .jr56e3
     oriw [$fff1], $01
 .jr56e3:
@@ -3632,11 +3652,11 @@ call55cf:
 .jr5702:
     ret
 
-call5703:
+init_boss:
     calt ACCCLR
     staw [$fff0]
     staw [$fff1]
-    staw [$ff89]
+    staw [TIME.SEC]
     mov [$c6eb], a
     mov [$c6ed], a
     mov [$c6e5], a
@@ -3680,7 +3700,7 @@ call5703:
     mov b, [$c698]
     mvi a, $3c
     sub a, b
-    staw [$ff89]
+    staw [TIME.SEC]
     adi a, $02
     mov [$c6a8], a
 .jr5771:
@@ -3719,7 +3739,7 @@ call578a:
     call call5f71
     call call5d22
     call call4754
-    calt ASTRO8
+    calt GET_BOMBER_Y
     eqi a, $3a
     jr .jr57ca
     mvi b, $00
@@ -3892,12 +3912,12 @@ call578a:
     stax [hl]
     eqi a, $05
     jr .jr58b7
-    calt ASTRO7
+    calt GET_BOMBER_X
     adi a, $05
     staw [$ffd0]
     adi a, $05
     staw [$ffd4]
-    calt ASTRO8
+    calt GET_BOMBER_Y
     staw [$ffd1]
     adi a, $02
     staw [$ffd3]
@@ -3943,29 +3963,29 @@ call578a:
     call call5e5a
     call call4857
     call call4a3e
-    ldaw [$ff89]
+    ldaw [TIME.SEC]
     mov b, a
     mvi a, $3c
     sub a, b
     offi a, $80
     calt ACCCLR
     mov [$c698], a
-    neiw [$ffe7], $00
+    neiw [var_mode], MODE_PLAYER
     jr .jr5952
-    gtiw [$ff89], $14
+    gtiw [TIME.SEC], $14
     jre .jr5962
     oriw [$fff0], $01
-    gtiw [$ff89], $1e
+    gtiw [TIME.SEC], $1e
     jr .jr5962
     calt ACCCLR
     mov [$c6ec], a
     mvi a, $03
     staw [$fff1]
 .jr5952:
-    gtiw [$ff89], $3c
+    gtiw [TIME.SEC], $3c
     jr .jr595f
     oriw [$fff0], $01
-    gtiw [$ff89], $44
+    gtiw [TIME.SEC], $44
     jr .jr595f
     jre .jr5997
 .jr595f:
@@ -4005,16 +4025,16 @@ call578a:
     mvi a, $01
     staw [$fff1]
     staw [$fff0]
-    staw [$ffe7]
+    staw [var_mode]
     calt ACCCLR
     mov [$c6ec], a
-    oriw [$ffe7], $01
+    oriw [var_mode], MODE_ATTRACT
     lxi hl, music_fanfare
     calt MUSPLAY
 .jr59ab:
     offiw [$ff80], $07
     jr .jr59ab
-    aniw [$ff89], $00
+    aniw [TIME.SEC], $00
     lxi hl, $c5a4
     calt ACCCLR
     mvi b, $4b
@@ -4031,9 +4051,9 @@ call578a:
     lxi hl, .str_zero
     calt DRAWTEXT
     db $3f, $1b, TEXT.SCR1 | TEXT.SPC1 | .str_zero.len
-    call call43c4
+    call update_screen
 .jr59d8:
-    eqiw [$ff89], $03
+    eqiw [TIME.SEC], $03
     jr .jr59d8
     mov a, [$c698]
 .jr59e0:
@@ -4053,7 +4073,7 @@ call578a:
     mov [$c5a0], a
     calt ACCCLR
     mov [$c6ec], a
-    staw [$ffe7]
+    staw [var_mode]
     mov [$c6e8], a
     ret
 
@@ -4104,7 +4124,7 @@ call5a34:
     mvi a, $0b
     sub a, b
     lxi hl, $c4b0
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     staw [$ffdc]
     nei a, $00
@@ -4323,7 +4343,7 @@ call5ba1:
     mov a, [$c6eb]
     eqi a, $00
     jre .jr5c0d
-    ltiw [$ff89], $3c
+    ltiw [TIME.SEC], $3c
     jre .jr5c78
     calt ASTRO2
     gti a, $e0
@@ -4462,7 +4482,7 @@ call5c8c:
     clc
     ral
     lxi hl, $c70f
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl+]
     nei a, $00
     jre .jr5d1a
@@ -4488,11 +4508,11 @@ call5c8c:
     calt MULTIPLY
     mov a, l
     lxi hl, $c3c0
-    calt ASTRO0
+    calt ADD_HL_A
     pop de
     pop bc
     ldax [bc]
-    calt ASTRO0
+    calt ADD_HL_A
     mov a, d
     stax [hl+]
     mov a, e
@@ -4612,7 +4632,7 @@ call5d5d:
     clc
     ral
     lxi hl, $c70f
-    calt ASTRO0
+    calt ADD_HL_A
     calt ACCCLR
     stax [hl+]
     stax [hl]
@@ -4622,7 +4642,7 @@ call5d5d:
     calt MULTIPLY
     mov a, l
     lxi hl, $c3c0
-    calt ASTRO0
+    calt ADD_HL_A
     mvi b, $4f
     calt ACCCLR
     calt MEMSET
@@ -4747,7 +4767,7 @@ call5dc9:
     stax [hl]
 .jr5e3b:
     call call5e50
-    call call43c4
+    call update_screen
     mvi a, $f5
 .jr5e43:
     mvi b, $a0
@@ -4772,12 +4792,12 @@ call5e50:
 call5e5a:
     calt ACCCLR
     staw [$ffdc]
-    calt ASTRO7
+    calt GET_BOMBER_X
     adi a, $04
     staw [$ffd0]
     adi a, $06
     staw [$ffd4]
-    calt ASTRO8
+    calt GET_BOMBER_Y
     staw [$ffd1]
     adi a, $02
     staw [$ffd3]
@@ -4880,7 +4900,7 @@ call5ed2:
     mov e, a
     mov a, d
     lxi hl, $c4b0
-    calt ASTRO0
+    calt ADD_HL_A
     ldax [hl]
     push va
     mov a, e
@@ -4941,7 +4961,7 @@ astro4:
     ral
     ral
     lxi hl, $c5a0
-    calt ASTRO0
+    calt ADD_HL_A
     ret
 
 call5f4b:
@@ -4964,7 +4984,7 @@ call5f4b:
     dcr b
 .jr5f64:
     mvi a, $10
-    calt ASTRO0
+    calt ADD_HL_A
     dcr b
     jr .jr5f64
 .jr5f69:
