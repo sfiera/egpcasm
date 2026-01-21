@@ -22,6 +22,7 @@ ASTRO9 = USER9
 var_score     = $ffa0
 var_hiscore   = $ffa3
 var_mode      = $ffe7
+var_pause     = $fff1
 var_level     = $fff4
 var_zone      = $fff6
 var_energy    = $fffc
@@ -31,6 +32,10 @@ var_bomber_y  = $c5a3
 
 MODE_PLAYER   = 0
 MODE_ATTRACT  = 1
+
+PAUSE_OFF  = 0
+PAUSE_ON   = 1
+PAUSE_UNK  = 3
 
 ZONE_MURK  = 1
 ZONE_CITY  = 2
@@ -66,7 +71,7 @@ main:
 start:
     lxi sp, $c7ff
     calt ACCCLR
-    staw [$fff1]
+    staw [var_pause]  ; = PAUSE_OFF
     staw [$fff0]
     mvi a, ZONE_MURK
     staw [var_zone]
@@ -127,7 +132,7 @@ play_basic:
     call call4bde
     call call4d75
     call update_screen
-    neiw [$fff1], $00
+    neiw [var_pause], PAUSE_OFF
     jr .loop
     ret
 
@@ -137,7 +142,7 @@ play_maze:
     call call5552
     call call55cf
     call update_screen
-    neiw [$fff1], $00
+    neiw [var_pause], PAUSE_OFF
     jr .loop
     ret
 
@@ -147,7 +152,7 @@ play_boss:
     call call5778
     call call578a
     call update_screen
-    neiw [$fff1], $00
+    neiw [var_pause], PAUSE_OFF
     jr .loop
     ret
 
@@ -219,7 +224,7 @@ do_title:
     staw [var_mode]
 .attract:
     calt ACCCLR
-    staw [$fff1]
+    staw [var_pause]  ; = PAUSE_OFF
     calt ASTRO5
     mvi a, $80
     stax [hl+]
@@ -239,14 +244,14 @@ do_title:
     call play_maze
     neiw [var_zone], ZONE_BOSS
     call play_boss
-    eqiw [$fff1], $03
+    eqiw [var_pause], PAUSE_UNK
     jr .jr4185
     inrw [var_zone]
     gtiw [var_zone], ZONE_BOSS
     jre .attract
     jmp start
 .jr4185:
-    eqiw [$fff1], $01
+    eqiw [var_pause], PAUSE_ON
     jre do_title
     ldaw [var_level]
     xri a, $03
@@ -367,7 +372,7 @@ start_round:
 .jr42b9:
     eqiw [TIME.SEC], $04
     jr .jr42b9
-    aniw [$fff1], $00
+    aniw [var_pause], PAUSE_OFF
     aniw [$fff0], $00
     aniw [TIME.SEC], $00
     call call41c6
@@ -468,7 +473,7 @@ call4329:
     db $0b, $29, TEXT.SCR1 | TEXT.SPC1 | str_verygood.len
     eqiw [var_level], $02
     jr .jr4367
-    gtiw [$ff88], $40
+    gtiw [TIME.BCD.SUB], $40
     jr .jr4367
     lxi hl, str_4800
     calt DRAWTEXT
@@ -483,7 +488,7 @@ call4329:
 try436f:
     call call4a6b
 .jr4372:
-    offiw [$ff88], $40
+    offiw [TIME.BCD.SUB], $40
     jr .jr437f
     eqiw [$ffe4], $01
     jr .jr4387
@@ -511,7 +516,7 @@ try436f:
     calt ACCCLR
     mvi b, $37
     calt MEMSET
-    gtiw [$ff88], $40
+    gtiw [TIME.BCD.SUB], $40
     jr .jr43af
     lxi hl, str_gameover
     calt DRAWTEXT
@@ -722,7 +727,7 @@ update_header:
 .jr4506:
     ltiw [var_energy], $06
     jr .jr450e
-    gtiw [$ff88], $50
+    gtiw [TIME.BCD.SUB], $50
     jr .jr4518
 .jr450e:
     ldaw [var_energy]
@@ -1354,9 +1359,9 @@ call489b:
     ana a, b
     oni a, JOY.BTN.STA
     jr .jr48fe
-    mvi a, $01
+    mvi a, PAUSE_ON
 .jr48fb:
-    staw [$fff1]
+    staw [var_pause]  ; = PAUSE_ON
     jr .jr48e6
 .jr48fe:
     oni a, $01
@@ -1581,14 +1586,14 @@ call4a3e:
     ldaw [var_score]
     gti a, $09
     ret
-    mvi a, $01
-    staw [$fff1]
+    mvi a, PAUSE_ON
+    staw [var_pause]  ; = PAUSE_ON
     mvi a, $09
     staw [$fff0]
     staw [var_score]
     mvi a, $99
-    staw [$ffa1]
-    staw [$ffa2]
+    staw [var_score + 1]
+    staw [var_score + 2]
     calt ACCCLR
     mov [$c6ec], a
     ret
@@ -1802,7 +1807,7 @@ init_basic:
 .jr4ba0:
     calt ACCCLR
     staw [$fff0]
-    staw [$fff1]
+    staw [var_pause]  ; = PAUSE_OFF
     staw [TIME.SEC]
     ldaw [var_zone]
     mov b, a
@@ -2425,10 +2430,10 @@ call4f6f:
     ret
     eqiw [$fff8], $00
     ret
-    eqiw [$fff1], $00
+    eqiw [var_pause], PAUSE_OFF
     ret
-    mvi a, $03
-    staw [$fff1]
+    mvi a, PAUSE_UNK
+    staw [var_pause]  ; = PAUSE_UNK
     ret
 .jr4f87:
     call call4a3e
@@ -2438,8 +2443,8 @@ call4f6f:
     jr .jr4f9d
     gtiw [TIME.SEC], $45
     ret
-    mvi a, $01
-    staw [$fff1]
+    mvi a, PAUSE_ON
+    staw [var_pause]  ; = PAUSE_ON
     staw [$fff0]
     ret
     ret
@@ -2452,8 +2457,8 @@ call4f6f:
     stax [hl]
     ret
 .jr4fa7:
-    mvi a, $01
-    staw [$fff1]
+    mvi a, PAUSE_ON
+    staw [var_pause]  ; = PAUSE_ON
     ldaw [var_lives]
     dcr a
     jr .jr4fb1
@@ -2467,7 +2472,7 @@ call4f6f:
     ret
 
 call4fbc:
-    ldaw [$ffa1]
+    ldaw [var_score + 1]
     nei a, $00
     jr .jr4fc5
     nei a, $50
@@ -3401,7 +3406,7 @@ call5518:
 
 init_maze:
     calt ACCCLR
-    staw [$fff1]
+    staw [var_pause]  ; = PAUSE_OFF
     staw [$fff0]
     staw [TIME.SEC]
     mov [$c69e], a
@@ -3615,8 +3620,8 @@ call55cf:
     staw [$fff0]
     gtiw [TIME.SEC], $1e
     jr .jr56c6
-    mvi a, $03
-    staw [$fff1]
+    mvi a, PAUSE_UNK
+    staw [var_pause]  ; = PAUSE_UNK
 .jr56c6:
     gtiw [TIME.SEC], $3c
     jr .jr56e3
@@ -3626,12 +3631,12 @@ call55cf:
     jr .jr56dc
     gtiw [TIME.SEC], $50
     jr .jr56e3
-    oriw [$fff1], $01
+    oriw [var_pause], PAUSE_ON
     jr .jr56e3
 .jr56dc:
     gtiw [TIME.SEC], $46
     jr .jr56e3
-    oriw [$fff1], $01
+    oriw [var_pause], PAUSE_ON
 .jr56e3:
     call call4fbc
     ret
@@ -3648,14 +3653,14 @@ call55cf:
     neiw [var_lives], $00
     mvi a, $02
     staw [$fff0]
-    oriw [$fff1], $01
+    oriw [var_pause], PAUSE_ON
 .jr5702:
     ret
 
 init_boss:
     calt ACCCLR
     staw [$fff0]
-    staw [$fff1]
+    staw [var_pause]  ; = PAUSE_OFF
     staw [TIME.SEC]
     mov [$c6eb], a
     mov [$c6ed], a
@@ -3979,8 +3984,8 @@ call578a:
     jr .jr5962
     calt ACCCLR
     mov [$c6ec], a
-    mvi a, $03
-    staw [$fff1]
+    mvi a, PAUSE_UNK
+    staw [var_pause]  ; = PAUSE_UNK
 .jr5952:
     gtiw [TIME.SEC], $3c
     jr .jr595f
@@ -4022,8 +4027,8 @@ call578a:
     mov [$c6e8], a
     call call5dc9
 .jr5997:
-    mvi a, $01
-    staw [$fff1]
+    mvi a, PAUSE_ON
+    staw [var_pause]  ; = PAUSE_ON
     staw [$fff0]
     staw [var_mode]
     calt ACCCLR
@@ -4098,7 +4103,7 @@ call578a:
     neiw [var_lives], $00
     mvi a, $02
     staw [$fff0]
-    oriw [$fff1], $01
+    oriw [var_pause], PAUSE_ON
     calt ACCCLR
     neiw [$fff0], $02
     mov [$c6e7], a
