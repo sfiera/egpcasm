@@ -8,6 +8,7 @@ BIN = gamepock/astrobom.bin \
       gamepock/blockmaz.bin \
       gamepock/egpcboot.bin \
 	  gamepock/hellowd.bin \
+	  gamepock/hexdump.bin \
 	  gamepock/boing.bin \
 	  gamepock/pokedemo.bin \
 	  gamepock/pokemahj.bin \
