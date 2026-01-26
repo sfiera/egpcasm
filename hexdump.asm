@@ -8,6 +8,8 @@
     outp = 0
 }
 
+#fn relo(symbol) => (symbol - loop + $c000)
+
 header:
     db CART.MAGIC
     dw main    ; normal startup
@@ -26,98 +28,77 @@ main:
     ; the interrupt might take over and run its code.
     di
 
-    ; Switch LCD 1 to count-down mode instead of count-up.
-    ; This makes it simpler to draw directly to that LCD.
-    ori pa, LCD.CS1   ; Select LCD 1
-    ani pa, !LCD.DI   ; Switch to instruction mode
-    mvi a, %00111010  ; Count-down mode
-    mov pb, a         ;
-    ori pa, LCD.E     ; Send command
-    ani pa, !LCD.E    ; Command sent
-    ani pa, !LCD.CS1  ; Deselect LCD 1
-
     ; Copy the hexdump code into WRAM, so it remains
     ; even after the cartridge is swapped.
     lxi hl, loop
-    lxi de, $c000
+    lxi de, relo(loop)
     mvi b, end - loop - 1
     calt MEMCOPY
 
-#fn relo(symbol) => (symbol - loop + $c000)
-    lxi hl, $0000
-    jmp relo(loop)
+    ; Switch LCD 1 to count-down mode instead of count-up.
+    ; This makes it simpler to draw directly to that LCD.
+    ori pa, LCD.CS1     ; Select LCD 1
+    ani pa, !LCD.DI     ; Switch to instruction mode
+    mvi a, %00111010    ; Command to set count-down mode
+    call relo(lcdexec)  ; Execute command
+    ani pa, !LCD.CS1    ; Deselect LCD 1
 
+    lxi hl, $0000       ; Set initial address for viewer
+    jmp relo(loop)      ; Switch to code in WRAM
+
+
+    ; main code, executed from WRAM.
 loop:
     push hl
-    call relo(drawaddr)
-    mvi b, LCD.CS1
-    mvi c, LCD.I.P1 | 48
-    call relo(drawrow)
-    call relo(drawrow)
-    call relo(drawrow)
-    call relo(drawrow)
-    mvi b, LCD.CS2
-    mvi c, LCD.I.P1 | 1
-    call relo(drawrow)
-    call relo(drawrow)
-    call relo(drawrow)
-    call relo(drawrow)
+
+    mvi a, LCD.I.P1 | 2                     ; LCD3, page 1A, column 2
+    call relo(drawaddr)                     ; Draw first address
+    lxi bc, (LCD.CS1 << 8) | LCD.I.P1 | 49  ; LCD1, page 1, leftmost column
+    call relo(drawrow4)                     ; Draw 4 rows of hex (16 bytes)
+    mvi a, LCD.I.P1 | 2 + 25                ; LCD3, page 1B, column 2
+    call relo(drawaddr)                     ; Draw second address
+    lxi bc, (LCD.CS2 << 8) | LCD.I.P1 | 0   ; LCD2, page1, leftmost column
+    call relo(drawrow4)                     ; Draw 4 rows of hex (16 bytes)
 
     calt JOYREAD
     pop hl
-    call relo(navigate)
 
-    jre loop
-
-navigate:
-    ; Move hl to de for later.
-    mov a, h
-    mov d, a
-    mov a, l
-    mov e, a
+    lxi de, 0
 
     ldaw [JOY.DIR.EDGE]
     mov b, a
     ldaw [JOY.DIR.CURR]
     ana a, b
 
-    offi a, JOY.DIR.UP
-    jr .plus0010
-    offi a, JOY.DIR.DN
-    jr .minus0010
+    offi a, JOY.DIR.UP  ; if up pressed
+    mvi e, $10          ; then de = $0010
+    offi a, JOY.DIR.DN  ; if down pressed
+    lxi de, $fff0       ; then de = -$0010 ($fff0)
 
     ldaw [JOY.BTN.EDGE]
-    mov c, a
+    mov b, a
     ldaw [JOY.BTN.CURR]
-    ana a, c
+    ana a, b
 
-    offi a, JOY.BTN.BT1
-    jr .plus1000
-    offi a, JOY.BTN.BT2
-    jr .plus0100
-    offi a, JOY.BTN.BT3
-    jr .minus1000
-    offi a, JOY.BTN.BT4
-    jr .minus0100
-
-    ; Only the first statement reached will execute.
-    ; (this is why hl was moved to de beforehand)
-    lxi hl, 0
-.plus0010:
-    lxi hl, $0010
-.minus0010:
-    lxi hl, -$0010
-.plus0100:
-    lxi hl, $0100
-.plus1000:
-    lxi hl, $1000
-.minus1000:
-    lxi hl, -$1000
-.minus0100:
-    lxi hl, -$0100
+    offi a, JOY.BTN.BT1  ; if button 1 pressed
+    mvi d, $10           ; then de = $1000
+    offi a, JOY.BTN.BT2  ; if button 2 pressed
+    mvi d, $01           ; then de = $0100
+    offi a, JOY.BTN.BT3  ; if button 3 pressed
+    mvi d, $f0           ; then de = -$1000 ($f000)
+    offi a, JOY.BTN.BT4  ; if button 4 pressed
+    mvi d, $ff           ; then de = -$0100 ($ff00)
 
     calt ADDRHLDE
-    ret
+    jre loop
+
+drawrow4:
+    call relo(drawrow2)
+    ; fall through
+
+drawrow2:
+    call relo(drawrow)
+    ; fall through
 
 drawrow:
     push bc
@@ -125,67 +106,68 @@ drawrow:
     ora a, b
     mov pa, a
     mov a, c
-    mov pb, a
-    ori pa, LCD.E     ; Send command
-    ani pa, !LCD.E    ; Command sent
+    call relo(lcdexec)
 
     ori pa, LCD.DI    ; Switch to data mode
 
-    call relo(drawbyte)
-    call relo(drawbyte)
-    call relo(drawbyte)
-    call relo(drawbyte)
+    call relo(drawbyte4)
 
-    ani pa, !LCD.DI & !LCD.CS1 & !LCD.CS2 & !LCD.CS3
-    pop bc
     mvi a, LCD.I.POFF
+    pop bc
     add a, c
     mov c, a
-    ret
+
+    jr deselect
 
 drawaddr:
     ori pa, LCD.CS3
-    mvi a, LCD.I.P1 | 2
-    mov pb, a
-    ori pa, LCD.E     ; Send command
-    ani pa, !LCD.E    ; Command sent
-
+    call relo(lcdexec)
     ori pa, LCD.DI    ; Switch to data mode
 
     mov a, h
-    calt ACC4RAR
-    call relo(drawdigit)
-    mov a, h
-    call relo(drawdigit)
+    call relo(drawacc)
     mov a, l
-    calt ACC4RAR
-    call relo(drawdigit)
-    mov a, l
-    call relo(drawdigit)
+    call relo(drawacc)
+    ; fall through
 
+deselect:
     ani pa, !LCD.DI & !LCD.CS1 & !LCD.CS2 & !LCD.CS3
     ret
 
+drawbyte4:
+    call relo(drawbyte2)
+    ; fall through
+
+drawbyte2:
+    call relo(drawbyte)
+    ; fall through
+
 drawbyte:
     ldax [hl+]
+    ; fall through
+
+; Draw the pair of hex digits in a.
+drawacc:
     push va
     calt ACC4RAR
     call relo(drawdigit)
     pop va
-    call relo(drawdigit)
-    ret
+    ; fall through
 
+; Draw the hex digit in the lower nibble of a.
 drawdigit:
+    ; a = (a & 0x0f) * 5
     ani a, $0f
     mov c, a
     clc
     ral
     ral
     add a, c
+
     lxi de, $02c4 + 5*$40
     add a, e
     mov e, a
-    xra a, a
+    calt ACCCLR
     adc a, d
     mov d, a
 
@@ -193,12 +175,15 @@ drawdigit:
 .nextbyte:
     ldax [de+]
     ral
-    mov pb, a
-    ori pa, LCD.E
-    ani pa, !LCD.E
+    call relo(lcdexec)
     dcr c
     jr .nextbyte
-    ani pb, 0
+    calt ACCCLR
+    ; fall through
+
+; Send and execute the LCD data in register a.
+lcdexec:
+    mov pb, a
     ori pa, LCD.E
     ani pa, !LCD.E
     ret
