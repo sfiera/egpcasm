@@ -85,8 +85,8 @@
 #subruledef pd7806_jr_reladdr {
     {addr: i16} => {
         reladdr = addr - $ - 1
-        $assert(reladdr <= $3f)
-        $assert(reladdr >= -$3f)
+        $assert(reladdr <= $1f)
+        $assert(reladdr >= -$20)
         reladdr`6
     }
 }
