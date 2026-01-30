@@ -239,7 +239,7 @@ memccpy:
     dw tilehflp  ;[PC+1] Flip tile horizontally
     dw tilevflp  ;[PC+1] Flip tile vertically
     dw tileflip  ;[PC+1] File tile across both axes
-    dw caltd6    ;[PC+x] ?? (Add/Sub multiple bytes)
+    dw objmove   ;[PC+1+N] Move multiple objects
     dw membump   ;[PC+1] INC/DEC Range of bytes from (HL)
     dw erasdot   ;Clear Dot; B,C = X-,Y-position
 
@@ -2479,74 +2479,123 @@ a0EA9:
     calt MEMCOPY                                    ; "((HL+) ==> (DE+))xB"
     ret
 ;------------------------------------------------------------
-;[PC+x] ?? (Add/Sub multiple bytes)
-caltd6:
+; [PC+1+N] Move multiple objects
+;
+; Moves several objects according to the bytes following the call.
+; First byte after the call is two nibbles:
+;  bit: 76543210  N = number of objects to move (0-12)
+;       NNNNPPPP  P = distance to move each object
+;
+; Following that are N motion bytes, as follows:
+;  bit: 76543210  I = Index of object to move (0-11)
+;       UDLRIIII  U = Move object up by P pixels
+;                 D = Move object down by P pixels
+;                 L = Move object left by P pixels
+;                 R = Move object right by P pixels
+;
+; After moving the objects, control returns to the address at
+; CART.UNKN, rather than the call site.
+;
+; The use case for this procedure is unclear, and it seems to have
+; gone unused in the actual games for the system.
+objmove:
+    ; Consume first byte following CALT statement
     pop hl
     ldax [hl+]
     push hl
+
+    ; Split into nibbles: lower (distance) and upper (count).
+    ; Save distance to [$FF96] and count to [$FF97].
+    ; If the count is > 12, do nothing and return.
     mov b, a
     ani a, $0F
     staw [$FF96]
     mov a, b
-    calt ACC4RAR                                    ; "(RLR A)x4"
+    calt ACC4RAR
     ani a, $0F
-    lti a, $0D
+    lti a, OBJ.COUNT + 1
     ret
     staw [$FF97]
-.a0EE5:
-    dcrw [$FF97]
-    jr .a0EF0                                       ;Based on 97, jump to cart (4007)!
-    calt SCRNCOMP                                   ; "CALT A0, CALT A4"
-    pop bc
-    lbcd [CART.UNKN]                                ;Read vector from $4007 on cart, however...
-    jb                                              ;...all 5 Pokekon games have "0000" there!
-.a0EF0:
+
+.nextbyte:
+    ; Decrement count. On underflow, exit from function.
+    ; On exit, display screen, then discard the return address.
+    ; Instead, load address from $4007 and return there.
+    ; All 5 Pokekon games have $0000 at address $4007,
+    ; so this CALT seems to have gone unused.
+    dcrw [$FF97]      ; Are there remaining motion bytes?
+    jr .motion        ; If so, consume the next one.
+    calt SCRNCOMP     ; Else composite sprites to the screen.
+    pop bc            ; Pop the return address for the function
+    lbcd [CART.UNKN]  ; then overwrite it with [$4007]
+    jb                ; and return there instead.
+
+.motion:
+    ; Consume next motion byte from call site.
     pop hl
     ldax [hl+]
     push hl
+
+    ; Save motion byte to [$FF98] and split out lower nibble.
+    ; The lower nibble contains the object index I.
+    ; If the object index is >= 12, then ignore and skip.
     staw [$FF98]
     ani a, $0F
-    lti a, $0C
-    jr .a0EE5
-    lxi hl, OBJ.TILE.END - 2
-.a0EFF:
+    lti a, OBJ.COUNT
+    jr .nextbyte
+
+    ; Count hl up to the Y address of the object at index I.
+    lxi hl, OBJ.O0.Y - 3
+.nextobj:
     inx hl
     inx hl
     inx hl
     dcr a
-    jr .a0EFF
+    jr .nextobj
+
+    ; Point de at the saved motion distance P.
     lxi de, $FF96
+
+.up:
+    ; Move object up by P if U is set.
     oniw [$FF98], $80
-    jr .a0F10
+    jr .down
     ldax [hl]
     subx [de]
     stax [hl]
-    jr .a0F18
+    jr .right
 
-.a0F10:
+.down:
+    ; Move object up by P if D is set.
     oniw [$FF98], $40
-    jr .a0F18
+    jr .right
     ldax [hl]
     addx [de]
     stax [hl]
-.a0F18:
+
+.right:
+    ; Move hl down to the X position of the object.
     dcx hl
+
+    ; Move object right by P if R is set.
     oniw [$FF98], $10
-    jr .a0F23
+    jr .left
 
     ldax [hl]
     addx [de]
     stax [hl]
-.a0F21:
-    jre .a0EE5
+.done:
+    jre .nextbyte
 
-.a0F23:
+    ; Move object left by P if L is set.
+.left:
     oniw [$FF98], $20
-    jr .a0F21
+    jr .done
     ldax [hl]
     subx [de]
     stax [hl]
-    jr .a0F21
+    jr .done
+
 ;------------------------------------------------------------
 ;Invert Screen RAM (C000~)
 scr1inv:

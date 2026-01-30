@@ -43,7 +43,7 @@ SCR2INV   = $00CE  ; Invert screen 2
 TILEHFLP  = $00D0  ; [PC+1] Flip object tile horizontally
 TILEVFLP  = $00D2  ; [PC+1] Flip object tile vertically
 TILEFLIP  = $00D4  ; [PC+1] Flip object tile across both axes
-CALTD6    = $00D6
+OBJMOVE   = $00D6  ; [PC+1+N] Move multiple objects
 MEMBUMP   = $00D8
 ERASDOT   = $00DA  ; Clear screen 2 pixel at (x, y) position (b, c)
 
