@@ -236,9 +236,9 @@ memccpy:
     dw tileinv   ;[PC+1] Invert 8 bytes at (C4B0+A*$10)
     dw scr1inv   ;Invert Screen RAM (C000~)
     dw scr2inv   ;Invert Screen 2 RAM (C258~)
-    dw caltd0    ;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
-    dw caltd2    ;[PC+1] ?? (Unpack & Roll 8 bits)
-    dw caltd4    ;[PC+1] ?? (Roll 8 bits -> Byte?)
+    dw tilehflp  ;[PC+1] Flip tile horizontally
+    dw tilevflp  ;[PC+1] Flip tile vertically
+    dw tileflip  ;[PC+1] File tile across both axes
     dw caltd6    ;[PC+x] ?? (Add/Sub multiple bytes)
     dw membump   ;[PC+1] INC/DEC Range of bytes from (HL)
     dw erasdot   ;Clear Dot; B,C = X-,Y-position
@@ -2395,8 +2395,8 @@ a0E6A:
     ret
 ;------------------------------------------------------------
 
-;[PC+1] ?? (Unpack 8 bytes -> 64 bytes (Twice!))
-caltd0:
+;[PC+1] Flip tile horizontally
+tilehflp:
     pop hl
     ldax [hl+]
     push hl
@@ -2432,8 +2432,8 @@ a0E73:
     pop de
     ret
 ;------------------------------------------------------------
-;[PC+1] ?? (Unpack & Roll 8 bits)
-caltd2:
+;[PC+1] Flip tile vertically
+tilevflp:
     pop hl
     ldax [hl+]
     push hl
@@ -2443,7 +2443,7 @@ caltd2:
     jr a0EA9
 ;-----------------------------------------------------------
 ;[PC+1] ?? (Roll 8 bits -> Byte?)
-caltd4:
+tileflip:
     pop hl
     ldax [hl+]
     push hl
